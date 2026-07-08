@@ -1,0 +1,53 @@
+@startuml
+title AskMyData - Use Case Diagram
+
+left to right direction
+
+actor "User" as User
+actor "AI Agent" as Agent
+actor "Data Source\n(PostgreSQL)" as DataSource
+
+rectangle "AskMyData" {
+
+  usecase "Create project" as UC01
+  usecase "Edit project" as UC02
+  usecase "Delete project" as UC03
+
+  usecase "Add data source" as UC04
+  usecase "Test connection" as UC05
+  usecase "Explore schema" as UC06
+
+  usecase "Ask question" as UC07
+  usecase "Generate SQL query" as UC08
+  usecase "Validate SQL query" as UC09
+  usecase "Execute read-only query" as UC10
+  usecase "Generate natural language answer" as UC11
+
+  usecase "View history" as UC12
+  usecase "Change language" as UC13
+}
+
+User --> UC01
+User --> UC02
+User --> UC03
+User --> UC04
+User --> UC06
+User --> UC07
+User --> UC12
+User --> UC13
+
+UC04 --> UC05 : <<include>>
+UC07 --> UC08 : <<include>>
+UC07 --> UC09 : <<include>>
+UC07 --> UC10 : <<include>>
+UC07 --> UC11 : <<include>>
+
+Agent --> UC08
+Agent --> UC11
+
+DataSource --> UC05
+DataSource --> UC06
+DataSource --> UC10
+
+
+@enduml
