@@ -1,0 +1,43 @@
+@startuml AskMyData_Domain_Overview
+
+title AskMyData - Domain Overview
+
+skinparam classAttributeIconSize 0
+
+class User
+class UserPreferences
+class Invitation
+
+class Project
+class DataSource
+class ProjectSettings
+
+class KnowledgeCatalog
+class SchemaSnapshot
+class SemanticMetadata
+class DataProfile
+
+class Conversation
+class Message
+class QuestionRun
+class ExecutionTrace
+
+User "1" *-- "1" UserPreferences
+User "1" o-- "*" Project
+User "1" o-- "*" Invitation
+
+Project "1" *-- "1" DataSource
+Project "1" *-- "1" ProjectSettings
+Project "1" *-- "1" KnowledgeCatalog
+Project "1" *-- "1" Conversation
+
+KnowledgeCatalog "1" *-- "*" SchemaSnapshot
+KnowledgeCatalog "1" *-- "*" SemanticMetadata
+KnowledgeCatalog "1" *-- "*" DataProfile
+
+Conversation "1" *-- "*" Message
+Conversation "1" *-- "*" QuestionRun
+
+QuestionRun "1" *-- "*" ExecutionTrace
+
+@enduml
