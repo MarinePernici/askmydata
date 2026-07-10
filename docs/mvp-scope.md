@@ -1,145 +1,242 @@
 # MVP Scope
 
-## Objectif
+## 1. Purpose
 
-Le MVP (Minimum Viable Product) doit démontrer la faisabilité d'une application permettant d'interroger une source de données en langage naturel via un agent IA.
+The MVP (Minimum Viable Product) aims to demonstrate the feasibility of an AI-powered platform that enables users to query structured data sources using natural language.
 
-Cette première version doit être suffisamment complète pour être présentée dans un portfolio, tout en restant limitée afin de garantir une architecture propre et une implémentation maîtrisée.
+The objective is not to build a production-ready platform, but to deliver a coherent, extensible and production-inspired application suitable for a professional portfolio.
 
----
-
-# Fonctionnalités incluses
-
-## Gestion des projets
-
-- créer un projet
-- modifier un projet
-- supprimer un projet
+The MVP focuses on validating the overall architecture, user workflow and AI orchestration pipeline.
 
 ---
 
-## Gestion des sources de données
+# 2. Included Features
 
-- ajouter une source PostgreSQL
-- tester la connexion
-- enregistrer la configuration
-- supprimer une source
+## User Management
 
----
-
-## Analyse du schéma
-
-- découverte automatique des tables
-- découverte des colonnes
-- découverte des clés étrangères
-- mise en cache du schéma
+* invitation-only registration;
+* account activation;
+* secure authentication;
+* session management;
+* logout;
+* user profile;
+* user preferences.
 
 ---
 
-## Questions en langage naturel
+## Project Management
 
-- poser une question
-- choisir la langue de réponse
-- conserver l'historique
-
----
-
-## Génération SQL
-
-- génération automatique
-- validation avant exécution
-- affichage de la requête générée
+* create a project;
+* edit project information;
+* delete a project;
+* archive project conversations after deletion.
 
 ---
 
-## Exécution
+## Data Source Management
 
-- lecture seule
-- timeout
-- limitation du nombre de lignes
+Supported source:
+
+* PostgreSQL.
+
+Features:
+
+* configure connection;
+* test connection;
+* validate credentials;
+* read-only access only;
+* encrypted connection configuration.
 
 ---
 
-## Réponse
+## Project Setup Wizard
 
-- affichage des données
-- reformulation en langage naturel
+The project creation workflow includes:
+
+1. project information;
+2. data source configuration;
+3. connection test;
+4. schema discovery;
+5. schema and table selection;
+6. Knowledge Catalog generation.
+
+---
+
+## Knowledge Catalog
+
+* automatic schema discovery;
+* schema snapshots;
+* schema refresh;
+* schema and table selection;
+* semantic metadata;
+* user-enriched descriptions;
+* business synonyms;
+* hidden objects.
+
+---
+
+## AI Query Engine
+
+The AI agent supports:
+
+* natural language questions;
+* contextual conversations;
+* clarification requests when needed;
+* AI orchestration pipeline;
+* read-only query generation;
+* query validation;
+* query execution;
+* natural language answers.
+
+---
+
+## Conversation Management
+
+* one active conversation per project;
+* conversation history;
+* contextual follow-up questions;
+* archived conversations remain consultable.
+
+---
+
+## User Interface
+
+* bilingual interface;
+* French;
+* English;
+* light/dark theme;
+* responsive layout.
 
 ---
 
 ## Administration
 
-- authentification simple
-- paramètres utilisateur
+Using Django Admin:
+
+* invitation management;
+* user management;
+* project overview;
+* platform monitoring.
 
 ---
 
-## Internationalisation
+## Developer Features
 
-- Français
-- English
+* developer mode;
+* execution pipeline status;
+* execution metrics;
+* diagnostic information.
 
----
-
-# Fonctionnalités exclues
-
-Les fonctionnalités suivantes ne font pas partie du MVP.
-
-## Sources de données
-
-- CSV
-- JSON
-- BigQuery
-- MongoDB
-- MySQL
-- SQL Server
-- Oracle
+Internal prompts and AI reasoning are never exposed.
 
 ---
 
-## Visualisation
+## Infrastructure
 
-- graphiques
-- dashboards
-- export PDF
+* Docker Compose;
+* automated tests;
+* GitHub Actions;
+* CI/CD pipeline;
+* monitoring;
+* cloud-ready deployment.
 
 ---
 
-## IA
+# 3. Explicitly Excluded
 
-- fine tuning
-- mémoire longue durée
-- plusieurs modèles IA
+The following features are intentionally excluded from the MVP.
+
+## Additional Data Sources
+
+* CSV
+* JSON
+* BigQuery
+* MongoDB
+* MySQL
+* SQL Server
+* Oracle
+
+---
+
+## Advanced AI
+
+* multiple AI providers;
+* autonomous agents;
+* long-term memory;
+* fine tuning;
+* Retrieval-Augmented Generation (RAG).
 
 ---
 
 ## Collaboration
 
-- partage de projets
-- commentaires
-- travail collaboratif
+* shared projects;
+* multiple project members;
+* comments;
+* real-time collaboration.
 
 ---
 
-## Administration avancée
+## Analytics
 
-- rôles
-- permissions complexes
-- SSO
+* dashboards;
+* charts;
+* automatic reports;
+* PDF export.
 
 ---
 
-# Critères de validation
+## Enterprise Features
 
-Le MVP sera terminé lorsque :
+* SSO;
+* OAuth providers;
+* advanced permissions;
+* organizations;
+* billing;
+* quotas.
 
-- un utilisateur peut créer un projet ;
-- connecter une base PostgreSQL ;
-- explorer automatiquement son schéma ;
-- poser une question ;
-- obtenir une réponse correcte ;
-- consulter le SQL généré ;
-- retrouver son historique ;
-- utiliser l'application en français et en anglais ;
-- lancer l'application avec Docker Compose ;
-- exécuter les tests automatiquement via GitHub Actions.
+---
+
+# 4. Platform Limits
+
+The demonstration platform intentionally includes several limits.
+
+Examples:
+
+* invitation-only access;
+* maximum number of projects per user;
+* one data source per project;
+* one active conversation per project;
+* read-only queries;
+* maximum execution time;
+* maximum number of returned rows.
+
+These limits may evolve in future versions.
+
+---
+
+# 5. MVP Success Criteria
+
+The MVP will be considered complete when a user can:
+
+* authenticate using an invitation;
+* create a project;
+* connect a PostgreSQL database;
+* discover the database structure;
+* choose which schemas and tables are exposed;
+* automatically generate a Knowledge Catalog;
+* enrich the catalog with business metadata;
+* ask questions using natural language;
+* receive reliable answers;
+* continue contextual conversations;
+* refresh the Knowledge Catalog;
+* use the application in French and English.
+
+From a technical perspective, the application must also provide:
+
+* Docker-based deployment;
+* automated testing;
+* CI/CD through GitHub Actions;
+* monitoring;
+* production-inspired architecture;
+* public online demonstration.

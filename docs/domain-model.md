@@ -6,6 +6,9 @@ This document describes the main business entities of AskMyData, their responsib
 
 The domain model is independent from the technical implementation. It does not depend on Django, FastAPI, PostgreSQL, SQLAlchemy or any specific LLM provider.
 
+This document describes the business domain only.
+Technical components, infrastructure services, AI providers, connectors and implementation details are documented separately in the software architecture documentation.
+
 ---
 
 ## 2. Domain Overview
@@ -15,6 +18,7 @@ AskMyData allows an authenticated user to create projects connected to external 
 Each project contains:
 
 * one data source;
+* one catalog scope;
 * one knowledge catalog;
 * one project configuration;
 * one active conversation;
@@ -140,6 +144,7 @@ A project is defined by its data source and provides access to its semantic cata
 
 * `draft`
 * `initializing`
+* `building_catalog`
 * `ready`
 * `error`
 * `archived`
@@ -148,6 +153,7 @@ A project is defined by its data source and provides access to its semantic cata
 
 * A project belongs to exactly one user.
 * A project contains exactly one data source.
+* A project contains exactly one Catalog Scope.
 * A project contains exactly one active conversation in the MVP.
 * A user may own several projects.
 * The number of projects per user may be limited in demonstration mode.
@@ -203,8 +209,33 @@ A data source is not only a technical connection. It also contains status inform
 * Connection secrets must never be stored in plain text.
 * The data source must be read-only.
 * A connection must be successfully tested before the project becomes ready.
-* The data source is used to generate and refresh the knowledge catalog.
+* The data source provides the raw metadata used to build and refresh the Knowledge Catalog through the Catalog Scope.
 * The application does not read the schema before every user question.
+
+---
+
+## CatalogScope
+
+Represents the subset of the connected data source that is intentionally exposed to the AI agent.
+
+The Catalog Scope defines the functional boundary of a project and determines which database objects are included in the Knowledge Catalog.
+
+### Main attributes
+
+- `id`
+- `selected_schemas`
+- `selected_tables`
+- `excluded_tables`
+- `created_at`
+- `updated_at`
+
+### Business rules
+
+- A Catalog Scope belongs to exactly one Project.
+- A Project contains exactly one Catalog Scope.
+- Only objects included in the Catalog Scope are used to build the Knowledge Catalog.
+- The Catalog Scope can be modified before refreshing the Knowledge Catalog.
+- Objects outside the Catalog Scope are never exposed to the AI agent.
 
 ---
 
@@ -221,8 +252,6 @@ These settings are independent from the connection configuration.
 * `maximum_result_rows`
 * `query_timeout_seconds`
 * `conversation_context_size`
-* `allowed_schemas`
-* `allowed_tables`
 * `developer_mode_enabled`
 * `created_at`
 * `updated_at`
@@ -270,14 +299,14 @@ It is the main abstraction used by the AI query engine to understand the connect
 
 ### Relationships
 
-* A knowledge catalog belongs to exactly one project.
-* A knowledge catalog is generated from exactly one data source.
-* A knowledge catalog contains one or more `SchemaSnapshot` entities.
-* A knowledge catalog may contain semantic metadata and data profiles.
+* A Knowledge Catalog belongs to exactly one project.
+* A Knowledge Catalog is generated from exactly one Catalog Scope.
+* A Knowledge Catalog contains one or more `SchemaSnapshot` entities.
+* A Knowledge Catalog may contain semantic metadata and data profiles.
 
 ### Business rules
 
-* The catalog is generated automatically from the data source.
+* The catalog is generated automatically from the Data Source using the Catalog Scope.
 * The user may enrich selected catalog elements.
 * Technical schema information cannot be modified manually.
 * User-defined descriptions and synonyms are stored separately from discovered schema metadata.
@@ -547,7 +576,7 @@ Examples:
 
 ### Knowledge Builder
 
-Builds and refreshes the knowledge catalog from a data source.
+Builds and refreshes the Knowledge Catalog from a data source.
 
 ### Question Orchestrator
 
@@ -595,6 +624,7 @@ User
 ├── Invitation
 └── Project*
     ├── DataSource
+    ├── CatalogScope    
     ├── ProjectSettings
     ├── KnowledgeCatalog
     │   ├── SchemaSnapshot*
@@ -619,8 +649,8 @@ User
 7. A conversation contains multiple ordered messages.
 8. A question run may contain clarification exchanges.
 9. Only validated read-only queries may be executed.
-10. The AI engine uses the knowledge catalog instead of rediscovering the schema for every question.
-11. The knowledge catalog is generated automatically and can be enriched by the user.
+10. The AI engine uses the Knowledge Catalog instead of rediscovering the schema for every question.
+11. The Knowledge Catalog is generated automatically and can be enriched by the user.
 12. Technical schema metadata and user-defined semantic metadata remain separated.
 13. Deleting a project removes the source configuration and secrets.
 14. The conversation is archived and remains consultable.

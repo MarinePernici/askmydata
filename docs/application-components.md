@@ -1,4 +1,6 @@
-# Component Responsibilities
+> ⚠️ This document will be completed after the software architecture has been defined.
+
+# Application Components
 
 ## Frontend
 
