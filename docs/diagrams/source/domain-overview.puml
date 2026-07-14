@@ -1,43 +1,96 @@
 @startuml AskMyData_Domain_Overview
 
-title AskMyData - Domain Overview
+title AskMyData — Domain Overview
 
+hide methods
+hide stereotypes
 skinparam classAttributeIconSize 0
+skinparam linetype ortho
 
 class User
 class UserPreferences
 class Invitation
 
-class Project
-class DataSource
+class Project {
+  status
+}
+
+class DataSource {
+  source_type
+  connection_status
+}
+
+class CatalogScope
+
 class ProjectSettings
 
-class KnowledgeCatalog
-class SchemaSnapshot
+class KnowledgeCatalog {
+  version
+  status
+}
+
+class SchemaSnapshot {
+  version
+  captured_at
+}
+
 class SemanticMetadata
-class DataProfile
 
-class Conversation
-class Message
-class QuestionRun
-class ExecutionTrace
+class Conversation {
+  status
+}
 
-User "1" *-- "1" UserPreferences
-User "1" o-- "*" Project
-User "1" o-- "*" Invitation
+class Message {
+  role
+  sequence_number
+}
 
-Project "1" *-- "1" DataSource
-Project "1" *-- "1" ProjectSettings
-Project "1" *-- "1" KnowledgeCatalog
-Project "1" *-- "1" Conversation
+class QuestionRun {
+  status
+}
 
-KnowledgeCatalog "1" *-- "*" SchemaSnapshot
-KnowledgeCatalog "1" *-- "*" SemanticMetadata
-KnowledgeCatalog "1" *-- "*" DataProfile
+class ExecutionTrace {
+  step
+  status
+}
 
-Conversation "1" *-- "*" Message
-Conversation "1" *-- "*" QuestionRun
+User "1" *-- "0..1" UserPreferences : preferences
+User "1" -- "0..*" Project : owns
 
-QuestionRun "1" *-- "*" ExecutionTrace
+Invitation "0..1" --> "1" User : accepted by
+
+Project "1" *-- "0..1" DataSource : data source
+Project "1" *-- "0..1" CatalogScope : scope
+Project "1" *-- "1" ProjectSettings : settings
+Project "1" *-- "0..1" KnowledgeCatalog : catalog
+Project "1" *-- "0..1" Conversation : active conversation
+Project "1" -- "0..*" QuestionRun : executions
+
+CatalogScope "1" --> "0..1" KnowledgeCatalog : defines
+
+KnowledgeCatalog "1" *-- "1..*" SchemaSnapshot : snapshots
+KnowledgeCatalog "1" *-- "0..*" SemanticMetadata : semantic metadata
+
+Conversation "1" *-- "0..*" Message : messages
+Conversation "1" *-- "0..*" QuestionRun : runs
+
+QuestionRun "1" --> "1" Message : input
+QuestionRun "1" --> "0..1" Message : output
+QuestionRun "1" *-- "0..*" ExecutionTrace : traces
+
+note right of Project
+  Central aggregate root and
+  data exploration workspace.
+end note
+
+note right of DataSource
+  PostgreSQL only in the MVP.
+  Access is read-only.
+end note
+
+note right of KnowledgeCatalog
+  Semantic layer used by
+  the AI query engine.
+end note
 
 @enduml

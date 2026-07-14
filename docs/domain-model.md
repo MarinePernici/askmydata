@@ -2,657 +2,1084 @@
 
 ## 1. Purpose
 
-This document describes the main business entities of AskMyData, their responsibilities and their relationships.
+This document defines the business concepts of AskMyData, their relationships and the business rules governing the application.
 
-The domain model is independent from the technical implementation. It does not depend on Django, FastAPI, PostgreSQL, SQLAlchemy or any specific LLM provider.
+The domain model describes **what the application manages**, independently from any implementation technology.
 
-This document describes the business domain only.
-Technical components, infrastructure services, AI providers, connectors and implementation details are documented separately in the software architecture documentation.
+It does not describe:
 
----
+- the application architecture;
+- the database schema;
+- the API;
+- the user interface;
+- the infrastructure.
 
-## 2. Domain Overview
-
-AskMyData allows an authenticated user to create projects connected to external data sources.
-
-Each project contains:
-
-* one data source;
-* one catalog scope;
-* one knowledge catalog;
-* one project configuration;
-* one active conversation;
-* multiple messages and question execution runs.
-
-The application is available through invitation only.
+Those aspects are documented separately.
 
 ---
 
-## 3. Main Entities
+# 2. Domain Overview
+
+AskMyData enables users to explore structured databases using natural language.
+
+The central concept of the application is the **Project**.
+
+A Project represents a complete data exploration workspace containing everything required to query a single structured data source.
+
+A Project may contain:
+
+- one external data source;
+- one catalog scope;
+- one Knowledge Catalog;
+- project settings;
+- one active conversation (MVP);
+- conversation messages;
+- question execution history;
+- execution traces.
+
+The external database always remains the source of truth.
+
+The Knowledge Catalog provides semantic context but never modifies the source data.
+
+---
+
+# 3. Aggregate Boundaries
+
+## Project Aggregate
+
+`Project` is the aggregate root of the domain.
+
+All business operations are performed inside a project.
+
+The Project aggregate owns:
+
+- DataSource
+- CatalogScope
+- ProjectSettings
+- KnowledgeCatalog
+- Conversation
+- QuestionRun
+- ExecutionTrace
+
+The aggregate guarantees the consistency of the exploration workspace.
+
+External systems (PostgreSQL, LLM providers, authentication providers...) are not part of the domain model.
+
+---
+
+# 4. Main Entities
 
 ## User
 
-Represents an authenticated person using AskMyData.
+### Definition
+
+Represents an authenticated user of AskMyData.
 
 ### Responsibilities
 
-* Own projects.
-* Access only their own data.
-* Manage personal preferences.
-* Authenticate through a secure session.
-* Use invitations to create an account.
+- authenticate;
+- own projects;
+- manage personal preferences;
+- access owned projects.
 
-### Main attributes
+### Main Attributes
 
-* `id`
-* `email`
-* `password_hash`
-* `is_active`
-* `is_verified`
-* `created_at`
-* `last_login_at`
+- id
+- email
+- password_hash
+- is_active
+- created_at
+- updated_at
+- last_login_at
 
 ### Relationships
 
-* A user has one `UserPreferences`.
-* A user can own several `Project` entities.
-* A user can accept one `Invitation`.
+A User:
+
+- owns zero or more Projects;
+- has zero or one UserPreferences.
+
+### Business Rules
+
+- Email addresses must be unique.
+- Passwords are never stored in plain text.
+- Users may only access projects they own.
+- Inactive users cannot authenticate.
+
+### Release
+
+MVP
 
 ---
 
 ## UserPreferences
 
-Represents user-specific interface and localization preferences.
+### Definition
 
-### Main attributes
+Represents optional user interface preferences.
 
-* `language`
-* `timezone`
-* `theme`
+### Main Attributes
 
-### Initial supported values
-
-#### Language
-
-* `fr`
-* `en`
-
-#### Theme
-
-* `light`
-* `dark`
-* `system`
+- language
+- response_language
+- timezone
+- theme
 
 ### Relationships
 
-* One `UserPreferences` belongs to one `User`.
+One User owns at most one UserPreferences.
+
+### Release
+
+Production-ready Portfolio
 
 ---
 
 ## Invitation
 
-Represents an invitation allowing a person to create an account.
+### Definition
 
-Invitations are created only by the platform administrator.
+Represents an invitation allowing a person to register on the platform.
 
-### Main attributes
+Invitations are intended for the public demonstration platform.
 
-* `id`
-* `email`
-* `token_hash`
-* `status`
-* `expires_at`
-* `created_at`
-* `accepted_at`
-* `revoked_at`
-* `invited_by`
+### Main Attributes
 
-### Status values
+- id
+- email
+- token_hash
+- status
+- expires_at
+- created_at
+- accepted_at
+- revoked_at
 
-* `pending`
-* `accepted`
-* `expired`
-* `revoked`
+### Status Values
 
-### Business rules
+- pending
+- accepted
+- expired
+- revoked
 
-* An invitation can only be used once.
-* An invitation expires after a defined duration.
-* The account email must match the invited email.
-* A revoked or expired invitation cannot be accepted.
-* Public self-registration is not allowed.
+### Business Rules
+
+- Invitations are single-use.
+- Expired invitations cannot be accepted.
+- Tokens are stored as hashes.
+- Public registration may be disabled.
+
+### Release
+
+Production-ready Portfolio
 
 ---
 
 ## Project
 
-Represents a user workspace dedicated to one data source.
+### Definition
 
-A project is defined by its data source and provides access to its semantic catalog and conversation.
+Represents the central data exploration workspace.
 
-### Main attributes
+A Project groups all resources required to explore one structured data source.
 
-* `id`
-* `name`
-* `description`
-* `status`
-* `created_at`
-* `updated_at`
-* `owner_id`
+### Responsibilities
 
-### Status values
+- manage one data source;
+- define the catalog scope;
+- own the Knowledge Catalog;
+- own conversations;
+- own execution history;
+- store project configuration.
 
-* `draft`
-* `initializing`
-* `building_catalog`
-* `ready`
-* `error`
-* `archived`
+### Main Attributes
 
-### Business rules
+- id
+- name
+- description
+- status
+- created_at
+- updated_at
+- archived_at
 
-* A project belongs to exactly one user.
-* A project contains exactly one data source.
-* A project contains exactly one Catalog Scope.
-* A project contains exactly one active conversation in the MVP.
-* A user may own several projects.
-* The number of projects per user may be limited in demonstration mode.
-* Deleting a project permanently deletes its data source configuration and sensitive information.
-* The conversation is archived and remains consultable after project deletion.
+### Status Values
 
----
+- draft
+- configuring
+- building_catalog
+- ready
+- refreshing_catalog
+- archived
+
+Failures are recorded separately and are not lifecycle states.
+
+### Relationships
+
+A Project:
+
+- belongs to one User;
+- owns zero or one DataSource;
+- owns zero or one CatalogScope;
+- owns zero or one KnowledgeCatalog;
+- owns exactly one ProjectSettings;
+- owns zero or one active Conversation (MVP);
+- owns zero or more QuestionRuns.
+
+### Lifecycle
+
+```text
+Draft
+  |
+  v
+Configuring
+  |
+  v
+Building Catalog
+  |
+  v
+Ready
+  |
+  +------> Refreshing Catalog ------+
+  |                                 |
+  +---------------------------------+
+  |
+  v
+Archived
+```
+
+### Business Rules
+
+- Projects are created in the `draft` state.
+- A project becomes `ready` only after successful catalog generation.
+- Only ready projects may answer questions.
+- Archived projects cannot execute new questions.
+- Project history is preserved after archival.
+- A project is never physically deleted during the MVP.
+
+### Release
+
+MVP
 
 ## DataSource
 
-Represents the central business resource connected to an external data system.
+### Definition
 
-A data source is not only a technical connection. It also contains status information, access restrictions and synchronization metadata.
+Represents the external structured data source connected to a Project.
 
-### Main attributes
+A DataSource provides access to the database explored by AskMyData.
 
-* `id`
-* `name`
-* `description`
-* `source_type`
-* `connection_status`
-* `encrypted_connection_configuration`
-* `last_connection_test_at`
-* `last_successful_connection_at`
-* `created_at`
-* `updated_at`
+### Responsibilities
 
-### Initial source types
+- store the connection configuration;
+- validate connectivity;
+- expose database metadata;
+- execute validated read-only queries.
 
-* `postgresql`
+### Main Attributes
 
-### Future source types
+- id
+- name
+- source_type
+- connection_status
+- encrypted_connection_configuration
+- last_connection_test_at
+- last_successful_connection_at
+- created_at
+- updated_at
 
-* `csv`
-* `json`
-* `bigquery`
-* `mongodb`
-* other SQL databases
+### Supported Source Types
 
-### Connection status values
+#### MVP
 
-* `not_configured`
-* `testing`
-* `connected`
-* `unreachable`
-* `invalid_credentials`
-* `error`
+- postgresql
 
-### Business rules
+#### Future
 
-* A data source belongs to exactly one project.
-* A data source cannot be shared between projects in the MVP.
-* Connection secrets must never be stored in plain text.
-* The data source must be read-only.
-* A connection must be successfully tested before the project becomes ready.
-* The data source provides the raw metadata used to build and refresh the Knowledge Catalog through the Catalog Scope.
-* The application does not read the schema before every user question.
+- MySQL
+- MariaDB
+- SQL Server
+- Oracle
+- DuckDB
+- Snowflake
+- BigQuery
+
+### Connection Status
+
+- not_configured
+- testing
+- connected
+- unreachable
+- invalid_credentials
+- insufficient_permissions
+- error
+- disabled
+
+### Relationships
+
+A DataSource:
+
+- belongs to one Project.
+
+### Business Rules
+
+- A project contains at most one DataSource in the MVP.
+- Connection credentials are always encrypted.
+- Only read-only database accounts are supported.
+- The connection must be validated before schema discovery.
+- The source database remains the single source of truth.
+- AskMyData never modifies the external database.
+
+### Release
+
+Foundation
 
 ---
 
 ## CatalogScope
 
-Represents the subset of the connected data source that is intentionally exposed to the AI agent.
+### Definition
 
-The Catalog Scope defines the functional boundary of a project and determines which database objects are included in the Knowledge Catalog.
+Represents the subset of database objects exposed to the AI engine.
 
-### Main attributes
+The CatalogScope defines the exploration boundary of a Project.
 
-- `id`
-- `selected_schemas`
-- `selected_tables`
-- `excluded_tables`
-- `created_at`
-- `updated_at`
+### Responsibilities
 
-### Business rules
+- select accessible schemas;
+- select accessible tables;
+- limit the AI context;
+- enforce the exploration perimeter.
 
-- A Catalog Scope belongs to exactly one Project.
-- A Project contains exactly one Catalog Scope.
-- Only objects included in the Catalog Scope are used to build the Knowledge Catalog.
-- The Catalog Scope can be modified before refreshing the Knowledge Catalog.
-- Objects outside the Catalog Scope are never exposed to the AI agent.
+### Main Attributes
+
+- id
+- selected_schemas
+- selected_tables
+- created_at
+- updated_at
+
+### Relationships
+
+A CatalogScope:
+
+- belongs to one Project;
+- is used to build one KnowledgeCatalog.
+
+### Business Rules
+
+- At least one table must be selected.
+- Objects outside the scope cannot be queried.
+- Updating the scope requires rebuilding the Knowledge Catalog.
+
+### Release
+
+MVP
 
 ---
 
 ## ProjectSettings
 
-Represents configurable project-level behavior.
+### Definition
 
-These settings are independent from the connection configuration.
+Represents the configurable behavior of a Project.
 
-### Main attributes
+### Main Attributes
 
-* `response_language`
-* `llm_model`
-* `maximum_result_rows`
-* `query_timeout_seconds`
-* `conversation_context_size`
-* `developer_mode_enabled`
-* `created_at`
-* `updated_at`
+- response_language
+- maximum_result_rows
+- query_timeout_seconds
+- conversation_context_size
+- developer_mode_enabled
 
-### Business rules
+### Relationships
 
-* Settings belong to exactly one project.
-* Default settings are applied when the project is created.
-* The response language can differ from the interface language.
-* Query limits must always respect platform-level maximum values.
-* Developer mode must not expose secrets, prompts or internal reasoning.
+ProjectSettings belong to exactly one Project.
+
+### Business Rules
+
+- Default settings are created with the Project.
+- Project settings cannot exceed platform limits.
+- Developer mode never exposes secrets or hidden prompts.
+
+### Release
+
+MVP
 
 ---
 
 ## KnowledgeCatalog
 
-Represents the semantic knowledge layer generated from a data source.
+### Definition
 
-It is the main abstraction used by the AI query engine to understand the connected source.
+Represents the semantic representation of the selected database.
+
+The Knowledge Catalog provides the business context used by the AI Query Engine.
 
 ### Responsibilities
 
-* Store discovered schema information.
-* Store user-enriched business metadata.
-* Store access restrictions.
-* Store schema refresh history.
-* Provide structured context to the AI orchestration pipeline.
+- store discovered metadata;
+- store semantic metadata;
+- expose searchable business knowledge;
+- provide context for question answering.
 
-### Main attributes
+### Main Attributes
 
-* `id`
-* `status`
-* `version`
-* `created_at`
-* `updated_at`
-* `last_refreshed_at`
+- id
+- version
+- status
+- created_at
+- updated_at
+- last_refreshed_at
 
-### Status values
+### Status Values
 
-* `pending`
-* `building`
-* `ready`
-* `outdated`
-* `failed`
+- pending
+- building
+- ready
+- outdated
+- failed
 
 ### Relationships
 
-* A Knowledge Catalog belongs to exactly one project.
-* A Knowledge Catalog is generated from exactly one Catalog Scope.
-* A Knowledge Catalog contains one or more `SchemaSnapshot` entities.
-* A Knowledge Catalog may contain semantic metadata and data profiles.
+A KnowledgeCatalog:
 
-### Business rules
+- belongs to one Project;
+- is built from one CatalogScope;
+- contains one or more SchemaSnapshots;
+- contains zero or more SemanticMetadata entries.
 
-* The catalog is generated automatically from the Data Source using the Catalog Scope.
-* The user may enrich selected catalog elements.
-* Technical schema information cannot be modified manually.
-* User-defined descriptions and synonyms are stored separately from discovered schema metadata.
-* Refreshing the catalog creates a new schema snapshot.
-* Previous snapshots may be retained for audit and comparison.
+### Business Rules
+
+- Technical metadata is generated automatically.
+- Semantic metadata is maintained by users.
+- The catalog cannot modify the source database.
+- A project becomes Ready only when the catalog is Ready.
+- Refreshing the catalog creates a new SchemaSnapshot.
+
+### Release
+
+Foundation
 
 ---
 
 ## SchemaSnapshot
 
-Represents a versioned technical snapshot of the source schema at a specific time.
+### Definition
 
-### Main attributes
+Represents an immutable snapshot of the selected database structure.
 
-* `id`
-* `version`
-* `status`
-* `captured_at`
-* `schema_hash`
-* `raw_metadata`
-* `error_message`
+Snapshots allow AskMyData to detect schema evolution over time.
 
-### Contained information
+### Main Attributes
 
-* schemas;
-* tables;
-* columns;
-* data types;
-* primary keys;
-* foreign keys;
-* constraints;
-* indexes, when available.
+- id
+- version
+- schema_hash
+- captured_at
+- raw_metadata
 
-### Business rules
+### Relationships
 
-* A schema snapshot is immutable after creation.
-* A refresh creates a new snapshot.
-* Only one snapshot is considered current.
-* Historical snapshots may remain available.
-* Schema metadata must not contain connection secrets.
+A SchemaSnapshot:
+
+- belongs to one KnowledgeCatalog.
+
+### Business Rules
+
+- Snapshots are immutable.
+- Every refresh creates a new snapshot.
+- Only one snapshot is considered current.
+- Historical snapshots may be retained for comparison.
+
+### Release
+
+MVP
 
 ---
 
 ## SemanticMetadata
 
-Represents user-provided business knowledge associated with catalog elements.
+### Definition
+
+Represents business knowledge associated with database objects.
+
+Unlike technical metadata, SemanticMetadata is created and maintained by users.
 
 ### Examples
 
-* table descriptions;
-* column descriptions;
-* business definitions;
-* synonyms;
-* aliases;
-* units;
-* business rules;
-* hidden or excluded fields.
+- business descriptions;
+- synonyms;
+- aliases;
+- business definitions;
+- units;
+- visibility restrictions.
 
-### Main attributes
+### Main Attributes
 
-* `id`
-* `target_type`
-* `target_identifier`
-* `description`
-* `synonyms`
-* `is_allowed`
-* `created_at`
-* `updated_at`
-* `created_by`
+- id
+- target_type
+- target_identifier
+- description
+- synonyms
+- is_allowed
+- created_at
+- updated_at
 
-### Business rules
+### Relationships
 
-* Semantic metadata supplements technical metadata.
-* It does not modify the source schema.
-* It must remain associated with the relevant schema element after refresh when possible.
-* Restricted objects must not be sent to the LLM or queried.
+SemanticMetadata:
 
----
+- belongs to one KnowledgeCatalog.
 
-## DataProfile
+### Business Rules
 
-Represents optional statistical metadata calculated from source data.
+- Semantic metadata supplements technical metadata.
+- It never modifies the source schema.
+- Compatible metadata should be preserved after catalog refresh.
+- Metadata that cannot be mapped after a schema change must be flagged for review.
+- Objects marked as unavailable cannot be exposed to the AI engine.
 
-### Examples
+### Release
 
-* null percentage;
-* minimum value;
-* maximum value;
-* distinct value count;
-* sample values;
-* value distribution.
-
-### Business rules
-
-* Data profiling is optional in the MVP.
-* Profiling must respect security and query limits.
-* Sensitive values must not be exposed.
-* Profiling results belong to a specific schema snapshot.
+MVP
 
 ---
 
 ## Conversation
 
-Represents the continuous interaction between a user and a project.
+### Definition
 
-### Main attributes
+Represents the history of interactions between a user and a Project.
 
-* `id`
-* `status`
-* `created_at`
-* `updated_at`
-* `archived_at`
+A Conversation provides the contextual information required for follow-up questions.
 
-### Status values
+### Responsibilities
 
-* `active`
-* `archived`
+- store exchanged messages;
+- preserve conversational context;
+- group QuestionRuns.
 
-### Business rules
+### Main Attributes
 
-* A project has one active conversation in the MVP.
-* A conversation contains several messages.
-* Previous messages may be used as contextual input.
-* Only a limited number of recent messages are sent to the AI model.
-* A conversation remains consultable after project deletion.
-* Archived conversations cannot execute new queries.
+- id
+- status
+- created_at
+- updated_at
+- archived_at
+
+### Status Values
+
+- active
+- archived
+
+### Relationships
+
+A Conversation:
+
+- belongs to one Project;
+- contains zero or more Messages;
+- contains zero or more QuestionRuns.
+
+### Business Rules
+
+- A Project has at most one active Conversation in the MVP.
+- Previous messages may be used as conversational context.
+- Only a limited amount of recent context is sent to the AI engine.
+- Archived conversations cannot receive new messages.
+
+### Release
+
+MVP
 
 ---
 
 ## Message
 
-Represents one ordered conversational message.
+### Definition
 
-### Main attributes
+Represents one message exchanged during a Conversation.
 
-* `id`
-* `role`
-* `content`
-* `language`
-* `sequence_number`
-* `created_at`
+Messages are ordered chronologically.
 
-### Role values
+### Main Attributes
 
-* `user`
-* `assistant`
-* `system`
-* `tool`
-* `error`
+- id
+- role
+- content
+- language
+- sequence_number
+- created_at
 
-### Business rules
+### Role Values
 
-* Every message belongs to one conversation.
-* Messages are ordered.
-* Messages are immutable after creation, except for controlled moderation or deletion requirements.
-* Internal reasoning must never be stored as a user-visible message.
-* Clarification requests are assistant messages.
-* Clarification answers are user messages.
+- user
+- assistant
+- system
+- tool
+- error
+
+### Relationships
+
+A Message:
+
+- belongs to one Conversation;
+- may initiate one QuestionRun.
+
+### Business Rules
+
+- Messages are immutable after creation.
+- Hidden prompts are never stored as user-visible messages.
+- Hidden model reasoning is never exposed.
+- Clarification requests are assistant messages.
+
+### Release
+
+MVP
 
 ---
 
 ## QuestionRun
 
-Represents the controlled execution of one user request through the AI orchestration pipeline.
+### Definition
 
-A run may include clarification exchanges before producing a final answer.
+Represents one execution of the AI query pipeline.
 
-### Main attributes
+A QuestionRun begins when a user submits a question and ends when the application produces a final answer, rejects the request or encounters a failure.
 
-* `id`
-* `status`
-* `started_at`
-* `completed_at`
-* `input_message_id`
-* `output_message_id`
-* `model_name`
-* `prompt_tokens`
-* `completion_tokens`
-* `estimated_cost`
-* `latency_ms`
-* `row_count`
-* `error_code`
-* `error_message`
+Unlike a Message, a QuestionRun represents processing rather than conversation.
 
-### Status values
+### Responsibilities
 
-* `pending`
-* `analyzing`
-* `needs_clarification`
-* `planning`
-* `generating_query`
-* `validating_query`
-* `executing_query`
-* `validating_result`
-* `generating_answer`
-* `completed`
-* `failed`
-* `rejected`
+- coordinate one question execution;
+- track execution status;
+- record execution metrics;
+- link user input to generated output.
 
-### Business rules
+### Main Attributes
 
-* A run starts from a user message.
-* A run may request one or more clarifications.
-* Clarification messages remain associated with the same run.
-* A query cannot be executed before validation.
-* Only read-only queries are accepted.
-* The final result is stored as an assistant message.
-* Failed and rejected runs remain traceable.
-* Internal reasoning is never exposed.
+- id
+- status
+- started_at
+- completed_at
+- latency_ms
+- model_name
+- prompt_tokens
+- completion_tokens
+- estimated_cost
+- row_count
+- error_code
+- error_message
+
+### Status Values
+
+- pending
+- running
+- needs_clarification
+- completed
+- failed
+- rejected
+- abandoned
+
+### Relationships
+
+A QuestionRun:
+
+- belongs to one Project;
+- belongs to one Conversation;
+- starts from one user Message;
+- may produce one assistant Message;
+- contains zero or more ExecutionTraces.
+
+### Business Rules
+
+- Only ready Projects may execute QuestionRuns.
+- Generated SQL must always be validated before execution.
+- Only read-only queries may be executed.
+- Clarification exchanges remain attached to the same QuestionRun.
+- Failed and rejected executions remain traceable.
+- Unsupported answers must never be presented as reliable.
+
+### Release
+
+Foundation
 
 ---
 
 ## ExecutionTrace
 
-Represents technical diagnostic information related to a question run.
+### Definition
 
-### Main attributes
+Represents one technical step executed during a QuestionRun.
 
-* `id`
-* `step`
-* `status`
-* `started_at`
-* `completed_at`
-* `duration_ms`
-* `technical_metadata`
-* `error_code`
-* `error_message`
+Execution traces are intended for diagnostics, testing and observability.
 
-### Example steps
+They are not part of the user conversation.
 
-* intent analysis;
-* schema selection;
-* context building;
-* query planning;
-* SQL generation;
-* SQL validation;
-* query execution;
-* result validation;
-* answer generation.
+### Responsibilities
 
-### Business rules
+- record pipeline execution;
+- measure execution duration;
+- store technical diagnostics;
+- support debugging.
 
-* Execution traces are not part of the normal user conversation.
-* Normal users only see simplified processing states.
-* Developer mode may expose selected metrics.
-* Prompts, secrets and internal reasoning must not be exposed.
-* Trace data supports testing, monitoring and debugging.
+### Main Attributes
+
+- id
+- step
+- status
+- started_at
+- completed_at
+- duration_ms
+- technical_metadata
+- error_code
+- error_message
+
+### Example Steps
+
+- intent analysis
+- context selection
+- query planning
+- SQL generation
+- SQL validation
+- query execution
+- result validation
+- answer generation
+
+### Relationships
+
+An ExecutionTrace:
+
+- belongs to one QuestionRun.
+
+### Business Rules
+
+- Execution traces are never exposed directly to end users.
+- Sensitive information must never be stored.
+- Hidden prompts are never recorded.
+- Hidden model reasoning is never recorded.
+- Execution traces support monitoring and debugging.
+
+### Release
+
+Foundation
 
 ---
 
-## 4. Domain Services
+# 5. Domain Services
 
-The following concepts are services rather than persistent business entities.
+The following concepts represent domain behavior rather than persistent entities.
 
-They will appear in the technical architecture and component diagrams.
+They encapsulate business logic and coordinate interactions between domain entities.
 
-### Connector
+Their technical implementation is described in the application architecture documentation.
+
+---
+
+## Connector
+
+### Definition
 
 Provides a common interface for interacting with external data sources.
 
-Examples:
+### Responsibilities
 
-* PostgreSQL connector;
-* CSV connector;
-* BigQuery connector;
-* MongoDB connector.
+- validate database connections;
+- discover database schemas;
+- execute validated read-only queries.
 
-### Knowledge Builder
+### Initial Implementation
 
-Builds and refreshes the Knowledge Catalog from a data source.
-
-### Question Orchestrator
-
-Coordinates the complete question-answering workflow.
-
-### Intent Analyzer
-
-Determines whether the user request is understandable, allowed and sufficiently precise.
-
-### Context Builder
-
-Selects the relevant conversation history and catalog information.
-
-### Query Planner
-
-Creates a structured execution plan.
-
-### Query Generator
-
-Generates a source-specific query.
-
-### Query Validator
-
-Checks security, syntax and platform rules.
-
-### Query Executor
-
-Executes an approved read-only query through a connector.
-
-### Result Validator
-
-Checks whether the result is usable and consistent.
-
-### Answer Generator
-
-Produces the natural language answer.
+- PostgreSQL Connector
 
 ---
 
-## 5. Main Relationships
+## Knowledge Builder
 
-```text
-User
-├── UserPreferences
-├── Invitation
-└── Project*
-    ├── DataSource
-    ├── CatalogScope    
-    ├── ProjectSettings
-    ├── KnowledgeCatalog
-    │   ├── SchemaSnapshot*
-    │   ├── SemanticMetadata*
-    │   └── DataProfile*
-    └── Conversation
-        ├── Message*
-        └── QuestionRun*
-            └── ExecutionTrace*
-```
+### Definition
+
+Builds and refreshes the Knowledge Catalog.
+
+### Responsibilities
+
+- discover technical metadata;
+- generate SchemaSnapshots;
+- preserve compatible SemanticMetadata;
+- build the current KnowledgeCatalog.
 
 ---
 
-## 6. Main Business Rules
+## Question Orchestrator
 
-1. Access to the application requires a valid invitation.
-2. A user can own several projects.
-3. A project belongs to exactly one user.
-4. A project contains exactly one data source.
-5. A data source cannot be shared between projects in the MVP.
-6. A project contains one active conversation in the MVP.
-7. A conversation contains multiple ordered messages.
-8. A question run may contain clarification exchanges.
-9. Only validated read-only queries may be executed.
-10. The AI engine uses the Knowledge Catalog instead of rediscovering the schema for every question.
-11. The Knowledge Catalog is generated automatically and can be enriched by the user.
-12. Technical schema metadata and user-defined semantic metadata remain separated.
-13. Deleting a project removes the source configuration and secrets.
-14. The conversation is archived and remains consultable.
-15. Platform limits may restrict projects, questions, query duration and result size.
-16. Internal model reasoning, secrets and complete prompts are never exposed to users.
+### Definition
+
+Coordinates the complete AI query workflow.
+
+It orchestrates the different domain services without implementing all their logic directly.
+
+### Responsibilities
+
+- coordinate QuestionRuns;
+- invoke specialized services;
+- manage execution flow.
+
+---
+
+## Intent Analyzer
+
+### Definition
+
+Determines the user's intent before query generation.
+
+### Responsibilities
+
+- detect ambiguous questions;
+- detect unsupported requests;
+- determine whether clarification is required.
+
+---
+
+## Context Builder
+
+### Definition
+
+Builds the contextual information required by the AI engine.
+
+### Responsibilities
+
+- retrieve KnowledgeCatalog information;
+- retrieve SemanticMetadata;
+- retrieve conversation context;
+- prepare the final prompt context.
+
+---
+
+## Query Planner
+
+### Definition
+
+Transforms the user intent into an execution plan.
+
+### Responsibilities
+
+- identify required entities;
+- determine the expected query strategy;
+- prepare SQL generation.
+
+---
+
+## Query Generator
+
+### Definition
+
+Generates a read-only SQL query from the execution plan.
+
+### Responsibilities
+
+- generate SQL;
+- respect catalog boundaries;
+- produce source-specific queries.
+
+---
+
+## Query Validator
+
+### Definition
+
+Validates generated SQL before execution.
+
+### Responsibilities
+
+- verify syntax;
+- reject forbidden statements;
+- enforce read-only execution;
+- verify catalog scope.
+
+---
+
+## Query Executor
+
+### Definition
+
+Executes validated SQL through the configured Connector.
+
+### Responsibilities
+
+- execute approved queries;
+- retrieve results;
+- capture execution metrics.
+
+---
+
+## Result Validator
+
+### Definition
+
+Determines whether the query result is sufficient to answer the user's question.
+
+### Responsibilities
+
+- validate returned data;
+- detect empty or inconsistent results;
+- prevent unsupported answers.
+
+---
+
+## Answer Generator
+
+### Definition
+
+Produces the final natural language response.
+
+### Responsibilities
+
+- generate the final answer;
+- summarize results;
+- explain limitations when necessary.
+
+---
+
+# 6. Main Relationships
+
+# 6. Main Relationships
+
+The relationships and cardinalities between the main domain entities are represented in the domain overview diagram:
+
+- PlantUML source: [`diagrams/source/domain-overview.puml`](diagrams/source/domain-overview.puml)
+- Generated diagram: [`diagrams/generated/AskMyData_Domain_Overview.svg`](diagrams/generated/AskMyData_Domain_Overview.svg)
+
+The diagram is the reference representation of the domain relationships. Entity definitions and business rules remain documented in this file.
+
+---
+
+# 7. Main Business Rules
+
+## Project
+
+1. A Project is the central exploration workspace.
+2. A Project belongs to exactly one User.
+3. A Project contains at most one DataSource in the MVP.
+4. A Project becomes **Ready** only after successful Knowledge Catalog generation.
+5. Archived Projects cannot execute new questions.
+
+---
+
+## Data Exploration
+
+6. PostgreSQL is the only supported connector in the MVP.
+7. The external database always remains the source of truth.
+8. AskMyData never modifies the external database.
+9. Only database objects included in the CatalogScope may be queried.
+
+---
+
+## AI Query Engine
+
+10. Every generated query must be validated before execution.
+11. Only read-only queries may be executed.
+12. Unsupported or unsafe queries must be rejected.
+13. The application must never present unsupported answers as reliable.
+
+---
+
+## Knowledge Catalog
+
+14. Technical metadata is generated automatically.
+15. Semantic metadata is maintained by users.
+16. Refreshing the catalog creates a new SchemaSnapshot.
+17. Compatible semantic metadata should be preserved across refreshes.
+
+---
+
+## Security
+
+18. Users may access only their own Projects.
+19. Connection credentials are always encrypted.
+20. Secrets must never be exposed.
+21. Hidden prompts and hidden model reasoning are never exposed.
+
+---
+
+## Traceability
+
+22. Every QuestionRun remains traceable.
+23. Failed executions are preserved.
+24. Rejected executions are preserved.
+25. Execution traces are separate from user-visible conversations.
+
+---
+
+# 8. Explicitly Deferred Concepts
+
+The following concepts are intentionally excluded from the current domain model.
+
+They may be introduced in future releases without changing the core architecture.
+
+## Collaboration
+
+- shared projects;
+- project members;
+- organizations;
+- advanced permissions.
+
+---
+
+## Data Sources
+
+- multiple data sources per project;
+- non-SQL databases;
+- file connectors;
+- cloud warehouses.
+
+---
+
+## AI Features
+
+- autonomous agents;
+- scheduled analyses;
+- automatic insights;
+- report generation.
+
+---
+
+## Analytics
+
+- dashboards;
+- charts;
+- exports;
+- scheduled reports.
+
+---
+
+## Platform
+
+- billing;
+- quotas;
+- usage limits;
+- API keys management.
+
+---
+
+# 9. Domain Model Summary
+
+The domain revolves around a single aggregate root: **Project**.
+
+A Project represents a complete data exploration workspace containing:
+
+- one DataSource;
+- one CatalogScope;
+- one KnowledgeCatalog;
+- one active Conversation;
+- QuestionRuns;
+- ExecutionTraces;
+- ProjectSettings.
+
+The Knowledge Catalog provides semantic understanding of the selected database.
+
+QuestionRuns orchestrate AI-assisted exploration while ExecutionTraces ensure observability and traceability.
+
+This model deliberately separates:
+
+- business concepts;
+- technical implementation;
+- infrastructure concerns.
+
+This separation enables the application to evolve without coupling the domain model to specific frameworks or AI providers.

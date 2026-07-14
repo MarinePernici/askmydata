@@ -6,9 +6,10 @@ Diagrams are written with PlantUML in order to keep them versioned, maintainable
 
 ## Current diagrams
 
-| File | Description |
-|---|---|
-| `use-cases.puml` | UML use case diagram describing the main interactions between the user, the AI agent and the data source. |
+| File | Diagram | Description |
+|---|---|---|
+| `use-cases.puml` | `AskMyData_UseCase.svg` | UML use case diagram describing the main interactions between the user, the AI agent and the data source. |
+| `domain-overview.puml` | `AskMyData_Domain_Overview.svg` | UML class diagram showing the main domain entities, relationships and cardinalities. |
 
 ## Rendering
 
