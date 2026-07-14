@@ -1,348 +1,390 @@
-# Requirements Specification
+<!-- docs>requirements.md -->
 
-## 1. Functional Requirements
+# Software Requirements Specification
 
-### FR-001 — User Authentication
+## 1. Purpose
 
-The application shall provide invitation-only user registration.
+This document defines the functional, non-functional and engineering requirements for AskMyData.
 
----
+Its purpose is to provide a stable reference for design, implementation, testing and future evolution of the project.
 
-### FR-002 — User Authentication
-
-The application shall provide secure user authentication using server-side sessions.
+This specification focuses on **what** the system must achieve rather than **how** it is implemented.
 
 ---
 
-### FR-003 — User Preferences
+# 2. Product Scope
 
-The application shall allow users to manage their personal preferences.
+AskMyData is an AI-assisted data exploration platform that enables users to interact with structured data using natural language.
 
-Supported preferences include:
+Instead of relying solely on database schemas, the platform builds a semantic Knowledge Catalog describing the data structure and business context. This catalog allows the AI engine to generate more reliable, secure and explainable answers.
 
-* interface language;
-* preferred response language;
-* theme;
-* timezone.
+The platform focuses exclusively on read-only exploration of structured databases.
 
 ---
 
-### FR-004 — Project Management
+# 3. Guiding Principle
 
-The application shall allow users to create projects.
+The primary capability of AskMyData is to enable reliable AI-assisted exploration of structured data without requiring users to understand database schemas or write SQL queries.
 
----
-
-### FR-005 — Project Management
-
-The application shall allow users to update project information.
+Every requirement defined in this specification contributes directly to this objective.
 
 ---
 
-### FR-006 — Project Management
+# 4. Releases
 
-The application shall allow users to permanently delete projects.
+The project is developed incrementally.
 
-Project conversations shall remain archived and consultable.
-
----
-
-### FR-007 — Data Source Management
-
-The application shall allow users to configure a PostgreSQL data source.
+| Release | Objective |
+|----------|-----------|
+| Foundation | Validate the AI query engine and the application architecture. |
+| MVP | Deliver a complete web application for AI-assisted PostgreSQL exploration. |
+| Production-ready Portfolio | Demonstrate industrialization, observability and deployment practices. |
 
 ---
 
-### FR-008 — Data Source Management
+# 5. Functional Requirements
 
-The application shall validate the connection before saving the data source.
+## 5.1 Authentication
 
----
+### FR-AUTH-001
 
-### FR-009 — Data Source Management
+The system shall allow users to authenticate securely.
 
-The application shall store connection credentials securely.
-
-Credentials shall never be stored in plain text.
+**Release:** MVP
 
 ---
 
-### FR-010 — Schema Discovery
+### FR-AUTH-002
 
-The application shall automatically discover the connected database structure.
+The system shall protect authenticated sessions.
 
----
-
-### FR-011 — Schema Discovery
-
-The application shall allow users to select the schemas and tables exposed to the AI agent.
+**Release:** MVP
 
 ---
 
-### FR-012 — Knowledge Catalog
+## 5.2 Project Management
 
-The application shall generate a Knowledge Catalog from the selected database objects.
+### FR-PROJ-001
 
----
+The system shall allow authenticated users to create projects.
 
-### FR-013 — Knowledge Catalog
-
-The application shall allow users to enrich the Knowledge Catalog with semantic metadata.
-
-Examples include:
-
-* business descriptions;
-* synonyms;
-* hidden objects.
+**Release:** MVP
 
 ---
 
-### FR-014 — Knowledge Catalog
+### FR-PROJ-002
 
-The application shall support refreshing the Knowledge Catalog.
+The system shall allow users to update project information.
 
-A new schema snapshot shall be generated during each refresh.
-
----
-
-### FR-015 — Natural Language Querying
-
-The application shall allow users to ask questions using natural language.
+**Release:** MVP
 
 ---
 
-### FR-016 — AI Orchestration
+### FR-PROJ-003
 
-The AI agent shall analyse user intent before generating a query.
+The system shall allow users to archive projects.
 
----
-
-### FR-017 — AI Orchestration
-
-The AI agent shall request clarification when a question is ambiguous.
+**Release:** MVP
 
 ---
 
-### FR-018 — Query Generation
+## 5.3 Data Sources
 
-The application shall generate source-specific read-only queries.
+### FR-DATA-001
 
----
+The system shall support PostgreSQL as the initial database connector.
 
-### FR-019 — Query Validation
-
-Generated queries shall be validated before execution.
+**Release:** Foundation
 
 ---
 
-### FR-020 — Query Execution
+### FR-DATA-002
 
-Only validated read-only queries shall be executed.
+The system shall validate database connections before saving them.
 
----
-
-### FR-021 — Natural Language Response
-
-The application shall generate understandable natural language answers.
+**Release:** MVP
 
 ---
 
-### FR-022 — Conversation Management
+### FR-DATA-003
 
-The application shall preserve conversation history.
+The system shall store connection credentials securely.
 
----
-
-### FR-023 — Contextual Conversations
-
-The AI agent shall use previous conversation messages as contextual information.
+**Release:** MVP
 
 ---
 
-### FR-024 — Knowledge Catalog Refresh
+### FR-DATA-004
 
-Users shall be able to refresh a project's Knowledge Catalog at any time.
+The system shall access external databases using read-only permissions.
 
----
-
-### FR-025 — Internationalization
-
-The application shall support both French and English.
+**Release:** Foundation
 
 ---
 
-### FR-026 — Developer Mode
+## 5.4 Knowledge Catalog
 
-The application shall provide an optional developer mode exposing execution metrics.
+### FR-KCAT-001
 
-The application shall never expose prompts, secrets or internal AI reasoning.
+The system shall discover database schemas.
 
----
-
-### FR-027 — Administration
-
-The administrator shall manage invitations through the administration interface.
+**Release:** Foundation
 
 ---
 
-### FR-028 — Administration
+### FR-KCAT-002
 
-The administrator shall manage users through the administration interface.
+The system shall generate a Knowledge Catalog from discovered metadata.
 
----
-
-# 2. Non-Functional Requirements
-
-## Performance
-
-### NFR-001
-
-Typical requests should complete within 10 seconds under normal conditions.
+**Release:** Foundation
 
 ---
 
-### NFR-002
+### FR-KCAT-003
 
-Knowledge Catalog generation shall execute asynchronously whenever possible.
+The system shall allow semantic descriptions to enrich the Knowledge Catalog.
+
+**Release:** MVP
 
 ---
+
+### FR-KCAT-004
+
+The system shall allow the Knowledge Catalog to be regenerated after schema changes.
+
+**Release:** MVP
+
+---
+
+## 5.5 AI Query Engine
+
+### FR-AI-001
+
+The system shall accept natural language questions.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-002
+
+The system shall use the Knowledge Catalog as contextual information.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-003
+
+The system shall generate SQL queries from user requests.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-004
+
+The system shall validate generated SQL before execution.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-005
+
+The system shall execute validated SQL queries.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-006
+
+The system shall generate natural language answers from query results.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-007
+
+The system shall request clarification when a question is ambiguous.
+
+**Release:** MVP
+
+---
+
+## 5.6 Conversations
+
+### FR-CONV-001
+
+The system shall maintain conversation history for each project.
+
+**Release:** MVP
+
+---
+
+### FR-CONV-002
+
+The system shall use previous exchanges as conversational context.
+
+**Release:** MVP
+
+---
+
+## 5.7 Administration
+
+### FR-ADMIN-001
+
+The system shall provide an administration interface for application management.
+
+**Release:** Production-ready
+
+---
+
+# 6. Non-functional Requirements
 
 ## Security
 
-### NFR-003
+### NFR-SEC-001
 
-Only authenticated users may access projects.
+All database access shall be read-only.
 
----
+### NFR-SEC-002
 
-### NFR-004
+Sensitive credentials shall never be stored in plain text.
 
-The platform shall use invitation-only registration.
+### NFR-SEC-003
 
----
-
-### NFR-005
-
-Connected data sources shall always be accessed in read-only mode.
+Generated SQL shall be validated before execution.
 
 ---
 
-### NFR-006
+## Reliability
 
-Sensitive credentials shall be encrypted.
+### NFR-REL-001
 
----
+The system shall return informative error messages without exposing sensitive information.
 
-### NFR-007
+### NFR-REL-002
 
-The application shall never expose prompts, secrets or internal reasoning.
-
----
-
-## Architecture
-
-### NFR-008
-
-The application shall follow a modular architecture.
+Unexpected failures shall be logged.
 
 ---
 
-### NFR-009
+## Performance
 
-Business logic shall remain independent from infrastructure.
+### NFR-PERF-001
 
----
-
-### NFR-010
-
-The architecture shall support additional data source connectors with minimal changes.
-
----
-
-### NFR-011
-
-The AI orchestration pipeline shall remain independent from any specific LLM provider.
+The application should return responses within an acceptable time for typical analytical queries.
 
 ---
 
 ## Maintainability
 
-### NFR-012
+### NFR-MAIN-001
 
-Core business services shall be unit tested.
+The application shall follow a modular architecture.
 
----
+### NFR-MAIN-002
 
-### NFR-013
-
-Architecture decisions shall be documented.
+Business logic shall remain independent from infrastructure components.
 
 ---
 
-### NFR-014
+# 7. Engineering Requirements
 
-The application shall follow a documentation-first approach.
+## Code Quality
 
----
+### ENG-001
 
-## Deployment
+The project shall use automated code formatting.
 
-### NFR-015
+### ENG-002
 
-The application shall be deployable using Docker Compose.
+The project shall use static analysis tools.
 
----
+### ENG-003
 
-### NFR-016
-
-The application shall be cloud-ready.
+The project shall use type checking where applicable.
 
 ---
 
-### NFR-017
+## Testing
 
-The application shall support automated deployment through CI/CD.
+### ENG-004
+
+Critical business components shall be covered by automated tests.
+
+### ENG-005
+
+The AI query pipeline shall be validated through integration tests.
+
+---
+
+## Containerization
+
+### ENG-006
+
+The application shall be executable using Docker Compose.
+
+---
+
+## CI/CD
+
+### ENG-007
+
+Every pull request shall trigger automated quality checks.
+
+### ENG-008
+
+The default branch shall remain deployable at all times.
 
 ---
 
 ## Observability
 
-### NFR-018
+### ENG-009
 
-Application logs shall be centralized.
+Application logs shall be structured.
 
----
+### ENG-010
 
-### NFR-019
-
-Health checks shall be available.
+The application shall expose health check endpoints.
 
 ---
 
-### NFR-020
+## Documentation
 
-Execution metrics shall be collected.
+### ENG-011
 
----
+Architecture decisions shall be documented through ADRs.
 
-### NFR-021
+### ENG-012
 
-Errors shall be traceable through structured logging.
-
----
-
-## Internationalization
-
-### NFR-022
-
-All user-facing text shall be translatable.
+Public documentation shall remain synchronized with the implementation.
 
 ---
 
-## Portability
+# 8. Requirement Attributes
 
-### NFR-023
+Each requirement may include the following attributes:
 
-The application shall run on Linux.
+- Identifier
+- Title
+- Description
+- Release
+- Priority
+- Dependencies
+- Verification Method
+- Status
 
-Development under WSL shall be fully supported.
+These attributes will be progressively completed during the implementation phase.
+
+---
+
+# 9. Traceability Matrix
+
+| Requirement | Use Case | Tests | ADR | Status |
+|-------------|----------|-------|-----|--------|
+| To be completed during implementation. |
