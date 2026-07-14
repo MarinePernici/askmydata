@@ -1,0 +1,141 @@
+@startuml AskMyData_Application_Components
+
+title AskMyData — Application Components
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor User
+
+package "Presentation Layer" {
+
+    component "Web Interface\n(Django Templates)" as WebUI
+
+}
+
+package "Application Layer" {
+
+    component "Accounts" as Accounts
+    component "Projects" as Projects
+    component "Data Source\nManagement" as DSM
+    component "Catalog" as Catalog
+    component "Conversation\nManagement" as Conversations
+
+    package "Query Engine" {
+
+        component "Question\nOrchestrator" as Orchestrator
+        component "Intent\nAnalyzer" as IntentAnalyzer
+        component "Context\nBuilder" as ContextBuilder
+        component "Query\nPlanner" as QueryPlanner
+        component "Query\nGenerator" as QueryGenerator
+        component "Query\nValidator" as QueryValidator
+        component "Query\nExecutor" as QueryExecutor
+        component "Result\nValidator" as ResultValidator
+        component "Answer\nGenerator" as AnswerGenerator
+
+    }
+
+}
+
+package "Infrastructure Layer" {
+
+    component "Connector\nInterface" as Connector
+
+    component "PostgreSQL\nConnector" as PostgreSQLConnector
+
+    component "LLM Provider\nInterface" as LLMInterface
+
+    component "Observability" as Observability
+
+    component "Shared Kernel" as SharedKernel
+
+}
+
+database "Application Database\n(PostgreSQL)" as AppDB
+
+database "External Data Source\n(PostgreSQL)" as ExternalDB
+
+cloud "LLM Provider" as LLM
+
+User --> WebUI
+
+WebUI --> Accounts
+WebUI --> Projects
+WebUI --> Conversations
+WebUI --> Catalog
+WebUI --> Orchestrator
+
+Projects --> DSM
+Projects --> Catalog
+Projects --> Conversations
+
+Catalog --> Connector
+
+Conversations --> Orchestrator
+
+Orchestrator --> IntentAnalyzer
+Orchestrator --> ContextBuilder
+Orchestrator --> QueryPlanner
+Orchestrator --> QueryGenerator
+Orchestrator --> QueryValidator
+Orchestrator --> QueryExecutor
+Orchestrator --> ResultValidator
+Orchestrator --> AnswerGenerator
+
+ContextBuilder --> Catalog
+
+QueryGenerator --> LLMInterface
+
+AnswerGenerator --> LLMInterface
+
+QueryExecutor --> Connector
+
+Connector <|.. PostgreSQLConnector
+
+PostgreSQLConnector --> ExternalDB
+
+LLMInterface --> LLM
+
+Accounts --> AppDB
+Projects --> AppDB
+DSM --> AppDB
+Catalog --> AppDB
+Conversations --> AppDB
+Orchestrator --> AppDB
+
+Orchestrator --> Observability
+
+Accounts ..> SharedKernel
+Projects ..> SharedKernel
+DSM ..> SharedKernel
+Catalog ..> SharedKernel
+Conversations ..> SharedKernel
+Orchestrator ..> SharedKernel
+
+note right of Projects
+Owns the Project aggregate
+and coordinates the project lifecycle.
+end note
+
+note right of Catalog
+Provides semantic context
+for AI-assisted exploration.
+end note
+
+note right of Orchestrator
+Coordinates the complete
+QuestionRun lifecycle.
+end note
+
+note right of Connector
+Abstraction over external
+structured data sources.
+end note
+
+note right of LLMInterface
+Provider-independent
+LLM abstraction.
+end note
+
+@enduml

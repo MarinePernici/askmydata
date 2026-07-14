@@ -1,0 +1,70 @@
+@startuml AskMyData_System_Use_Cases
+
+title AskMyData — System Use Cases
+
+left to right direction
+
+skinparam packageStyle rectangle
+
+actor User
+actor Administrator
+actor "External Data Source\n(PostgreSQL)" as DataSource
+
+rectangle "AskMyData" {
+
+  package "Project Management" {
+
+    usecase "Create and Initialize\nProject" as UC01
+    usecase "Update Project" as UC02
+    usecase "Archive Project" as UC03
+
+  }
+
+  package "Knowledge Catalog" {
+
+    usecase "Refresh Knowledge\nCatalog" as UC04
+    usecase "Manage Semantic\nMetadata" as UC05
+
+  }
+
+  package "Data Exploration" {
+
+    usecase "Ask Question" as UC06
+    usecase "Answer\nClarification Request" as UC07
+    usecase "Browse Conversation\nHistory" as UC08
+
+  }
+
+  package "User Settings" {
+
+    usecase "Update User\nPreferences" as UC09
+
+  }
+
+  package "Administration" {
+
+    usecase "Manage Invitations" as UC10
+
+  }
+
+}
+
+User --> UC01
+User --> UC02
+User --> UC03
+
+User --> UC04
+User --> UC05
+
+User --> UC06
+User --> UC07
+User --> UC08
+User --> UC09
+
+Administrator --> UC10
+
+UC01 --> DataSource : <<uses>>
+UC04 --> DataSource : <<uses>>
+UC06 --> DataSource : <<reads>>
+
+@enduml

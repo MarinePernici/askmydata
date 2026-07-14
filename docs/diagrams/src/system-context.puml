@@ -1,0 +1,57 @@
+@startuml AskMyData_System_Context
+
+title AskMyData — System Context
+
+left to right direction
+
+skinparam packageStyle rectangle
+
+actor User
+actor Administrator
+
+rectangle "AskMyData\n(Modular Monolith)" as AskMyData
+
+database "Application Database\n(PostgreSQL)" as AppDB
+
+database "External Data Source\n(PostgreSQL)" as DataSource
+
+cloud "LLM Provider" as LLM
+
+cloud "Email Service" as Email
+
+User --> AskMyData : Authenticate\nManage projects\nExplore data
+
+Administrator --> AskMyData : Manage invitations\n(Admin)
+
+AskMyData --> AppDB : Store application data
+
+AskMyData --> DataSource : Read-only SQL queries
+
+AskMyData --> LLM : Prompt / Response
+
+AskMyData --> Email : Send invitations\n(Production-ready)
+
+note bottom of AppDB
+Stores AskMyData data:
+- users
+- projects
+- catalogs
+- conversations
+- execution history
+end note
+
+note bottom of DataSource
+Business database explored
+by the AI engine.
+
+Read-only access.
+end note
+
+note bottom of LLM
+Provider-independent interface.
+
+(OpenAI, Azure OpenAI,
+Anthropic, Ollama...)
+end note
+
+@enduml

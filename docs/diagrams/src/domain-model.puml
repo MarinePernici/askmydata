@@ -1,0 +1,137 @@
+@startuml AskMyData_Domain_Model
+
+title AskMyData — Domain Model
+
+hide methods
+hide stereotypes
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+package "Identity and Access" {
+
+  class User {
+    email
+    is_active
+  }
+
+  class UserPreferences {
+    language
+    response_language
+    timezone
+    theme
+  }
+
+  class Invitation {
+    status
+    expires_at
+  }
+}
+
+package "Project Workspace" {
+
+  class Project {
+    name
+    status
+  }
+
+  class ProjectSettings {
+    maximum_result_rows
+    query_timeout_seconds
+    conversation_context_size
+  }
+
+  class DataSource {
+    source_type
+    connection_status
+  }
+}
+
+package "Knowledge Catalog" {
+
+  class CatalogScope
+
+  class KnowledgeCatalog {
+    version
+    status
+  }
+
+  class SchemaSnapshot {
+    version
+    captured_at
+  }
+
+  class SemanticMetadata {
+    target_type
+    target_identifier
+    is_allowed
+  }
+}
+
+package "Conversation and Execution" {
+
+  class Conversation {
+    status
+  }
+
+  class Message {
+    role
+    sequence_number
+  }
+
+  class QuestionRun {
+    status
+  }
+
+  class ExecutionTrace {
+    step
+    status
+  }
+}
+
+User "1" *-- "0..1" UserPreferences : preferences
+User "1" -- "0..*" Project : owns
+
+User "1" <-- "0..*" Invitation : created by
+Invitation "0..1" --> "0..1" User : accepted by
+
+Project "1" *-- "1" ProjectSettings : settings
+Project "1" *-- "0..1" DataSource : data source
+Project "1" *-- "0..1" CatalogScope : scope
+Project "1" *-- "0..1" KnowledgeCatalog : catalog
+Project "1" *-- "0..1" Conversation : active conversation
+
+CatalogScope "1" --> "0..1" KnowledgeCatalog : defines
+
+KnowledgeCatalog "1" *-- "0..*" SchemaSnapshot : snapshots
+KnowledgeCatalog "1" *-- "0..*" SemanticMetadata : semantic metadata
+
+Conversation "1" *-- "0..*" Message : messages
+Conversation "1" *-- "0..*" QuestionRun : runs
+
+QuestionRun "1" --> "1" Message : input
+QuestionRun "1" --> "0..1" Message : output
+QuestionRun "1" *-- "0..*" ExecutionTrace : traces
+
+note right of Project
+  Central aggregate root and
+  data exploration workspace.
+end note
+
+note right of DataSource
+  PostgreSQL only in the MVP.
+  Access is read-only.
+end note
+
+note right of KnowledgeCatalog
+  Semantic layer used by
+  the AI query engine.
+end note
+
+note right of QuestionRun
+  Represents one controlled
+  execution of the AI pipeline.
+end note
+
+@enduml
