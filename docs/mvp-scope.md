@@ -1,242 +1,250 @@
+<!-- docs>mvp-scope.md -->
+
 # MVP Scope
 
 ## 1. Purpose
 
-The MVP (Minimum Viable Product) aims to demonstrate the feasibility of an AI-powered platform that enables users to query structured data sources using natural language.
+AskMyData is developed incrementally to ensure that each stage delivers measurable value while keeping the architecture extensible.
 
-The objective is not to build a production-ready platform, but to deliver a coherent, extensible and production-inspired application suitable for a professional portfolio.
+Rather than attempting to build the complete platform from the beginning, the project is divided into three successive milestones:
 
-The MVP focuses on validating the overall architecture, user workflow and AI orchestration pipeline.
+1. Foundation
+2. MVP
+3. Production-ready Portfolio
 
----
-
-# 2. Included Features
-
-## User Management
-
-* invitation-only registration;
-* account activation;
-* secure authentication;
-* session management;
-* logout;
-* user profile;
-* user preferences.
+Each stage builds upon the previous one without requiring major architectural redesign.
 
 ---
 
-## Project Management
+# 2. Foundation
 
-* create a project;
-* edit project information;
-* delete a project;
-* archive project conversations after deletion.
+## Objective
 
----
+Validate the core AI-powered query engine independently from the complete web application.
 
-## Data Source Management
+The goal is to ensure that the end-to-end workflow is reliable before introducing user management, project management and deployment concerns.
 
-Supported source:
+## Included
 
-* PostgreSQL.
+- PostgreSQL connector
+- Schema discovery
+- Minimal Knowledge Catalog generation
+- Natural language question processing
+- AI orchestration pipeline
+- SQL generation
+- SQL validation
+- Read-only query execution
+- Natural language answer generation
+- Execution traces
+- Unit tests for the core services
 
-Features:
+## Excluded
 
-* configure connection;
-* test connection;
-* validate credentials;
-* read-only access only;
-* encrypted connection configuration.
-
----
-
-## Project Setup Wizard
-
-The project creation workflow includes:
-
-1. project information;
-2. data source configuration;
-3. connection test;
-4. schema discovery;
-5. schema and table selection;
-6. Knowledge Catalog generation.
+- Authentication
+- User accounts
+- Project management
+- Administration
+- Conversation history
+- Developer dashboard
+- CI/CD
+- Monitoring
+- Cloud deployment
 
 ---
 
-## Knowledge Catalog
+# 3. MVP
 
-* automatic schema discovery;
-* schema snapshots;
-* schema refresh;
-* schema and table selection;
-* semantic metadata;
-* user-enriched descriptions;
-* business synonyms;
-* hidden objects.
+## Objective
 
----
+Deliver a complete web application allowing a user to securely explore a PostgreSQL database using natural language.
 
-## AI Query Engine
+The MVP focuses on functional completeness rather than production-level operations.
 
-The AI agent supports:
+## Included Features
 
-* natural language questions;
-* contextual conversations;
-* clarification requests when needed;
-* AI orchestration pipeline;
-* read-only query generation;
-* query validation;
-* query execution;
-* natural language answers.
+### User Management
 
----
+- secure authentication
+- session management
 
-## Conversation Management
+### Project Management
 
-* one active conversation per project;
-* conversation history;
-* contextual follow-up questions;
-* archived conversations remain consultable.
+- create a project
+- edit project information
+- delete a project
 
----
+### Data Source Management
 
-## User Interface
+- PostgreSQL connector
+- connection configuration
+- connection testing
+- encrypted credentials
+- read-only access
 
-* bilingual interface;
-* French;
-* English;
-* light/dark theme;
-* responsive layout.
+### Project Setup
 
----
+- schema discovery
+- schema selection
+- table selection
+- Knowledge Catalog generation
 
-## Administration
+### Knowledge Catalog
 
-Using Django Admin:
+- automatic generation
+- schema refresh
+- semantic descriptions
+- business synonyms
 
-* invitation management;
-* user management;
-* project overview;
-* platform monitoring.
+### AI Query Engine
 
----
+- natural language questions
+- contextual conversations
+- clarification requests
+- SQL generation
+- SQL validation
+- read-only execution
+- natural language answers
 
-## Developer Features
+### Conversation
 
-* developer mode;
-* execution pipeline status;
-* execution metrics;
-* diagnostic information.
+- one active conversation per project
+- conversation history
 
-Internal prompts and AI reasoning are never exposed.
+### User Interface
 
----
+- responsive web interface
 
-## Infrastructure
+### Technical Foundation
 
-* Docker Compose;
-* automated tests;
-* GitHub Actions;
-* CI/CD pipeline;
-* monitoring;
-* cloud-ready deployment.
+- modular architecture
+- automated tests
+- Docker Compose for local development
 
 ---
 
-# 3. Explicitly Excluded
+# 4. Production-ready Portfolio
 
-The following features are intentionally excluded from the MVP.
+## Objective
+
+Demonstrate software engineering and MLOps practices expected in a modern AI application.
+
+This stage focuses on maintainability, deployment and operational excellence.
+
+## Included Features
+
+### Software Quality
+
+- comprehensive automated tests
+- code quality checks
+- static analysis
+- architecture validation
+
+### DevOps
+
+- Docker images
+- GitHub Actions
+- CI pipeline
+- CD pipeline
+
+### Observability
+
+- structured logging
+- health checks
+- execution metrics
+- monitoring dashboards
+- error tracking
+
+### Deployment
+
+- cloud deployment
+- public demonstration instance
+- production configuration
+- secret management
+
+### Advanced Platform Features
+
+- invitation-only registration
+- Django administration
+- developer mode
+- internationalization
+- user preferences
+- theme support
+
+---
+
+# 5. Explicitly Excluded
+
+The following features are intentionally excluded from the current portfolio roadmap.
 
 ## Additional Data Sources
 
-* CSV
-* JSON
-* BigQuery
-* MongoDB
-* MySQL
-* SQL Server
-* Oracle
-
----
+- CSV
+- JSON
+- MySQL
+- SQL Server
+- Oracle
+- BigQuery
+- MongoDB
 
 ## Advanced AI
 
-* multiple AI providers;
-* autonomous agents;
-* long-term memory;
-* fine tuning;
-* Retrieval-Augmented Generation (RAG).
-
----
+- multiple AI providers
+- autonomous agents
+- long-term memory
+- fine tuning
+- Retrieval-Augmented Generation (RAG)
 
 ## Collaboration
 
-* shared projects;
-* multiple project members;
-* comments;
-* real-time collaboration.
-
----
+- shared projects
+- multiple project members
+- comments
+- real-time collaboration
 
 ## Analytics
 
-* dashboards;
-* charts;
-* automatic reports;
-* PDF export.
-
----
+- dashboards
+- charts
+- PDF export
+- scheduled reports
 
 ## Enterprise Features
 
-* SSO;
-* OAuth providers;
-* advanced permissions;
-* organizations;
-* billing;
-* quotas.
+- organizations
+- advanced permissions
+- SSO
+- OAuth providers
+- billing
+- quotas
 
 ---
 
-# 4. Platform Limits
+# 6. Success Criteria
 
-The demonstration platform intentionally includes several limits.
+## Foundation
 
-Examples:
+The project successfully answers natural language questions over a PostgreSQL database through a secure AI pipeline.
 
-* invitation-only access;
-* maximum number of projects per user;
-* one data source per project;
-* one active conversation per project;
-* read-only queries;
-* maximum execution time;
-* maximum number of returned rows.
+## MVP
 
-These limits may evolve in future versions.
+A user can:
 
----
+- authenticate
+- create a project
+- connect a PostgreSQL database
+- build a Knowledge Catalog
+- ask contextual questions
+- receive reliable natural language answers
 
-# 5. MVP Success Criteria
+## Production-ready Portfolio
 
-The MVP will be considered complete when a user can:
+The application demonstrates:
 
-* authenticate using an invitation;
-* create a project;
-* connect a PostgreSQL database;
-* discover the database structure;
-* choose which schemas and tables are exposed;
-* automatically generate a Knowledge Catalog;
-* enrich the catalog with business metadata;
-* ask questions using natural language;
-* receive reliable answers;
-* continue contextual conversations;
-* refresh the Knowledge Catalog;
-* use the application in French and English.
-
-From a technical perspective, the application must also provide:
-
-* Docker-based deployment;
-* automated testing;
-* CI/CD through GitHub Actions;
-* monitoring;
-* production-inspired architecture;
-* public online demonstration.
+- clean architecture
+- automated testing
+- Docker-based deployment
+- CI/CD
+- monitoring
+- structured logging
+- cloud deployment
+- production-inspired engineering practices
