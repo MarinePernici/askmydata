@@ -1,220 +1,149 @@
+<!-- docs>product-vision.md -->
+
 # Product Vision
 
-## 1. Vision
+## Vision
 
-AskMyData is a web platform that enables users to explore and query structured data sources using natural language through an AI-powered assistant.
+Organizations increasingly rely on structured data to support operational and strategic decisions. However, accessing this information often requires technical expertise, knowledge of database schemas, and SQL skills that many users do not possess.
 
-Instead of directly interacting with databases, AskMyData builds a semantic knowledge catalog from connected data sources. This catalog provides the AI agent with structured knowledge about the data, enabling more reliable, secure and explainable answers.
+AskMyData aims to bridge this gap by providing an AI-assisted data exploration platform built on a semantic understanding of enterprise data.
 
-The platform is designed to be extensible and source-agnostic, allowing new data source types to be added without modifying the application's core architecture.
-
----
-
-# 2. Problem Statement
-
-Organizations store valuable information in databases, data warehouses and structured files.
-
-Although these data sources contain valuable business knowledge, accessing them usually requires technical skills such as:
-
-* SQL;
-* understanding database schemas;
-* knowledge of relationships between tables;
-* assistance from developers or data analysts.
-
-As a result, business users often depend on technical teams to answer relatively simple questions.
-
-AskMyData aims to reduce this dependency by providing a secure natural language interface over structured data.
+Rather than interacting directly with a database, users interact with a knowledge layer generated from its structure and enriched with business context. This approach enables more reliable, secure and explainable interactions while reducing the need for technical expertise.
 
 ---
 
-# 3. Objectives
+# Problem Statement
 
-## Functional Objectives
+Although organizations store large amounts of valuable data, extracting meaningful information remains difficult.
 
-Allow users to:
+Several challenges limit access to this information:
 
-* create projects;
-* connect external data sources;
-* automatically discover their structure;
-* select which schemas and tables should be exposed to the AI;
-* automatically build a knowledge catalog;
-* enrich the catalog with business metadata;
-* ask questions in natural language;
-* receive reliable and understandable answers;
-* keep a searchable conversation history.
+- database schemas are often large and difficult to understand;
+- business terminology rarely matches table or column names;
+- writing SQL queries requires technical expertise;
+- traditional AI-to-SQL approaches often lack business context;
+- generated SQL may be incorrect, unsafe or difficult to validate;
+- users need confidence in the answers produced by AI systems.
 
----
-
-## Technical Objectives
-
-Design a modern backend platform featuring:
-
-* modular architecture;
-* clear separation of responsibilities;
-* REST APIs;
-* AI orchestration;
-* connector-based architecture;
-* secure execution pipeline;
-* observability;
-* automated testing;
-* CI/CD;
-* cloud deployment;
-* containerized infrastructure.
+Existing solutions frequently focus on translating natural language into SQL, but provide little understanding of the underlying data model or the reasoning behind the generated answers.
 
 ---
 
-## Educational Objectives
+# Proposed Solution
 
-The project serves as a portfolio demonstrating practical experience with:
+AskMyData introduces a semantic knowledge layer between the database and the AI engine.
 
-* software architecture;
-* Python development;
-* Django;
-* FastAPI;
-* Docker;
-* automated testing;
-* GitHub Actions;
-* CI/CD;
-* cloud deployment;
-* monitoring;
-* LLM integration;
-* AI application development.
+Before answering questions, the application builds a Knowledge Catalog describing the structure of the database, its relationships and business meaning.
 
----
+This catalog allows the AI engine to:
 
-# 4. Target Audience
+- understand the user's intent;
+- interpret business vocabulary;
+- generate more relevant SQL queries;
+- validate generated queries before execution;
+- execute queries in a controlled read-only environment;
+- generate clear natural language answers supported by reliable database queries.
 
-AskMyData is primarily intended for:
-
-* business users;
-* analysts;
-* developers;
-* data professionals;
-* anyone who needs to explore structured data without writing SQL.
-
-The current version is developed as a portfolio project and technical demonstration.
+The database remains the source of truth, while the Knowledge Catalog provides the contextual understanding required for accurate AI-assisted exploration.
 
 ---
 
-# 5. Main User Journey
+# Target Users
 
-1. Create a project.
-2. Configure a data source.
-3. Test the connection.
-4. Discover the database structure.
-5. Select the schemas and tables to expose.
-6. Build the knowledge catalog.
-7. Ask questions in natural language.
-8. Review the generated answer.
-9. Continue the conversation using contextual follow-up questions.
+## Long-term Vision
 
----
+AskMyData is designed to make structured data accessible to every business user, regardless of their technical background.
 
-# 6. Core Features
+Typical users include:
 
-## MVP
+- business analysts;
+- product managers;
+- finance teams;
+- marketing teams;
+- sales teams;
+- human resources;
+- operations teams;
+- decision makers.
 
-* user authentication;
-* invitation-only access;
-* project management;
-* PostgreSQL connector;
-* automatic schema discovery;
-* schema and table selection;
-* automatic knowledge catalog generation;
-* knowledge catalog enrichment;
-* AI-powered natural language querying;
-* secure read-only query execution;
-* conversation history;
-* bilingual interface (French and English).
+The long-term objective is to reduce technical barriers and democratize access to organizational knowledge.
 
----
+## MVP Focus
 
-## Future Versions
+The first version focuses on technical users who regularly work with data, including:
 
-* CSV support;
-* JSON support;
-* BigQuery connector;
-* MongoDB connector;
-* additional SQL databases;
-* semantic search;
-* dashboards and charts;
-* project sharing;
-* team collaboration;
-* external authentication providers;
-* additional languages.
+- Data Analysts;
+- Data Scientists;
+- Analytics Engineers;
+- BI Developers;
+- Software Engineers.
+
+This narrower scope allows the project to validate the core concepts before extending the platform to a broader audience.
 
 ---
 
-# 7. Design Principles
+# Core Principles
 
-The platform is built around the following principles:
+The following principles guide every architectural and functional decision.
 
-* modular architecture;
-* separation of concerns;
-* extensibility;
-* security by default;
-* explainability;
-* observability;
-* internationalization;
-* maintainability;
-* documentation-first development.
+## Reliability over novelty
 
----
+The objective is not simply to generate SQL with a Large Language Model, but to produce reliable and trustworthy answers.
 
-# 8. Internationalization
+## Semantic understanding before SQL generation
 
-Internationalization is considered from the beginning of the project.
+The AI should reason from business knowledge rather than directly from raw database structures.
 
-The first supported languages are:
+## Security by design
 
-* French
-* English
+Database access must remain controlled, auditable and read-only by default.
 
-Additional languages should be added without significant architectural changes.
+## Explainability
 
----
+Users should understand how answers are produced and be able to trust the underlying execution process.
 
-# 9. Constraints
+## Modular architecture
 
-The project must:
+Business logic, AI orchestration, infrastructure and user interface must remain loosely coupled to facilitate maintenance and future evolution.
 
-* remain inexpensive to deploy;
-* be publicly accessible as a demonstration platform;
-* provide invitation-only access;
-* operate in read-only mode against connected data sources;
-* never modify external data;
-* support multiple data source technologies through a common architecture;
-* rely on open-source technologies whenever possible.
+## Incremental development
+
+The platform is built iteratively, validating the AI engine first before expanding towards a complete production-ready application.
 
 ---
 
-# 10. Success Criteria
+# Product Goals
 
-The project will be considered successful if it demonstrates:
+The project aims to demonstrate that AI-assisted data exploration can be both accessible and reliable.
 
-* secure user authentication;
-* successful PostgreSQL integration;
-* automatic knowledge catalog generation;
-* reliable natural language querying;
-* extensible connector architecture;
-* containerized deployment;
-* automated testing;
-* CI/CD pipeline;
-* production-like architecture;
-* public online demonstration;
-* straightforward integration of additional data source connectors.
+The primary objectives are:
+
+- simplify access to structured data;
+- reduce dependency on SQL expertise;
+- improve understanding of complex databases;
+- provide trustworthy AI-assisted answers;
+- demonstrate modern software engineering practices for AI applications.
 
 ---
 
-# 11. Non-Goals
+# Out of Scope
 
-The first version is **not** intended to:
+AskMyData is not intended to become:
 
-* replace a Business Intelligence platform;
-* replace an ETL or ELT solution;
-* become a SQL editor;
-* modify connected data sources;
-* train custom AI models;
-* expose prompts or internal AI reasoning;
-* support every existing database technology;
-* optimize for large-scale production workloads.
+- a Business Intelligence platform;
+- a dashboard builder;
+- a reporting tool;
+- a database administration tool;
+- an autonomous AI agent capable of modifying databases;
+- a replacement for existing database management systems.
+
+The platform focuses exclusively on secure, explainable and AI-assisted exploration of structured data.
+
+---
+
+# Success Vision
+
+A successful version of AskMyData enables users to explore complex databases naturally, without requiring detailed knowledge of their internal structure.
+
+The platform combines semantic understanding, controlled SQL generation and modern software engineering practices to deliver a reliable AI-assisted experience.
+
+Beyond solving a practical problem, the project also demonstrates the design, development and industrialization of a modern AI application through clean architecture, automated testing, containerization, CI/CD, observability and production-oriented engineering practices.
