@@ -36,12 +36,6 @@ package "Project Workspace" {
     status
   }
 
-  class ProjectSettings {
-    maximum_result_rows
-    query_timeout_seconds
-    conversation_context_size
-  }
-
   class DataSource {
     source_type
     connection_status
@@ -50,7 +44,10 @@ package "Project Workspace" {
 
 package "Knowledge Catalog" {
 
-  class CatalogScope
+  class CatalogScope {
+    selected_schemas
+    selected_tables
+  }
 
   class KnowledgeCatalog {
     version
@@ -65,7 +62,8 @@ package "Knowledge Catalog" {
   class SemanticMetadata {
     target_type
     target_identifier
-    is_allowed
+    description
+    synonyms
   }
 }
 
@@ -96,22 +94,21 @@ User "1" -- "0..*" Project : owns
 User "1" <-- "0..*" Invitation : created by
 Invitation "0..1" --> "0..1" User : accepted by
 
-Project "1" *-- "1" ProjectSettings : settings
 Project "1" *-- "0..1" DataSource : data source
 Project "1" *-- "0..1" CatalogScope : scope
 Project "1" *-- "0..1" KnowledgeCatalog : catalog
-Project "1" *-- "0..1" Conversation : active conversation
+Project "1" *-- "0..*" Conversation : conversations
 
-CatalogScope "1" --> "0..1" KnowledgeCatalog : defines
+KnowledgeCatalog "0..1" --> "1" CatalogScope : built from
 
 KnowledgeCatalog "1" *-- "0..*" SchemaSnapshot : snapshots
 KnowledgeCatalog "1" *-- "0..*" SemanticMetadata : semantic metadata
 
 Conversation "1" *-- "0..*" Message : messages
-Conversation "1" *-- "0..*" QuestionRun : runs
+Conversation "0..1" <-- "0..*" QuestionRun : belongs to
 
-QuestionRun "1" --> "1" Message : input
-QuestionRun "1" --> "0..1" Message : output
+QuestionRun "1" --> "0..1" Message : started by
+QuestionRun "1" --> "0..1" Message : produces
 QuestionRun "1" *-- "0..*" ExecutionTrace : traces
 
 note right of Project
@@ -127,6 +124,19 @@ end note
 note right of KnowledgeCatalog
   Semantic layer used by
   the AI query engine.
+end note
+
+note right of SchemaSnapshot
+  Immutable representation of
+  the source schema at capture time.
+  Catalog regeneration creates
+  a new snapshot.
+  One snapshot is current.
+end note
+
+note right of SemanticMetadata
+  Generated automatically from
+  catalog technical metadata.
 end note
 
 note right of QuestionRun

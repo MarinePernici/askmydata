@@ -18,7 +18,7 @@ package "Application Layer" {
 
     component "Accounts" as Accounts
     component "Projects" as Projects
-    component "Data Source\nManagement" as DSM
+    component "Data Source\nManagement\n(capability)" as DSM
     component "Catalog" as Catalog
     component "Conversation\nManagement" as Conversations
 
@@ -41,13 +41,9 @@ package "Application Layer" {
 package "Infrastructure Layer" {
 
     component "Connector\nInterface" as Connector
-
     component "PostgreSQL\nConnector" as PostgreSQLConnector
-
     component "LLM Provider\nInterface" as LLMInterface
-
     component "Observability" as Observability
-
     component "Shared Kernel" as SharedKernel
 
 }
@@ -70,9 +66,12 @@ Projects --> DSM
 Projects --> Catalog
 Projects --> Conversations
 
+DSM --> Connector
 Catalog --> Connector
+Catalog --> LLMInterface
 
 Conversations --> Orchestrator
+Orchestrator --> Conversations
 
 Orchestrator --> IntentAnalyzer
 Orchestrator --> ContextBuilder
@@ -85,8 +84,9 @@ Orchestrator --> AnswerGenerator
 
 ContextBuilder --> Catalog
 
+IntentAnalyzer --> LLMInterface
+QueryPlanner --> LLMInterface
 QueryGenerator --> LLMInterface
-
 AnswerGenerator --> LLMInterface
 
 QueryExecutor --> Connector
@@ -102,9 +102,11 @@ Projects --> AppDB
 DSM --> AppDB
 Catalog --> AppDB
 Conversations --> AppDB
-Orchestrator --> AppDB
 
 Orchestrator --> Observability
+QueryValidator --> Observability
+QueryExecutor --> Observability
+ResultValidator --> Observability
 
 Accounts ..> SharedKernel
 Projects ..> SharedKernel
@@ -119,8 +121,9 @@ and coordinates the project lifecycle.
 end note
 
 note right of Catalog
-Provides semantic context
-for AI-assisted exploration.
+Builds and regenerates the
+Knowledge Catalog and provides
+semantic context for AI exploration.
 end note
 
 note right of Orchestrator

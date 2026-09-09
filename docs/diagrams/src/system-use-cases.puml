@@ -9,62 +9,78 @@ skinparam packageStyle rectangle
 actor User
 actor Administrator
 actor "External Data Source\n(PostgreSQL)" as DataSource
+actor "LLM Provider" as LLMProvider
 
 rectangle "AskMyData" {
 
+  package "Authentication" {
+
+    usecase "Authenticate" as UC01
+
+  }
+
   package "Project Management" {
 
-    usecase "Create and Initialize\nProject" as UC01
-    usecase "Update Project" as UC02
-    usecase "Archive Project" as UC03
+    usecase "Create and Initialize\nProject" as UC02
+    usecase "Update Project\nInformation" as UC09
+    usecase "Archive Project" as UC10
 
   }
 
   package "Knowledge Catalog" {
 
-    usecase "Refresh Knowledge\nCatalog" as UC04
-    usecase "Manage Semantic\nMetadata" as UC05
+    usecase "Explore Knowledge\nCatalog" as UC03
+    usecase "Regenerate Knowledge\nCatalog" as UC08
 
   }
 
-  package "Data Exploration" {
+  package "Conversational Exploration" {
 
-    usecase "Ask Question" as UC06
-    usecase "Answer\nClarification Request" as UC07
-    usecase "Browse Conversation\nHistory" as UC08
+    usecase "Ask a Question" as UC04
+    usecase "Clarify a Question" as UC05
+    usecase "Continue a\nConversation" as UC06
+    usecase "Manage\nConversations" as UC07
 
   }
 
-  package "User Settings" {
+  package "Data Schema" {
 
-    usecase "Update User\nPreferences" as UC09
+    usecase "Explore Data\nSchema" as UC12
 
   }
 
   package "Administration" {
 
-    usecase "Manage Invitations" as UC10
+    usecase "Manage Platform\nAccess" as UC11
 
   }
 
 }
 
 User --> UC01
+
 User --> UC02
 User --> UC03
-
 User --> UC04
 User --> UC05
-
 User --> UC06
 User --> UC07
 User --> UC08
 User --> UC09
+User --> UC10
+User --> UC12
 
-Administrator --> UC10
+Administrator --> UC11
 
-UC01 --> DataSource : <<uses>>
-UC04 --> DataSource : <<uses>>
-UC06 --> DataSource : <<reads>>
+UC02 --> DataSource : <<uses>>
+UC08 --> DataSource : <<uses>>
+UC04 --> DataSource : <<reads>>
+UC12 --> DataSource : <<reads>>
+
+UC02 --> LLMProvider : <<uses>>
+UC04 --> LLMProvider : <<uses>>
+UC05 --> LLMProvider : <<uses>>
+UC06 --> LLMProvider : <<uses>>
+UC08 --> LLMProvider : <<uses>>
 
 @enduml

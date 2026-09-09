@@ -21,13 +21,13 @@ cloud "Email Service" as Email
 
 User --> AskMyData : Authenticate\nManage projects\nExplore data
 
-Administrator --> AskMyData : Manage invitations\n(Admin)
+Administrator --> AskMyData : Manage platform access\n(Production-ready)
 
 AskMyData --> AppDB : Store application data
 
-AskMyData --> DataSource : Read-only SQL queries
+AskMyData --> DataSource : Schema discovery\nRead-only SQL queries
 
-AskMyData --> LLM : Prompt / Response
+AskMyData --> LLM : Question processing\nSemantic metadata generation
 
 AskMyData --> Email : Send invitations\n(Production-ready)
 
@@ -37,7 +37,8 @@ Stores AskMyData data:
 - projects
 - catalogs
 - conversations
-- execution history
+- question runs
+- execution traces
 end note
 
 note bottom of DataSource
