@@ -122,6 +122,22 @@ The system shall access external databases using read-only permissions.
 
 ---
 
+### FR-DATA-005
+
+The system shall allow users to select the schemas and tables included in the project Catalog Scope.
+
+**Release:** MVP
+
+---
+
+### FR-DATA-006
+
+The system shall allow users to explore the selected database schema, including tables, columns and relationships.
+
+**Release:** MVP
+
+---
+
 ## 5.4 Knowledge Catalog
 
 ### FR-KCAT-001
@@ -142,7 +158,7 @@ The system shall generate a Knowledge Catalog from discovered metadata.
 
 ### FR-KCAT-003
 
-The system shall allow semantic descriptions to enrich the Knowledge Catalog.
+The system shall automatically generate semantic descriptions and business synonyms to enrich the Knowledge Catalog.
 
 **Release:** MVP
 
@@ -150,7 +166,7 @@ The system shall allow semantic descriptions to enrich the Knowledge Catalog.
 
 ### FR-KCAT-004
 
-The system shall allow the Knowledge Catalog to be regenerated after schema changes.
+The system shall allow the Knowledge Catalog to be regenerated from the current source schema.
 
 **Release:** MVP
 
@@ -208,6 +224,14 @@ The system shall generate natural language answers from query results.
 
 ### FR-AI-007
 
+The system shall validate query results before generating a natural language answer.
+
+**Release:** Foundation
+
+---
+
+### FR-AI-008
+
 The system shall request clarification when a question is ambiguous.
 
 **Release:** MVP
@@ -218,7 +242,7 @@ The system shall request clarification when a question is ambiguous.
 
 ### FR-CONV-001
 
-The system shall maintain conversation history for each project.
+The system shall allow multiple conversations to be created and maintained within each project.
 
 **Release:** MVP
 
@@ -232,13 +256,21 @@ The system shall use previous exchanges as conversational context.
 
 ---
 
+### FR-CONV-003
+
+The system shall allow users to access the persistent conversation history of each project.
+
+**Release:** MVP
+
+---
+
 ## 5.7 Administration
 
 ### FR-ADMIN-001
 
 The system shall provide an administration interface for application management.
 
-**Release:** Production-ready
+**Release:** Production-ready Portfolio
 
 ---
 
@@ -250,13 +282,37 @@ The system shall provide an administration interface for application management.
 
 All database access shall be read-only.
 
+**Release:** Foundation
+
 ### NFR-SEC-002
 
-Sensitive credentials shall never be stored in plain text.
+Sensitive application secrets and credentials shall never be stored in plain text.
+
+**Release:** MVP
 
 ### NFR-SEC-003
 
 Generated SQL shall be validated before execution.
+
+**Release:** Foundation
+
+### NFR-SEC-004
+
+The system shall restrict access to projects and their associated data to their owner.
+
+**Release:** MVP
+
+### NFR-SEC-005
+
+Data source credentials shall be encrypted at rest and shall never be exposed in application logs or user-facing responses.
+
+**Release:** MVP
+
+### NFR-SEC-006
+
+External PostgreSQL connections shall use database accounts restricted to read-only permissions.
+
+**Release:** Foundation
 
 ---
 
@@ -266,9 +322,25 @@ Generated SQL shall be validated before execution.
 
 The system shall return informative error messages without exposing sensitive information.
 
+**Release:** MVP
+
 ### NFR-REL-002
 
 Unexpected failures shall be logged.
+
+**Release:** Foundation
+
+### NFR-REL-003
+
+The system shall handle AI query pipeline failures gracefully and shall not present failed or incomplete results as valid answers.
+
+**Release:** MVP
+
+### NFR-REL-004
+
+The system shall maintain execution traces for each question run, including the status of the main AI query pipeline steps.
+
+**Release:** Foundation
 
 ---
 
@@ -276,7 +348,25 @@ Unexpected failures shall be logged.
 
 ### NFR-PERF-001
 
-The application should return responses within an acceptable time for typical analytical queries.
+The application shall return responses within an acceptable time for typical analytical queries.
+
+**Release:** MVP
+
+### NFR-PERF-002
+
+The system shall enforce configurable execution timeouts and maximum row limits for generated SQL queries.
+
+**Release:** MVP
+
+---
+
+## Usability
+
+### NFR-USA-001
+
+The application shall adapt its layout to different desktop screen sizes while remaining usable and preserving access to all core features.
+
+**Release:** MVP
 
 ---
 
@@ -286,9 +376,13 @@ The application should return responses within an acceptable time for typical an
 
 The application shall follow a modular architecture.
 
+**Release:** MVP
+
 ### NFR-MAIN-002
 
 Business logic shall remain independent from infrastructure components.
+
+**Release:** MVP
 
 ---
 
@@ -300,13 +394,19 @@ Business logic shall remain independent from infrastructure components.
 
 The project shall use automated code formatting.
 
+**Release:** MVP
+
 ### ENG-002
 
 The project shall use static analysis tools.
 
+**Release:** Production-ready Portfolio
+
 ### ENG-003
 
 The project shall use type checking where applicable.
+
+**Release:** Production-ready Portfolio
 
 ---
 
@@ -314,11 +414,15 @@ The project shall use type checking where applicable.
 
 ### ENG-004
 
-Critical business components shall be covered by automated tests.
+Critical features shall have automated tests.
+
+**Release:** MVP
 
 ### ENG-005
 
 The AI query pipeline shall be validated through integration tests.
+
+**Release:** MVP
 
 ---
 
@@ -326,7 +430,9 @@ The AI query pipeline shall be validated through integration tests.
 
 ### ENG-006
 
-The application shall be executable using Docker Compose.
+The application shall be runnable locally using Docker Compose.
+
+**Release:** MVP
 
 ---
 
@@ -334,11 +440,15 @@ The application shall be executable using Docker Compose.
 
 ### ENG-007
 
-Every pull request shall trigger automated quality checks.
+Pull requests shall run automated quality checks.
+
+**Release:** Production-ready Portfolio
 
 ### ENG-008
 
-The default branch shall remain deployable at all times.
+The default branch shall remain deployable.
+
+**Release:** Production-ready Portfolio
 
 ---
 
@@ -346,11 +456,15 @@ The default branch shall remain deployable at all times.
 
 ### ENG-009
 
-Application logs shall be structured.
+The application shall produce structured logs.
+
+**Release:** Production-ready Portfolio
 
 ### ENG-010
 
-The application shall expose health check endpoints.
+The application shall expose health checks.
+
+**Release:** Production-ready Portfolio
 
 ---
 
@@ -358,11 +472,15 @@ The application shall expose health check endpoints.
 
 ### ENG-011
 
-Architecture decisions shall be documented through ADRs.
+Major architectural decisions shall be documented using Architecture Decision Records.
+
+**Release:** MVP
 
 ### ENG-012
 
-Public documentation shall remain synchronized with the implementation.
+Documentation shall remain synchronized with the implementation.
+
+**Release:** MVP
 
 ---
 

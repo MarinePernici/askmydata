@@ -180,7 +180,7 @@ Semantic colors may be used for states such as:
 
 - Ready;
 - Building;
-- Refreshing;
+- Regenerating;
 - Outdated;
 - Error.
 
@@ -658,7 +658,7 @@ Existing or expected states include examples such as:
 - Configuring;
 - Building Catalog;
 - Ready;
-- Refreshing;
+- Regenerating Catalog;
 - Archived.
 
 Badge appearance should be based on semantic meaning rather than assigning arbitrary colors to every state.
@@ -752,7 +752,7 @@ Examples include:
 - reading database schemas;
 - generating metadata;
 - building the catalog;
-- refreshing the catalog;
+- regenerating the catalog;
 - creating a project.
 
 Relevant feedback patterns may include:
@@ -821,18 +821,21 @@ Buttons and other interactive controls should provide sufficiently large clickab
 
 # 23. Responsive Design
 
-The current wireframes primarily target desktop usage.
+AskMyData primarily targets desktop usage.
 
-Responsive behavior has not yet been fully specified.
+The interface should adapt to different desktop screen sizes, from laptop displays to larger monitors, while preserving access to all core features.
 
-It will be defined according to:
+Responsive behavior should account for:
 
-- actual usage requirements;
-- frontend implementation constraints;
-- component behavior;
-- information density.
+- available viewport width;
+- information density;
+- navigation usability;
+- component resizing and wrapping;
+- preservation of core actions and content.
 
-Responsive rules should not be fixed prematurely before these requirements are known.
+The MVP does not require mobile-specific navigation, mobile-optimized layouts or tablet-specific designs.
+
+Exact breakpoints and component-level responsive rules will be refined during frontend implementation.
 
 ---
 

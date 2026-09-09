@@ -31,8 +31,7 @@ A Project may contain:
 - one external data source;
 - one catalog scope;
 - one Knowledge Catalog;
-- project settings;
-- one active conversation (MVP);
+- multiple conversations;
 - conversation messages;
 - question execution history;
 - execution traces.
@@ -55,7 +54,6 @@ The Project aggregate owns:
 
 - DataSource
 - CatalogScope
-- ProjectSettings
 - KnowledgeCatalog
 - Conversation
 - QuestionRun
@@ -189,7 +187,6 @@ A Project groups all resources required to explore one structured data source.
 - own the Knowledge Catalog;
 - own conversations;
 - own execution history;
-- store project configuration.
 
 ### Main Attributes
 
@@ -207,10 +204,10 @@ A Project groups all resources required to explore one structured data source.
 - configuring
 - building_catalog
 - ready
-- refreshing_catalog
+- regenerating_catalog
 - archived
 
-Failures are recorded separately and are not lifecycle states.
+Failures during configuration, initial catalog generation or catalog regeneration are recorded separately and are not lifecycle states.
 
 ### Relationships
 
@@ -220,8 +217,7 @@ A Project:
 - owns zero or one DataSource;
 - owns zero or one CatalogScope;
 - owns zero or one KnowledgeCatalog;
-- owns exactly one ProjectSettings;
-- owns zero or one active Conversation (MVP);
+- owns zero or more Conversation;
 - owns zero or more QuestionRuns.
 
 ### Lifecycle
@@ -238,13 +234,15 @@ Building Catalog
   v
 Ready
   |
-  +------> Refreshing Catalog ------+
-  |                                 |
-  +---------------------------------+
+  +------> Regenerating Catalog -----+
+  |                                  |
+  +----------------------------------+
   |
   v
 Archived
 ```
+A project may be archived from any non-archived persistent state when no incompatible operation is in progress.
+
 
 ### Business Rules
 
@@ -368,37 +366,7 @@ A CatalogScope:
 
 - At least one table must be selected.
 - Objects outside the scope cannot be queried.
-- Updating the scope requires rebuilding the Knowledge Catalog.
-
-### Release
-
-MVP
-
----
-
-## ProjectSettings
-
-### Definition
-
-Represents the configurable behavior of a Project.
-
-### Main Attributes
-
-- response_language
-- maximum_result_rows
-- query_timeout_seconds
-- conversation_context_size
-- developer_mode_enabled
-
-### Relationships
-
-ProjectSettings belong to exactly one Project.
-
-### Business Rules
-
-- Default settings are created with the Project.
-- Project settings cannot exceed platform limits.
-- Developer mode never exposes secrets or hidden prompts.
+- Catalog regeneration preserves the existing CatalogScope.
 
 ### Release
 
@@ -428,7 +396,7 @@ The Knowledge Catalog provides the business context used by the AI Query Engine.
 - status
 - created_at
 - updated_at
-- last_refreshed_at
+- last_regenerated_at
 
 ### Status Values
 
@@ -450,14 +418,14 @@ A KnowledgeCatalog:
 ### Business Rules
 
 - Technical metadata is generated automatically.
-- Semantic metadata is maintained by users.
+- Semantic metadata is generated automatically.
 - The catalog cannot modify the source database.
 - A project becomes Ready only when the catalog is Ready.
-- Refreshing the catalog creates a new SchemaSnapshot.
+- Regenerating the catalog creates a new SchemaSnapshot.
 
 ### Release
 
-Foundation
+Foundation, then MVP enrichment
 
 ---
 
@@ -486,9 +454,8 @@ A SchemaSnapshot:
 ### Business Rules
 
 - Snapshots are immutable.
-- Every refresh creates a new snapshot.
+- Every catalog regeneration creates a new snapshot.
 - Only one snapshot is considered current.
-- Historical snapshots may be retained for comparison.
 
 ### Release
 
@@ -502,16 +469,12 @@ MVP
 
 Represents business knowledge associated with database objects.
 
-Unlike technical metadata, SemanticMetadata is created and maintained by users.
+SemanticMetadata is generated automatically from the discovered database structure to enrich technical metadata with business-oriented context.
 
 ### Examples
 
-- business descriptions;
-- synonyms;
-- aliases;
-- business definitions;
-- units;
-- visibility restrictions.
+- semantic descriptions;
+- business synonyms.
 
 ### Main Attributes
 
@@ -520,7 +483,6 @@ Unlike technical metadata, SemanticMetadata is created and maintained by users.
 - target_identifier
 - description
 - synonyms
-- is_allowed
 - created_at
 - updated_at
 
@@ -533,10 +495,9 @@ SemanticMetadata:
 ### Business Rules
 
 - Semantic metadata supplements technical metadata.
+- Semantic metadata is generated automatically.
 - It never modifies the source schema.
-- Compatible metadata should be preserved after catalog refresh.
-- Metadata that cannot be mapped after a schema change must be flagged for review.
-- Objects marked as unavailable cannot be exposed to the AI engine.
+- Catalog regeneration generates semantic metadata from the current source schema within the existing CatalogScope.
 
 ### Release
 
@@ -581,7 +542,8 @@ A Conversation:
 
 ### Business Rules
 
-- A Project has at most one active Conversation in the MVP.
+- A Project may contain multiple Conversations.
+- Conversation context is isolated between Conversations within the same Project.
 - Previous messages may be used as conversational context.
 - Only a limited amount of recent context is sent to the AI engine.
 - Archived conversations cannot receive new messages.
@@ -684,9 +646,9 @@ Unlike a Message, a QuestionRun represents processing rather than conversation.
 A QuestionRun:
 
 - belongs to one Project;
-- belongs to one Conversation;
-- starts from one user Message;
-- may produce one assistant Message;
+- may belong to one Conversation in the MVP;
+- may start from one user Message in the MVP;
+- may produce one assistant Message in the MVP;
 - contains zero or more ExecutionTraces.
 
 ### Business Rules
@@ -710,7 +672,7 @@ Foundation
 
 Represents one technical step executed during a QuestionRun.
 
-Execution traces are intended for diagnostics, testing and observability.
+Execution traces are intended for traceability, diagnostics and testing.
 
 They are not part of the user conversation.
 
@@ -756,7 +718,7 @@ An ExecutionTrace:
 - Sensitive information must never be stored.
 - Hidden prompts are never recorded.
 - Hidden model reasoning is never recorded.
-- Execution traces support monitoring and debugging.
+- Execution traces support traceability and debugging.
 
 ### Release
 
@@ -796,13 +758,13 @@ Provides a common interface for interacting with external data sources.
 
 ### Definition
 
-Builds and refreshes the Knowledge Catalog.
+Builds and regenerates the Knowledge Catalog.
 
 ### Responsibilities
 
-- discover technical metadata;
+- discover technical metadata within the CatalogScope;
 - generate SchemaSnapshots;
-- preserve compatible SemanticMetadata;
+- generate SemanticMetadata automatically;
 - build the current KnowledgeCatalog.
 
 ---
@@ -939,8 +901,6 @@ Produces the final natural language response.
 
 # 6. Main Relationships
 
-# 6. Main Relationships
-
 The relationships and cardinalities between the main domain entities are represented in the domain overview diagram:
 
 - PlantUML source: [`diagrams/source/domain-overview.puml`](diagrams/source/domain-overview.puml)
@@ -983,9 +943,9 @@ The diagram is the reference representation of the domain relationships. Entity 
 ## Knowledge Catalog
 
 14. Technical metadata is generated automatically.
-15. Semantic metadata is maintained by users.
-16. Refreshing the catalog creates a new SchemaSnapshot.
-17. Compatible semantic metadata should be preserved across refreshes.
+15. Semantic metadata is generated automatically.
+16. Regenerating the catalog creates a new SchemaSnapshot.
+17. Catalog regeneration preserves the existing CatalogScope.
 
 ---
 
@@ -1058,6 +1018,17 @@ They may be introduced in future releases without changing the core architecture
 
 ---
 
+## Knowledge Catalog
+
+The following catalog capabilities are deferred beyond the MVP:
+
+- manual semantic metadata editing;
+- manual business synonym management;
+- schema change conflict resolution;
+- advanced schema version comparison.
+
+---
+
 # 9. Domain Model Summary
 
 The domain revolves around a single aggregate root: **Project**.
@@ -1067,10 +1038,9 @@ A Project represents a complete data exploration workspace containing:
 - one DataSource;
 - one CatalogScope;
 - one KnowledgeCatalog;
-- one active Conversation;
+- multiple Conversations;
 - QuestionRuns;
 - ExecutionTraces;
-- ProjectSettings.
 
 The Knowledge Catalog provides semantic understanding of the selected database.
 

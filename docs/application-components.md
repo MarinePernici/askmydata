@@ -276,13 +276,11 @@ Manages the lifecycle of data exploration projects.
 * coordinate project initialization;
 * determine whether a project is ready;
 * archive projects;
-* enforce project ownership;
-* expose project-level settings.
+* enforce project ownership.
 
 ### Domain Concepts
 
-* Project;
-* ProjectSettings.
+* Project.
 
 ### Application Services
 
@@ -295,7 +293,6 @@ Examples:
 * `StartProjectConfiguration`
 * `MarkProjectReady`
 * `ArchiveProject`
-* `UpdateProjectSettings`
 
 ### Interfaces Exposed
 
@@ -390,10 +387,9 @@ The Catalog component provides the contextual knowledge used by the Query Engine
 * manage the catalog scope;
 * discover selected database metadata;
 * build the Knowledge Catalog;
+* regenerate the Knowledge Catalog;
 * create schema snapshots;
-* refresh the catalog;
-* store semantic metadata;
-* preserve compatible metadata after refresh;
+* generate and store semantic metadata automatically;
 * provide catalog context to the Query Engine.
 
 ### Domain Concepts
@@ -409,17 +405,14 @@ Examples:
 
 * `DefineCatalogScope`
 * `BuildKnowledgeCatalog`
-* `RefreshKnowledgeCatalog`
+* `RegenerateKnowledgeCatalog`
 * `GetKnowledgeCatalog`
-* `UpdateSemanticMetadata`
-* `HideCatalogObject`
 * `GetCatalogContext`
 
 ### Interfaces Exposed
 
-* catalog construction service;
+* catalog construction and regeneration service;
 * catalog query service;
-* semantic metadata management;
 * contextual catalog retrieval.
 
 ### Dependencies
@@ -446,11 +439,12 @@ Manages conversations and user-visible messages associated with projects.
 
 ### Responsibilities
 
-* create the active project conversation;
+* create project conversations;
+* list and retrieve project conversations;
 * store ordered messages;
 * retrieve conversation history;
 * append user and assistant messages;
-* provide limited contextual history;
+* provide limited contextual history for the selected conversation;
 * archive conversations with projects.
 
 ### Domain Concepts
@@ -462,7 +456,8 @@ Manages conversations and user-visible messages associated with projects.
 
 Examples:
 
-* `GetProjectConversation`
+* `ListProjectConversations`
+* `GetConversation`
 * `CreateProjectConversation`
 * `AppendUserMessage`
 * `AppendAssistantMessage`
@@ -471,9 +466,10 @@ Examples:
 
 ### Interfaces Exposed
 
+* project conversation listing and retrieval;
 * conversation history retrieval;
 * message creation;
-* contextual history selection.
+* contextual history selection for a specific conversation.
 
 ### Dependencies
 
@@ -511,7 +507,8 @@ It is designed behind explicit interfaces so it can later be extracted into a de
 * execute approved queries;
 * validate results;
 * generate natural language answers;
-* record execution metrics and traces.
+* record execution traces;
+* expose execution metadata for observability when required.
 
 ### Domain Concepts
 
@@ -640,7 +637,7 @@ Determines whether the user request is understandable, permitted and sufficientl
 * user question;
 * project context;
 * catalog summary;
-* recent conversation context.
+* recent context from the selected conversation, when applicable.
 
 ### Outputs
 
@@ -668,8 +665,7 @@ Builds the minimal relevant context required for question processing.
 
 * retrieve relevant technical metadata;
 * retrieve semantic metadata;
-* select recent conversation messages;
-* apply project settings;
+* select recent messages from the selected conversation;
 * exclude restricted catalog objects;
 * limit context size.
 
@@ -678,7 +674,7 @@ Builds the minimal relevant context required for question processing.
 * project;
 * user question;
 * current catalog;
-* active conversation.
+* selected conversation, when applicable.
 
 ### Outputs
 
@@ -729,7 +725,6 @@ Generates source-specific SQL from an approved query plan.
 * generate PostgreSQL-compatible SQL;
 * generate read-only statements;
 * respect the Catalog Scope;
-* apply platform query limits;
 * return structured generation metadata.
 
 ### Dependencies
@@ -759,7 +754,7 @@ Validates generated SQL before execution.
 * reject prohibited statements;
 * verify referenced schemas and tables;
 * enforce catalog boundaries;
-* enforce row and timeout limits;
+* enforce query result limits;
 * reject multiple statements when unsupported.
 
 ### Validation Layers
@@ -848,7 +843,7 @@ Produces a natural language response grounded in validated query results.
 ### Responsibilities
 
 * summarize the result;
-* answer in the configured language;
+* generate a clear natural language answer;
 * report relevant limitations;
 * avoid unsupported claims;
 * produce a user-visible response.
@@ -892,7 +887,7 @@ The abstraction should expose capabilities equivalent to:
 ```text
 test_connection()
 validate_permissions()
-discover_schema(scope)
+discover_schema(scope=None)
 execute_read_only(query, limits)
 ```
 
@@ -949,9 +944,11 @@ Provides a provider-independent interface for model inference.
 
 * send structured model requests;
 * return structured responses;
-* expose token usage;
-* expose latency and provider errors;
+* expose provider metadata when available;
+* expose provider errors;
 * apply configured timeouts and retries.
+
+Provider metadata may include token usage, model information and latency. Its persistence and monitoring are handled by the Observability component when enabled.
 
 ### Provider Interface
 
@@ -985,13 +982,20 @@ Provides logging, metrics and diagnostic capabilities across the application.
 
 ### Responsibilities
 
+#### Foundation
+
+* record execution traces;
+* record execution durations;
+* record normalized execution errors;
+* correlate traces with Question Run identifiers.
+
+#### Production-ready Portfolio
+
 * produce structured application logs;
 * correlate logs with Project and Question Run identifiers;
-* record execution durations;
 * record LLM usage metrics;
-* record errors;
 * expose health information;
-* support future monitoring integrations.
+* support monitoring integrations.
 
 ### Data That May Be Recorded
 
@@ -1064,8 +1068,7 @@ This database is separate from the external source database explored by users.
 * conversations;
 * messages;
 * question runs;
-* execution traces;
-* application settings.
+* execution traces.
 
 ### Responsibilities
 
@@ -1231,16 +1234,15 @@ Project creation and data source configuration may span several user actions.
 
 The project remains in a non-ready state until initialization succeeds.
 
-### Catalog Construction
+### Catalog Construction and Regeneration
 
-Catalog creation should:
+Catalog construction and regeneration should:
 
 * create a Schema Snapshot;
-* store discovered metadata;
+* store discovered technical metadata;
+* generate and store semantic metadata;
 * update catalog status;
 * update project status;
-
-within controlled transaction boundaries.
 
 External schema discovery cannot be part of one long database transaction.
 
@@ -1289,7 +1291,7 @@ Operations likely to justify asynchronous execution later include:
 
 * schema discovery;
 * Knowledge Catalog construction;
-* catalog refresh;
+* Knowledge Catalog regeneration;
 * long-running queries;
 * evaluation workflows.
 
@@ -1332,7 +1334,7 @@ The following interfaces must remain stable to support extraction:
 * continue clarification;
 * retrieve run status;
 * retrieve final result;
-* retrieve safe execution metrics.
+* retrieve safe execution traces.
 
 Extraction is an architectural option, not an MVP requirement.
 
@@ -1366,7 +1368,7 @@ They may be introduced only when supported by a concrete functional or operation
 | Administration Interface | Platform administration               | Production-ready Portfolio    |
 | Accounts                 | Authentication and users              | MVP                           |
 | Projects                 | Project lifecycle and ownership       | MVP                           |
-| Data Source Management   | External connection configuration     | MVP                           |
+| Data Source Management   | External connection configuration     | Foundation / MVP              |
 | Catalog                  | Semantic catalog and schema snapshots | Foundation / MVP              |
 | Conversations            | Messages and contextual history       | MVP                           |
 | Query Engine             | AI-assisted question workflow         | Foundation                    |
@@ -1394,6 +1396,7 @@ They may be introduced only when supported by a concrete functional or operation
 11. Presentation components never access databases directly.
 12. Application data and external source data remain separate.
 13. Question Runs and Execution Traces provide operational traceability.
-14. Sensitive information is excluded from logs and traces.
-15. FastAPI extraction remains possible but is not implemented prematurely.
-16. Infrastructure components are introduced only when a demonstrated need exists.
+14. Conversation context is isolated between Conversations within the same Project.
+15. Sensitive information is excluded from logs and traces.
+16. FastAPI extraction remains possible but is not implemented prematurely.
+17. Infrastructure components are introduced only when a demonstrated need exists.

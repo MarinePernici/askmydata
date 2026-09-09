@@ -71,7 +71,7 @@ The MVP focuses on functional completeness rather than production-level operatio
 
 - create a project
 - edit project information
-- delete a project
+- archive a project
 
 ### Data Source Management
 
@@ -84,16 +84,24 @@ The MVP focuses on functional completeness rather than production-level operatio
 ### Project Setup
 
 - schema discovery
-- schema selection
-- table selection
+- schema and table selection
+- Catalog Scope definition
 - Knowledge Catalog generation
+
+### Data Exploration
+
+- data source overview
+- schema exploration
+- table and column metadata
+- database relationships
 
 ### Knowledge Catalog
 
 - automatic generation
-- schema refresh
-- semantic descriptions
+- technical metadata
+- automatically generated semantic descriptions
 - business synonyms
+- catalog regeneration from the current source schema
 
 ### AI Query Engine
 
@@ -103,16 +111,25 @@ The MVP focuses on functional completeness rather than production-level operatio
 - SQL generation
 - SQL validation
 - read-only execution
+- result validation
 - natural language answers
 
-### Conversation
+### Conversations
 
-- one active conversation per project
-- conversation history
+- multiple conversations per project
+- persistent conversation history
+- contextual follow-up questions
 
 ### User Interface
 
-- responsive web interface
+- responsive desktop web interface
+- project dashboard
+- guided project creation workflow
+- data source overview
+- schema exploration
+- Knowledge Catalog exploration
+- conversational interface
+- project settings
 
 ### Technical Foundation
 
@@ -217,6 +234,19 @@ The following features are intentionally excluded from the current portfolio roa
 - billing
 - quotas
 
+## Advanced Catalog Management
+
+- manual semantic metadata editing
+- manual synonym management
+- schema change conflict resolution
+- advanced catalog version comparison
+
+## User Interface
+
+- mobile-specific layouts
+- mobile-optimized navigation
+- tablet-specific layouts
+
 ---
 
 # 6. Success Criteria
@@ -229,12 +259,16 @@ The project successfully answers natural language questions over a PostgreSQL da
 
 A user can:
 
-- authenticate
-- create a project
-- connect a PostgreSQL database
-- build a Knowledge Catalog
-- ask contextual questions
-- receive reliable natural language answers
+- authenticate securely
+- create and configure a project
+- connect and validate a PostgreSQL data source
+- select the schemas and tables available for exploration
+- build and inspect a Knowledge Catalog
+- inspect the selected database schema
+- create and revisit conversations
+- ask contextual questions in natural language
+- receive answers supported by validated read-only SQL queries
+- update and archive a project
 
 ## Production-ready Portfolio
 
