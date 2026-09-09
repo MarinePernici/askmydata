@@ -34,10 +34,8 @@ The Knowledge Catalog is built from the selected Catalog Scope and contains:
 
 - discovered technical metadata;
 - schema snapshots;
-- user-defined semantic metadata;
-- business descriptions;
-- synonyms;
-- visibility rules.
+- automatically generated semantic descriptions;
+- business synonyms.
 
 The Query Engine never reasons directly over the complete database schema.
 
@@ -58,7 +56,7 @@ The Knowledge Catalog:
 - reduces the amount of information sent to the LLM;
 - improves prompt quality;
 - preserves business terminology;
-- enables user customization;
+- enriches technical metadata with automatically generated business context;
 - supports schema evolution;
 - isolates AI-specific concerns from database structures.
 
@@ -80,7 +78,7 @@ The semantic layer becomes an application asset rather than a property of the da
 - Better prompt quality.
 - Smaller LLM context.
 - Improved response relevance.
-- User-defined business vocabulary.
+- Business-oriented semantic enrichment.
 - Better resilience to schema evolution.
 - Clear separation between technical and semantic metadata.
 - Easier future support for additional connectors.
@@ -89,7 +87,7 @@ The semantic layer becomes an application asset rather than a property of the da
 
 - Additional metadata must be stored.
 - Catalog generation introduces an initialization step.
-- Catalog refreshes must be managed when schemas evolve.
+- Catalog regeneration must be managed when source schemas evolve.
 - Additional synchronization logic is required.
 
 ---

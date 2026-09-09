@@ -38,7 +38,7 @@ AskMyData will be implemented as a **Modular Monolith**.
 
 The application will initially be deployed as a single Django application while separating business capabilities into independent modules.
 
-The initial architecture includes dedicated modules for:
+The initial architecture separates the following business capabilities:
 
 - Accounts;
 - Projects;

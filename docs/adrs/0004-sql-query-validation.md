@@ -121,13 +121,15 @@ Application-level validation complements, but never replaces, database-level sec
 
 ## Execution Limits
 
-Validated queries remain subject to execution constraints.
+After successful validation, queries remain subject to execution constraints enforced during query execution.
 
 Examples include:
 
 - statement timeout;
 - maximum number of returned rows;
 - connector-specific limits.
+
+These execution safeguards complement SQL validation but are not a substitute for it.
 
 ---
 

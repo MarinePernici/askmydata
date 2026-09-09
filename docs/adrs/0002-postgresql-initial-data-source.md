@@ -47,7 +47,7 @@ The PostgreSQL Connector is the only concrete implementation during the initial 
 
 The rest of the application depends only on the Connector interface and remains independent from PostgreSQL-specific implementation details.
 
-Future connectors may be introduced without modifying the domain model or the application architecture.
+Future connectors may be introduced without requiring changes to the core domain model or major architectural redesign.
 
 ---
 
@@ -152,11 +152,11 @@ Examples include:
 - Snowflake;
 - BigQuery.
 
-The introduction of a new connector should not require changes to:
+The introduction of a new connector should preserve:
 
-- the Domain Model;
-- the Project aggregate;
-- the Knowledge Catalog;
+- the core Domain Model;
+- the Project aggregate boundaries;
+- the Knowledge Catalog abstraction;
 - the Query Engine interfaces.
 
 Only infrastructure implementations and connector-specific behavior should evolve.
