@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from connectors.types import ColumnMetadata,  RelationshipMetadata
 
 
 class Connector(ABC):
@@ -25,7 +25,7 @@ class Connector(ABC):
         self,
         schema: str,
         table: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[ColumnMetadata]:
         """Return metadata for the columns of the given table."""
         raise NotImplementedError
 
@@ -34,6 +34,6 @@ class Connector(ABC):
         self,
         schema: str,
         table: str,
-    ) -> list[dict[str, Any]]:
-        """Return metadata for relationships involving the given table."""
+    ) -> list[RelationshipMetadata]:
+        """Return foreign-key relationships involving the given table."""
         raise NotImplementedError

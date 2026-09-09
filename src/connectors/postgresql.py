@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
-
 import psycopg
 
 from connectors.base import Connector
+from connectors.types import ColumnMetadata, RelationshipMetadata
 
 @dataclass(frozen=True)
 class PostgreSQLConnectionConfig:
@@ -18,16 +17,20 @@ class PostgreSQLConnector(Connector):
     def __init__(self, config: PostgreSQLConnectionConfig) -> None:
         self._config = config
 
+    def _connect(self) -> psycopg.Connection:
+        """Create a connection to the configured PostgreSQL data source."""
+        return psycopg.connect(
+            host=self._config.host,
+            port=self._config.port,
+            dbname=self._config.database,
+            user=self._config.user,
+            password=self._config.password,
+        )
+
     def test_connection(self) -> bool:
         """Check whether the PostgreSQL data source can be reached."""
         try:
-            with psycopg.connect(
-                host=self._config.host,
-                port=self._config.port,
-                dbname=self._config.database,
-                user=self._config.user,
-                password=self._config.password,
-            ) as connection:
+            with self._connect() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT 1")
                     cursor.fetchone()
@@ -37,21 +40,131 @@ class PostgreSQLConnector(Connector):
             return False
 
     def discover_schemas(self) -> list[str]:
-        raise NotImplementedError
+        """Return the user-accessible schemas in the PostgreSQL data source."""
+        with self._connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT schema_name
+                    FROM information_schema.schemata
+                    WHERE schema_name NOT IN ('pg_catalog', 'information_schema')
+                    AND schema_name NOT LIKE 'pg_toast%%'
+                    AND schema_name NOT LIKE 'pg_temp_%%'
+                    ORDER BY schema_name
+                    """
+                )
+
+                return [row[0] for row in cursor.fetchall()]
 
     def discover_tables(self, schema: str) -> list[str]:
-        raise NotImplementedError
+        """Return the tables available in the given PostgreSQL schema."""
+        with self._connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = %s
+                    AND table_type = 'BASE TABLE'
+                    ORDER BY table_name
+                    """,
+                    (schema,),
+                )
+
+                return [row[0] for row in cursor.fetchall()]
 
     def discover_columns(
         self,
         schema: str,
         table: str,
-    ) -> list[dict[str, Any]]:
-        raise NotImplementedError
+    ) -> list[ColumnMetadata]:
+        """Return metadata for the columns of the given PostgreSQL table."""
+        with self._connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        column_name,
+                        data_type,
+                        is_nullable,
+                        column_default
+                    FROM information_schema.columns
+                    WHERE table_schema = %s
+                    AND table_name = %s
+                    ORDER BY ordinal_position
+                    """,
+                    (schema, table),
+                )
+
+                return [
+                    ColumnMetadata(
+                        name=row[0],
+                        data_type=row[1],
+                        nullable=row[2] == "YES",
+                        default=row[3],
+                    )
+                    for row in cursor.fetchall()
+                ]
 
     def discover_relationships(
         self,
         schema: str,
         table: str,
-    ) -> list[dict[str, Any]]:
-        raise NotImplementedError
+    ) -> list[RelationshipMetadata]:
+        """Return foreign-key relationships involving the given PostgreSQL table."""
+        with self._connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        source_ns.nspname AS source_schema,
+                        source_table.relname AS source_table,
+                        source_column.attname AS source_column,
+                        target_ns.nspname AS target_schema,
+                        target_table.relname AS target_table,
+                        target_column.attname AS target_column
+                    FROM pg_constraint AS fk
+                    JOIN pg_class AS source_table
+                        ON source_table.oid = fk.conrelid
+                    JOIN pg_namespace AS source_ns
+                        ON source_ns.oid = source_table.relnamespace
+                    JOIN pg_class AS target_table
+                        ON target_table.oid = fk.confrelid
+                    JOIN pg_namespace AS target_ns
+                        ON target_ns.oid = target_table.relnamespace
+                    JOIN LATERAL unnest(
+                        fk.conkey,
+                        fk.confkey
+                    ) AS columns(source_attnum, target_attnum)
+                        ON TRUE
+                    JOIN pg_attribute AS source_column
+                        ON source_column.attrelid = source_table.oid
+                        AND source_column.attnum = columns.source_attnum
+                    JOIN pg_attribute AS target_column
+                        ON target_column.attrelid = target_table.oid
+                        AND target_column.attnum = columns.target_attnum
+                    WHERE fk.contype = 'f'
+                    AND (
+                        (source_ns.nspname = %s AND source_table.relname = %s)
+                        OR
+                        (target_ns.nspname = %s AND target_table.relname = %s)
+                    )
+                    ORDER BY
+                        source_ns.nspname,
+                        source_table.relname,
+                        source_column.attname
+                    """,
+                    (schema, table, schema, table),
+                )
+
+                return [
+                    RelationshipMetadata(
+                        source_schema=row[0],
+                        source_table=row[1],
+                        source_column=row[2],
+                        target_schema=row[3],
+                        target_table=row[4],
+                        target_column=row[5],
+                    )
+                    for row in cursor.fetchall()
+                ]
