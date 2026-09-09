@@ -1,0 +1,9 @@
+[project]
+name = "askmydata"
+version = "0.1.0"
+description = "Natural-language exploration of structured data through controlled AI-assisted SQL generation."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "django>=6.1.1",
+]
