@@ -8,5 +8,6 @@ dependencies = [
     "django>=6.1.1",
     "django-environ>=0.14.0",
     "openai>=3.11.0",
+    "pglast>=8.4",
     "psycopg[binary]>=3.3.5",
 ]

@@ -41,6 +41,7 @@ dependencies = [
     { name = "django" },
     { name = "django-environ" },
     { name = "openai" },
+    { name = "pglast" },
     { name = "psycopg", extra = ["binary"] },
 ]
 
@@ -49,6 +50,7 @@ requires-dist = [
     { name = "django", specifier = ">=6.1.1" },
     { name = "django-environ", specifier = ">=0.14.0" },
     { name = "openai", specifier = ">=3.11.0" },
+    { name = "pglast", specifier = ">=8.4" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.5" },
 ]
 
@@ -168,6 +170,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e5/31/cacdcba6fb96dae7df9b24573b73904464561e17a77b78c5a4e330a6da89/openai-3.11.0.tar.gz", hash = "sha256:1ee0114c218bba9ffdea1927b974b4ddeee5f173000b0930aab53efc7c349989", size = 1487330, upload-time = "2026-09-09T15:32:16.913Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/c4/d23c3f86e280e09a001dc9ad7330e882531baca2e598e42b0d7d1eb693c4/openai-3.11.0-py3-none-any.whl", hash = "sha256:2fc169442feafd535f4959605b42d47bc922216385a6d2473b0d47956691d9fd", size = 1749391, upload-time = "2026-09-09T15:32:14.854Z" },
+]
+
+[[package]]
+name = "pglast"
+version = "8.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/e3/e7dbccbac32ba8d6ea4f55aaf14ebd794bf0b8a05561af72284efe38b1b8/pglast-8.4.tar.gz", hash = "sha256:ebc804351aab9c1bac395611758883cd17d4198f4704224bb6f9f1dd1f3c513d", size = 3790693, upload-time = "2026-07-22T14:46:58.692Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/21/e1/cdda5f48351e10dddb1566d8fdf6fbea7c0125cb90a972a51986cfd9ad52/pglast-8.4-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:7ffd86c71f0b920fef014bb6e4303f4062ce9a9bd423644c0f7580392941abad", size = 1529367, upload-time = "2026-07-22T15:13:14.584Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/bc/0d5886ba94f7d5e1b5d255fffb8f9426fefb854eaa8f3a7214be6dfbaba2/pglast-8.4-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:1c9f685ac45da437d0452821ad4c2fade5376905b1d32640dc9e561b352eeaa5", size = 1451217, upload-time = "2026-07-22T15:13:15.851Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/2e/31144fbe8f20c99ef342869e893b4af58ded8c676f95f714d8185173dc52/pglast-8.4-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a879b684e3d16ba4fa9221286bcd18a6bb4a1052cf16bbb5952667253eab5f81", size = 6181156, upload-time = "2026-07-22T15:13:17.443Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/05/897d428ef40c3b08a6b30c9666bfc2de2c4ec9722eb35f749fcb93171368/pglast-8.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:16f4e5ce7b41b25affbea84dc104f66f93f3f6f89346cd73de0e926a057e2ab6", size = 6297706, upload-time = "2026-07-22T15:13:19.022Z" },
+    { url = "https://files.pythonhosted.org/packages/70/e7/713d251ac895c124cee39c9f393232525b6d1b0595c9c48706e522298560/pglast-8.4-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:4cc7dce8318482c8af79e809482830573f3172eff8669bdedbb20760c86b7f11", size = 5977651, upload-time = "2026-07-22T15:13:20.488Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/fe/ef95ef83a86c7c4f189d33795eb1d896149236ca9162ffeb1b4d03de4edd/pglast-8.4-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:b475daff44e7eaded37a69e66ab0a9919c94dbfbe76c4fdcea5e9b254c1951ab", size = 6075510, upload-time = "2026-07-22T15:13:22.029Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/d7/c704db78c7fb10e8a8cb99f26a8a5ec30e92c428777f8a684c1314ebd79c/pglast-8.4-cp313-cp313-win32.whl", hash = "sha256:7960771b36e139232623969eb49ae79b60bca50ddd4aa70b9354bbcfc7feaf7c", size = 1366076, upload-time = "2026-07-22T15:13:23.395Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/9f/3bd6d1326da01a944ac159afd5a772e39921cbc0ab9941051b7632d0969e/pglast-8.4-cp313-cp313-win_amd64.whl", hash = "sha256:2f82f522858dafbcf1b2d969cebee0f3311a4f86ed07c8962e1f7ab00d7e87a1", size = 1438885, upload-time = "2026-07-22T15:13:24.758Z" },
 ]
 
 [[package]]

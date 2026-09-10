@@ -1,5 +1,6 @@
 import os
 import unittest
+import psycopg
 
 import environ
 
@@ -147,4 +148,19 @@ class PostgreSQLConnectorTests(unittest.TestCase):
             ],
         )
 
-
+    def test_readonly_user_cannot_modify_source_data(self):
+        with psycopg.connect(
+            host=self.config.host,
+            port=self.config.port,
+            dbname=self.config.database,
+            user=self.config.user,
+            password=self.config.password,
+        ) as connection:
+            with connection.cursor() as cursor:
+                with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                    cursor.execute(
+                        """
+                        INSERT INTO sales.customers (name, email)
+                        VALUES ('Unauthorized', 'unauthorized@example.com')
+                        """
+                    )
