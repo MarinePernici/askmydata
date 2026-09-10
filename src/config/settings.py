@@ -30,6 +30,8 @@ environ.Env.read_env(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
+DATASOURCE_ENCRYPTION_KEY = env("DATASOURCE_ENCRYPTION_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DJANGO_DEBUG")
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     # AskMyData apps
     "apps.projects",
     "apps.runs",
+    "apps.data_sources",
 ]
 
 MIDDLEWARE = [
