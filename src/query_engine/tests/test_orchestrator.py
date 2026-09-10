@@ -89,6 +89,33 @@ class RecordingAnswerGenerator:
         )
 
 
+class RecordingTracer:
+    def __init__(self):
+        self.events = []
+
+    def record(
+        self,
+        step,
+        status,
+        duration_ms,
+        error_code="",
+        error_message="",
+    ):
+        self.events.append(
+            {
+                "step": step,
+                "status": status,
+                "duration_ms": duration_ms,
+                "error_code": error_code,
+                "error_message": error_message,
+            }
+        )
+
+
+class FailingGenerator:
+    def generate(self, question, catalog):
+        raise RuntimeError("LLM unavailable")
+
 class QueryOrchestratorTests(unittest.TestCase):
     def test_orchestrator_can_be_created(self):
         orchestrator = QueryOrchestrator(
@@ -188,6 +215,72 @@ class QueryOrchestratorTests(unittest.TestCase):
             )
 
         self.assertFalse(answer_generator.called)
+
+    def test_orchestrator_traces_all_successful_steps(self):
+        tracer = RecordingTracer()
+
+        orchestrator = QueryOrchestrator(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor=FakeExecutor(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            tracer=tracer,
+        )
+
+        orchestrator.run(
+            question="How many orders are there?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(len(tracer.events), 5)
+
+        self.assertEqual(
+            [event["step"] for event in tracer.events],
+            [
+                "sql_generation",
+                "sql_validation",
+                "query_execution",
+                "result_validation",
+                "answer_generation",
+            ],
+        )
+
+        self.assertTrue(
+            all(event["status"] == "completed" for event in tracer.events)
+        )
+
+        self.assertTrue(
+            all(event["duration_ms"] >= 0 for event in tracer.events)
+        )
+
+    def test_orchestrator_traces_failed_sql_generation(self):
+        tracer = RecordingTracer()
+
+        orchestrator = QueryOrchestrator(
+            generator=FailingGenerator(),
+            validator=FakeValidator(),
+            executor=FakeExecutor(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            tracer=tracer,
+        )
+
+        with self.assertRaises(RuntimeError):
+            orchestrator.run(
+                question="How many orders are there?",
+                catalog=KnowledgeCatalog(tables=()),
+            )
+
+        self.assertEqual(len(tracer.events), 1)
+
+        event = tracer.events[0]
+
+        self.assertEqual(event["step"], "sql_generation")
+        self.assertEqual(event["status"], "failed")
+        self.assertEqual(event["error_code"], "RuntimeError")
+        self.assertEqual(event["error_message"], "LLM unavailable")
+        self.assertGreaterEqual(event["duration_ms"], 0)
 
 if __name__ == "__main__":
     unittest.main()
