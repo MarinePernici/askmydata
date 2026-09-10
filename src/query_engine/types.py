@@ -31,3 +31,20 @@ class ResultValidationResult:
 
     is_valid: bool
     error: str | None = None
+
+
+@dataclass(frozen=True)
+class AnswerGenerationResult:
+    """Natural-language answer generated from a query result."""
+
+    answer: str
+
+
+@dataclass(frozen=True)
+class QueryRunResult:
+    """Result of a complete query processing run."""
+
+    sql: str
+    explanation: str
+    execution: QueryExecutionResult
+    answer: str

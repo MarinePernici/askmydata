@@ -8,6 +8,7 @@ from query_engine.types import (
     ResultValidationResult,
     SQLGenerationResult,
     SQLValidationResult,
+    AnswerGenerationResult,
 )
 
 class FakeGenerator:
@@ -42,6 +43,13 @@ class FakeResultValidator:
         )
 
 
+class FakeAnswerGenerator:
+    def generate(self, question, sql, result):
+        return AnswerGenerationResult(
+            answer="There is one value.",
+        )
+
+
 class RecordingExecutor:
     def __init__(self):
         self.called = False
@@ -70,6 +78,17 @@ class RejectingResultValidator:
         )
 
 
+class RecordingAnswerGenerator:
+    def __init__(self):
+        self.called = False
+
+    def generate(self, question, sql, result):
+        self.called = True
+        return AnswerGenerationResult(
+            answer="This should not be generated.",
+        )
+
+
 class QueryOrchestratorTests(unittest.TestCase):
     def test_orchestrator_can_be_created(self):
         orchestrator = QueryOrchestrator(
@@ -77,6 +96,7 @@ class QueryOrchestratorTests(unittest.TestCase):
             validator=None,
             executor=None,
             result_validator=None,
+            answer_generator=None,
         )
 
         self.assertIsNotNone(orchestrator)
@@ -87,6 +107,7 @@ class QueryOrchestratorTests(unittest.TestCase):
             validator=FakeValidator(),
             executor=FakeExecutor(),
             result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
         )
 
         result = orchestrator.run(
@@ -94,8 +115,26 @@ class QueryOrchestratorTests(unittest.TestCase):
             catalog=KnowledgeCatalog(tables=()),
         )
 
-        self.assertEqual(result.columns, ("value",))
-        self.assertEqual(result.rows, ((1,),))
+        self.assertEqual(
+            result.sql,
+            "SELECT 1 AS value;",
+        )
+        self.assertEqual(
+            result.explanation,
+            "Returns one value.",
+        )
+        self.assertEqual(
+            result.execution.columns,
+            ("value",),
+        )
+        self.assertEqual(
+            result.execution.rows,
+            ((1,),),
+        )
+        self.assertEqual(
+            result.answer,
+            "There is one value.",
+        )
 
     def test_run_does_not_execute_invalid_sql(self):
         executor = RecordingExecutor()
@@ -105,6 +144,7 @@ class QueryOrchestratorTests(unittest.TestCase):
             validator=RejectingValidator(),
             executor=executor,
             result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
         )
 
         with self.assertRaises(SQLValidationError):
@@ -121,6 +161,7 @@ class QueryOrchestratorTests(unittest.TestCase):
             validator=FakeValidator(),
             executor=FakeExecutor(),
             result_validator=RejectingResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
         )
 
         with self.assertRaises(ResultValidationError):
@@ -128,6 +169,25 @@ class QueryOrchestratorTests(unittest.TestCase):
                 question="Return one.",
                 catalog=KnowledgeCatalog(tables=()),
             )
+
+    def test_run_does_not_generate_answer_for_invalid_query_result(self):
+        answer_generator = RecordingAnswerGenerator()
+
+        orchestrator = QueryOrchestrator(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor=FakeExecutor(),
+            result_validator=RejectingResultValidator(),
+            answer_generator=answer_generator,
+        )
+
+        with self.assertRaises(ResultValidationError):
+            orchestrator.run(
+                question="Return one.",
+                catalog=KnowledgeCatalog(tables=()),
+            )
+
+        self.assertFalse(answer_generator.called)
 
 if __name__ == "__main__":
     unittest.main()

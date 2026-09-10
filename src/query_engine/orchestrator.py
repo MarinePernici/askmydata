@@ -3,8 +3,9 @@ from query_engine.exceptions import SQLValidationError, ResultValidationError
 from query_engine.query_executor import QueryExecutor
 from query_engine.sql_generator import SQLGenerator
 from query_engine.sql_validator import SQLValidator
-from query_engine.types import QueryExecutionResult
+from query_engine.types import QueryExecutionResult, QueryRunResult
 from query_engine.result_validator import ResultValidator
+from query_engine.answer_generator import AnswerGenerator
 
 
 class QueryOrchestrator:
@@ -16,17 +17,19 @@ class QueryOrchestrator:
         validator: SQLValidator,
         executor: QueryExecutor,
         result_validator: ResultValidator,
+        answer_generator: AnswerGenerator,
     ) -> None:
         self._generator = generator
         self._validator = validator
         self._executor = executor
         self._result_validator = result_validator
+        self._answer_generator = answer_generator
 
     def run(
         self,
         question: str,
         catalog: KnowledgeCatalog,
-    ) -> QueryExecutionResult:
+    ) -> QueryRunResult:
         generation_result = self._generator.generate(
             question=question,
             catalog=catalog,
@@ -54,4 +57,15 @@ class QueryOrchestrator:
                 result_validation.error or "Query result validation failed."
             )
 
-        return execution_result
+        answer_result = self._answer_generator.generate(
+            question=question,
+            sql=generation_result.sql,
+            result=execution_result,
+        )
+
+        return QueryRunResult(
+            sql=generation_result.sql,
+            explanation=generation_result.explanation,
+            execution=execution_result,
+            answer=answer_result.answer,
+        )
