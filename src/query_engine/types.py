@@ -23,3 +23,11 @@ class QueryExecutionResult:
 
     columns: tuple[str, ...]
     rows: tuple[tuple[object, ...], ...]
+
+
+@dataclass(frozen=True)
+class ResultValidationResult:
+    """Result of query execution result validation."""
+
+    is_valid: bool
+    error: str | None = None
