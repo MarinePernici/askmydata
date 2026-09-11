@@ -13,13 +13,13 @@ class QuestionRunService:
         self,
         generator,
         validator,
-        executor,
+        executor_factory,
         result_validator,
         answer_generator,
     ) -> None:
         self._generator = generator
         self._validator = validator
-        self._executor = executor
+        self._executor_factory = executor_factory
         self._result_validator = result_validator
         self._answer_generator = answer_generator
 
@@ -35,24 +35,29 @@ class QuestionRunService:
             started_at=timezone.now(),
         )
 
-        tracer = DjangoQueryTracer(
-            question_run=question_run,
-        )
-
-        orchestrator = QueryOrchestrator(
-            generator=self._generator,
-            validator=self._validator,
-            executor=self._executor,
-            result_validator=self._result_validator,
-            answer_generator=self._answer_generator,
-            tracer=tracer,
-        )
-
         try:
+            config = project.data_source.to_connection_config()
+
+            executor = self._executor_factory(config)
+
+            tracer = DjangoQueryTracer(
+                question_run=question_run,
+            )
+
+            orchestrator = QueryOrchestrator(
+                generator=self._generator,
+                validator=self._validator,
+                executor=executor,
+                result_validator=self._result_validator,
+                answer_generator=self._answer_generator,
+                tracer=tracer,
+            )
+
             result = orchestrator.run(
                 question=question,
                 catalog=catalog,
             )
+
         except Exception as exc:
             question_run.status = QuestionRun.Status.FAILED
             question_run.completed_at = timezone.now()

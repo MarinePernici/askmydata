@@ -1,6 +1,6 @@
 import unittest
 
-from catalog.types import KnowledgeCatalog, TableMetadata
+from catalog.types import KnowledgeCatalog, SemanticMetadata, TableMetadata
 from llm.base import LLMProvider
 from llm.types import LLMMessage, LLMResponse
 from connectors.types import ColumnMetadata
@@ -138,3 +138,41 @@ class SQLGeneratorTests(unittest.TestCase):
                 question="Test",
                 catalog=KnowledgeCatalog(tables=()),
             )
+
+    def test_generate_sends_semantic_metadata_to_provider(self):
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        catalog = KnowledgeCatalog(
+            tables=(
+                TableMetadata(
+                    schema="sales",
+                    name="orders",
+                    columns=(),
+                    relationships=(),
+                    semantic_metadata=SemanticMetadata(
+                        description="Customer orders",
+                        business_synonyms=(
+                            "sales orders",
+                            "purchases",
+                        ),
+                    ),
+                ),
+            )
+        )
+
+        generator.generate(
+            question="How many purchases are there?",
+            catalog=catalog,
+        )
+
+        system_message = provider.messages[0]
+
+        self.assertIn(
+            "DESCRIPTION Customer orders",
+            system_message.content,
+        )
+        self.assertIn(
+            "SYNONYMS sales orders, purchases",
+            system_message.content,
+        )

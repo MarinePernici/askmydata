@@ -10,6 +10,19 @@ class CatalogSerializer:
         for table in catalog.tables:
             lines.append(f"TABLE {table.schema}.{table.name}")
 
+            if table.semantic_metadata is not None:
+                lines.append(
+                    f"  DESCRIPTION {table.semantic_metadata.description}"
+                )
+
+                if table.semantic_metadata.business_synonyms:
+                    lines.append(
+                        "  SYNONYMS "
+                        + ", ".join(
+                            table.semantic_metadata.business_synonyms
+                        )
+                    )
+
             for column in table.columns:
                 nullable = "NULL" if column.nullable else "NOT NULL"
                 lines.append(

@@ -17,48 +17,39 @@ class SemanticEnricher:
         self,
         table: TableMetadata,
     ) -> TableMetadata:
-
-        columns_text = "\n".join(
-            f"- {column.name}: {column.data_type}"
-            for column in table.columns
-        )
-
-        relationships_text = "\n".join(
-            (
-                f"- {relationship.source_column} -> "
-                f"{relationship.target_schema}."
-                f"{relationship.target_table}."
-                f"{relationship.target_column}"
-            )
-            for relationship in table.relationships
-        )
-
         response = self._provider.generate(
-            messages=[
-                LLMMessage(
-                    role="system",
-                    content=(
-                        "You generate semantic metadata for database tables. "
-                        "Return valid JSON only."
-                    ),
-                ),
-                LLMMessage(
-                    role="user",
-                    content=(
-                        f"Schema: {table.schema}\n"
-                        f"Table: {table.name}\n\n"
-                        f"Columns:\n{columns_text}\n\n"
-                        f"Relationships:\n{relationships_text}\n\n"
-                        "Return JSON with exactly these fields:\n"
-                        '- "description": string\n'
-                        '- "business_synonyms": array of strings'
-                    ),
-                ),
-            ]
+            messages=self._build_messages(table)
         )
 
+        semantic_metadata = self._parse_semantic_metadata(
+            response.content
+        )
+
+        return TableMetadata(
+            schema=table.schema,
+            name=table.name,
+            columns=table.columns,
+            relationships=table.relationships,
+            semantic_metadata=semantic_metadata,
+        )
+
+    def enrich_catalog(
+        self,
+        catalog: KnowledgeCatalog,
+    ) -> KnowledgeCatalog:
+        return KnowledgeCatalog(
+            tables=tuple(
+                self.enrich_table(table)
+                for table in catalog.tables
+            )
+        )
+
+    def _parse_semantic_metadata(
+        self,
+        content: str,
+    ) -> SemanticMetadata:
         try:
-            payload = json.loads(response.content)
+            payload = json.loads(content)
         except json.JSONDecodeError as exc:
             raise SemanticEnrichmentError(
                 "LLM returned invalid semantic metadata JSON."
@@ -90,26 +81,48 @@ class SemanticEnricher:
                 "Semantic metadata business_synonyms must contain only strings."
             )
 
-        semantic_metadata = SemanticMetadata(
+        return SemanticMetadata(
             description=description,
             business_synonyms=tuple(business_synonyms),
         )
 
-        return TableMetadata(
-            schema=table.schema,
-            name=table.name,
-            columns=table.columns,
-            relationships=table.relationships,
-            semantic_metadata=semantic_metadata,
+    def _build_messages(
+        self,
+        table: TableMetadata,
+    ) -> list[LLMMessage]:
+        columns_text = "\n".join(
+            f"- {column.name}: {column.data_type}"
+            for column in table.columns
         )
 
-    def enrich_catalog(
-        self,
-        catalog: KnowledgeCatalog,
-    ) -> KnowledgeCatalog:
-        return KnowledgeCatalog(
-            tables=tuple(
-                self.enrich_table(table)
-                for table in catalog.tables
+        relationships_text = "\n".join(
+            (
+                f"- {relationship.source_column} -> "
+                f"{relationship.target_schema}."
+                f"{relationship.target_table}."
+                f"{relationship.target_column}"
             )
+            for relationship in table.relationships
         )
+
+        return [
+            LLMMessage(
+                role="system",
+                content=(
+                    "You generate semantic metadata for database tables. "
+                    "Return valid JSON only."
+                ),
+            ),
+            LLMMessage(
+                role="user",
+                content=(
+                    f"Schema: {table.schema}\n"
+                    f"Table: {table.name}\n\n"
+                    f"Columns:\n{columns_text}\n\n"
+                    f"Relationships:\n{relationships_text}\n\n"
+                    "Return JSON with exactly these fields:\n"
+                    '- "description": string\n'
+                    '- "business_synonyms": array of strings'
+                ),
+            ),
+        ]

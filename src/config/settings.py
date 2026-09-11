@@ -32,6 +32,8 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 DATASOURCE_ENCRYPTION_KEY = env("DATASOURCE_ENCRYPTION_KEY")
 
+OPENAI_API_KEY = env("OPENAI_API_KEY")
+LLM_MODEL = env("LLM_MODEL", default="gpt-5-mini")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DJANGO_DEBUG")

@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
@@ -51,14 +52,42 @@ class FailingGenerator:
         raise RuntimeError("LLM unavailable")
 
 
+class FakeExecutorFactory:
+    def __init__(self):
+        self.config = None
+
+    def __call__(self, config):
+        self.config = config
+        return FakeExecutor()
+
+
 class QuestionRunServiceTests(TestCase):
+    def create_project_with_data_source(self):
+        project = Project.objects.create(
+            name="Test project",
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="test_database",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        return project
+    
     def test_successful_run_is_persisted(self):
-        project = Project.objects.create(name="Test project")
+        project = self.create_project_with_data_source()
+
+        executor_factory = FakeExecutorFactory()
 
         service = QuestionRunService(
             generator=FakeGenerator(),
             validator=FakeValidator(),
-            executor=FakeExecutor(),
+            executor_factory=executor_factory,
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
         )
@@ -86,17 +115,16 @@ class QuestionRunServiceTests(TestCase):
         )
 
     def test_failed_run_is_persisted(self):
-        project = Project.objects.create(
-            name="Test project",
-        )
+        project = self.create_project_with_data_source()
 
         service = QuestionRunService(
             generator=FailingGenerator(),
             validator=FakeValidator(),
-            executor=FakeExecutor(),
+            executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
         )
+
 
         with self.assertRaises(RuntimeError):
             service.run(
@@ -145,4 +173,45 @@ class QuestionRunServiceTests(TestCase):
         self.assertEqual(
             trace.error_message,
             "LLM unavailable",
+        )
+
+    def test_executor_factory_receives_project_data_source_config(self):
+        project = self.create_project_with_data_source()
+
+        executor_factory = FakeExecutorFactory()
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=executor_factory,
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+        )
+
+        service.run(
+            project=project,
+            question="Return one.",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertIsNotNone(executor_factory.config)
+        self.assertEqual(
+            executor_factory.config.host,
+            "localhost",
+        )
+        self.assertEqual(
+            executor_factory.config.port,
+            5432,
+        )
+        self.assertEqual(
+            executor_factory.config.database,
+            "test_database",
+        )
+        self.assertEqual(
+            executor_factory.config.user,
+            "readonly",
+        )
+        self.assertEqual(
+            executor_factory.config.password,
+            "secret-password",
         )
