@@ -1,33 +1,58 @@
-from connectors.base import Connector
-
-from catalog.types import KnowledgeCatalog, TableMetadata
+from catalog.types import (
+    CatalogScope,
+    KnowledgeCatalog,
+    TableMetadata,
+)
 
 
 class CatalogBuilder:
-    """Build a Knowledge Catalog from an external data source."""
-
-    def __init__(self, connector: Connector) -> None:
+    def __init__(self, connector):
         self._connector = connector
 
-    def build(self) -> KnowledgeCatalog:
-        """Build a catalog containing all accessible schemas and tables."""
-        tables: list[TableMetadata] = []
+    def build(
+        self,
+        scope: CatalogScope | None = None,
+    ) -> KnowledgeCatalog:
+        tables = []
 
-        for schema in self._connector.discover_schemas():
-            for table in self._connector.discover_tables(schema):
-                columns = self._connector.discover_columns(schema, table)
-                relationships = self._connector.discover_relationships(
+        if scope is None:
+            schemas = self._connector.discover_schemas()
+
+            selections = [
+                (schema, table)
+                for schema in schemas
+                for table in self._connector.discover_tables(schema)
+            ]
+        else:
+            selections = [
+                (selection.schema, selection.table)
+                for selection in scope.tables
+            ]
+
+        for schema, table in selections:
+            columns = tuple(
+                self._connector.discover_columns(
                     schema,
                     table,
                 )
+            )
 
-                tables.append(
-                    TableMetadata(
-                        schema=schema,
-                        name=table,
-                        columns=tuple(columns),
-                        relationships=tuple(relationships),
-                    )
+            relationships = tuple(
+                self._connector.discover_relationships(
+                    schema,
+                    table,
                 )
+            )
 
-        return KnowledgeCatalog(tables=tuple(tables))
+            tables.append(
+                TableMetadata(
+                    schema=schema,
+                    name=table,
+                    columns=columns,
+                    relationships=relationships,
+                )
+            )
+
+        return KnowledgeCatalog(
+            tables=tuple(tables),
+        )

@@ -3,7 +3,12 @@ import os
 import unittest
 
 from catalog.builder import CatalogBuilder
-from catalog.types import KnowledgeCatalog, TableMetadata
+from catalog.types import (
+    CatalogScope,
+    CatalogTableSelection,
+    KnowledgeCatalog,
+    TableMetadata,
+)
 from connectors.base import Connector
 from connectors.postgresql import (
     PostgreSQLConnectionConfig,
@@ -166,4 +171,29 @@ class KnowledgeCatalogTests(unittest.TestCase):
                 target_column="id",
             ),
             orders.relationships,
+        )
+
+    def test_build_uses_only_selected_tables_when_scope_is_provided(self):
+        connector = FakeConnector()
+        builder = CatalogBuilder(connector)
+
+        scope = CatalogScope(
+            tables=(
+                CatalogTableSelection(
+                    schema="sales",
+                    table="orders",
+                ),
+            )
+        )
+
+        catalog = builder.build(scope=scope)
+
+        self.assertEqual(len(catalog.tables), 1)
+        self.assertEqual(
+            catalog.tables[0].schema,
+            "sales",
+        )
+        self.assertEqual(
+            catalog.tables[0].name,
+            "orders",
         )

@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.projects",
     "apps.runs",
     "apps.data_sources",
+    "apps.catalogs",
 ]
 
 MIDDLEWARE = [

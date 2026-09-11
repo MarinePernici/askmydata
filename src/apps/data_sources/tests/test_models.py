@@ -1,6 +1,7 @@
 from django.db import IntegrityError
 from django.test import TestCase
 
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 
@@ -130,5 +131,5 @@ class DataSourceModelTests(TestCase):
             project=project,
         )
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DataSourceConfigurationError):
             data_source.to_connection_config()

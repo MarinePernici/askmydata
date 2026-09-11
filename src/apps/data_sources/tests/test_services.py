@@ -70,3 +70,4 @@ class DataSourceServiceTests(TestCase):
             self.data_source.connection_status,
             DataSource.ConnectionStatus.FAILED,
         )
+

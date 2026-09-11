@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.data_sources.encryption import CredentialCipher
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.projects.models import Project
 from connectors.postgresql import PostgreSQLConnectionConfig
 
@@ -97,7 +98,9 @@ class DataSource(models.Model):
 
     def to_connection_config(self) -> PostgreSQLConnectionConfig:
         if not self.is_configured():
-            raise ValueError("Data source is not fully configured.")
+            raise DataSourceConfigurationError(
+                "Data source is not fully configured."
+            )
 
         return PostgreSQLConnectionConfig(
             host=self.host,
