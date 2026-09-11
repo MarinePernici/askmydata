@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from apps.catalogs.readers import CatalogReader
 from apps.catalogs.services import CatalogService
 from apps.runs.services import QuestionRunService
 from catalog.semantic_enricher import SemanticEnricher
@@ -41,4 +42,5 @@ def create_question_run_service() -> QuestionRunService:
         answer_generator=AnswerGenerator(
             provider=provider,
         ),
+        catalog_reader=CatalogReader(),
     )

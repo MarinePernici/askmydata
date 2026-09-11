@@ -4,3 +4,7 @@ class DataSourceNotConfiguredError(Exception):
 
 class CatalogScopeNotConfiguredError(Exception):
     """Raised when a project has no catalog scope."""
+
+
+class CatalogNotReadyError(Exception):
+    pass

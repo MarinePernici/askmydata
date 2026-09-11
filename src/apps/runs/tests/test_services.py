@@ -61,6 +61,16 @@ class FakeExecutorFactory:
         return FakeExecutor()
 
 
+class FakeCatalogReader:
+    def __init__(self, catalog):
+        self.catalog = catalog
+        self.project = None
+
+    def get_current(self, project):
+        self.project = project
+        return self.catalog
+
+
 class QuestionRunServiceTests(TestCase):
     def create_project_with_data_source(self):
         project = Project.objects.create(
@@ -78,11 +88,14 @@ class QuestionRunServiceTests(TestCase):
         data_source.save()
 
         return project
-    
+
     def test_successful_run_is_persisted(self):
         project = self.create_project_with_data_source()
 
         executor_factory = FakeExecutorFactory()
+
+        catalog = KnowledgeCatalog(tables=())
+        catalog_reader = FakeCatalogReader(catalog)
 
         service = QuestionRunService(
             generator=FakeGenerator(),
@@ -90,12 +103,12 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=executor_factory,
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
+            catalog_reader=catalog_reader,
         )
 
         result = service.run(
             project=project,
             question="Return one.",
-            catalog=KnowledgeCatalog(tables=()),
         )
 
         run = QuestionRun.objects.get()
@@ -123,14 +136,15 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
         )
-
 
         with self.assertRaises(RuntimeError):
             service.run(
                 project=project,
                 question="Return one.",
-                catalog=KnowledgeCatalog(tables=()),
             )
 
         run = QuestionRun.objects.get()
@@ -180,18 +194,21 @@ class QuestionRunServiceTests(TestCase):
 
         executor_factory = FakeExecutorFactory()
 
+        catalog = KnowledgeCatalog(tables=())
+        catalog_reader = FakeCatalogReader(catalog)
+
         service = QuestionRunService(
             generator=FakeGenerator(),
             validator=FakeValidator(),
             executor_factory=executor_factory,
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
+            catalog_reader=catalog_reader,
         )
 
         service.run(
             project=project,
             question="Return one.",
-            catalog=KnowledgeCatalog(tables=()),
         )
 
         self.assertIsNotNone(executor_factory.config)
@@ -214,4 +231,29 @@ class QuestionRunServiceTests(TestCase):
         self.assertEqual(
             executor_factory.config.password,
             "secret-password",
+        )
+
+    def test_catalog_is_loaded_from_project(self):
+        project = self.create_project_with_data_source()
+
+        catalog = KnowledgeCatalog(tables=())
+        catalog_reader = FakeCatalogReader(catalog)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=catalog_reader,
+        )
+
+        service.run(
+            project=project,
+            question="Return one.",
+        )
+
+        self.assertEqual(
+            catalog_reader.project,
+            project,
         )

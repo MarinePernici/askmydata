@@ -3,7 +3,6 @@ from django.utils import timezone
 from apps.projects.models import Project
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
-from catalog.types import KnowledgeCatalog
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import QueryRunResult
 
@@ -16,18 +15,19 @@ class QuestionRunService:
         executor_factory,
         result_validator,
         answer_generator,
+        catalog_reader,
     ) -> None:
         self._generator = generator
         self._validator = validator
         self._executor_factory = executor_factory
         self._result_validator = result_validator
         self._answer_generator = answer_generator
+        self._catalog_reader = catalog_reader
 
     def run(
         self,
         project: Project,
         question: str,
-        catalog: KnowledgeCatalog,
     ) -> QueryRunResult:
         question_run = QuestionRun.objects.create(
             project=project,
@@ -36,8 +36,11 @@ class QuestionRunService:
         )
 
         try:
-            config = project.data_source.to_connection_config()
+            catalog = self._catalog_reader.get_current(
+                project=project,
+            )
 
+            config = project.data_source.to_connection_config()
             executor = self._executor_factory(config)
 
             tracer = DjangoQueryTracer(
