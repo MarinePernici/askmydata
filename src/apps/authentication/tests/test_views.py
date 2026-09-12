@@ -56,3 +56,27 @@ class LoginViewTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_anonymous_user_is_redirected_to_login(self):
+        response = self.client.get(
+            reverse("dashboard"),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            f'{reverse("login")}?next={reverse("dashboard")}',
+    )
+
+    def test_authenticated_user_can_access_dashboard(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("dashboard"),
+        )
+
+        self.assertEqual(response.status_code, 200)
