@@ -6,6 +6,7 @@ from llm.types import LLMMessage, LLMResponse
 from connectors.types import ColumnMetadata
 from query_engine.sql_generator import SQLGenerator
 from query_engine.exceptions import SQLGenerationError
+from query_engine.types import ClarificationResult, ConversationMessage
 
 
 class FakeLLMProvider(LLMProvider):
@@ -45,6 +46,31 @@ class MissingFieldProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content='{"sql": "SELECT 1;"}',
+            model="fake-model",
+        )
+
+
+class ClarificationProvider(LLMProvider):
+    def generate(
+        self,
+        messages: list[LLMMessage],
+    ) -> LLMResponse:
+        return LLMResponse(
+            content=(
+                '{"clarification": '
+                '"Which date range should I use?"}'
+            ),
+            model="fake-model",
+        )
+
+
+class EmptyClarificationProvider(LLMProvider):
+    def generate(
+        self,
+        messages: list[LLMMessage],
+    ) -> LLMResponse:
+        return LLMResponse(
+            content='{"clarification": "   "}',
             model="fake-model",
         )
 
@@ -176,3 +202,83 @@ class SQLGeneratorTests(unittest.TestCase):
             "SYNONYMS sales orders, purchases",
             system_message.content,
         )
+
+    def test_generate_includes_conversation_history_in_system_prompt(self):
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        history = (
+            ConversationMessage(
+                role="user",
+                content="How many orders are there?",
+            ),
+            ConversationMessage(
+                role="assistant",
+                content="There are 42 orders.",
+            ),
+        )
+
+        generator.generate(
+            question="And how many this month?",
+            catalog=KnowledgeCatalog(tables=()),
+            history=history,
+        )
+
+        system_message = provider.messages[0]
+        user_message = provider.messages[1]
+
+        self.assertIn(
+            "user: How many orders are there?",
+            system_message.content,
+        )
+        self.assertIn(
+            "assistant: There are 42 orders.",
+            system_message.content,
+        )
+
+        self.assertEqual(
+            user_message.content,
+            "And how many this month?",
+        )
+
+    def test_generate_handles_empty_conversation_history(self):
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        generator.generate(
+            question="How many orders are there?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        system_message = provider.messages[0]
+
+        self.assertIn(
+            "No previous conversation.",
+            system_message.content,
+        )
+
+    def test_generate_returns_clarification_when_question_is_ambiguous(self):
+        provider = ClarificationProvider()
+        generator = SQLGenerator(provider)
+
+        result = generator.generate(
+            question="How many recent orders are there?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(
+            result,
+            ClarificationResult(
+                question="Which date range should I use?",
+            ),
+        )
+
+    def test_generate_rejects_empty_clarification(self):
+        provider = EmptyClarificationProvider()
+        generator = SQLGenerator(provider)
+
+        with self.assertRaises(SQLGenerationError):
+            generator.generate(
+                question="How many recent orders are there?",
+                catalog=KnowledgeCatalog(tables=()),
+            )

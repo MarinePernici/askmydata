@@ -5,7 +5,7 @@ from llm.base import LLMProvider
 from llm.types import LLMMessage
 from query_engine.catalog_serializer import CatalogSerializer
 from query_engine.exceptions import SQLGenerationError
-from query_engine.types import SQLGenerationResult
+from query_engine.types import ClarificationResult, ConversationMessage, SQLGenerationResult
 
 
 class SQLGenerator:
@@ -19,12 +19,26 @@ class SQLGenerator:
         self._provider = provider
         self._serializer = serializer or CatalogSerializer()
 
+    def _serialize_history(
+        self,
+        history: tuple[ConversationMessage, ...],
+    ) -> str:
+        if not history:
+            return "No previous conversation."
+
+        return "\n".join(
+            f"{message.role}: {message.content}"
+            for message in history
+        )
+
     def generate(
         self,
         question: str,
         catalog: KnowledgeCatalog,
-    ) -> SQLGenerationResult:
+        history: tuple[ConversationMessage, ...] = (),
+    ) -> SQLGenerationResult | ClarificationResult:
         catalog_context = self._serializer.serialize(catalog)
+        history_context = self._serialize_history(history)
 
         messages = [
             LLMMessage(
@@ -40,6 +54,7 @@ class SQLGenerator:
                     "- Return exactly one SQL query.\n"
                     "- Use schema-qualified table names.\n\n"
                     f"Catalog:\n{catalog_context}\n\n"
+                    f"Conversation history:\n{history_context}\n\n"
                     "Return a JSON object with exactly these fields:\n"
                     '- "sql": the PostgreSQL query\n'
                     '- "explanation": a short explanation of the query'
@@ -52,12 +67,30 @@ class SQLGenerator:
         ]
 
         response = self._provider.generate(messages)
+
         try:
             payload = json.loads(response.content)
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise SQLGenerationError(
+                "The LLM returned an invalid SQL generation response."
+            ) from exc
 
+        if "clarification" in payload:
+            clarification = payload["clarification"]
+
+            if not isinstance(clarification, str) or not clarification.strip():
+                raise SQLGenerationError(
+                    "The LLM returned an invalid SQL generation response."
+                )
+
+            return ClarificationResult(
+                question=clarification.strip(),
+            )
+
+        try:
             sql = payload["sql"]
             explanation = payload["explanation"]
-        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        except (KeyError, TypeError) as exc:
             raise SQLGenerationError(
                 "The LLM returned an invalid SQL generation response."
             ) from exc

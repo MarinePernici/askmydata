@@ -5,7 +5,11 @@ from typing import TypeVar
 from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import ResultValidationError, SQLValidationError
 from query_engine.tracer import NullQueryTracer, QueryTracer
-from query_engine.types import QueryRunResult
+from query_engine.types import (
+    ClarificationResult,
+    ConversationMessage,
+    QueryRunResult,
+)
 
 
 T = TypeVar("T")
@@ -34,14 +38,19 @@ class QueryOrchestrator:
         self,
         question: str,
         catalog: KnowledgeCatalog,
-    ) -> QueryRunResult:
+        history: tuple[ConversationMessage, ...] = (),
+    ) -> QueryRunResult | ClarificationResult:
         generation_result = self._run_traced_step(
             step="sql_generation",
             operation=lambda: self._generator.generate(
                 question=question,
                 catalog=catalog,
+                history=history,
             ),
         )
+
+        if isinstance(generation_result, ClarificationResult):
+            return generation_result
 
         validation_result = self._run_traced_step(
             step="sql_validation",

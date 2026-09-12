@@ -64,6 +64,30 @@ class QuestionRun(models.Model):
 
     error_message = models.TextField(blank=True)
 
+    conversation = models.ForeignKey(
+        "conversations.Conversation",
+        on_delete=models.CASCADE,
+        related_name="question_runs",
+        null=True,
+        blank=True,
+    )
+
+    user_message = models.OneToOneField(
+        "conversations.Message",
+        on_delete=models.SET_NULL,
+        related_name="question_run",
+        null=True,
+        blank=True,
+    )
+
+    assistant_message = models.OneToOneField(
+        "conversations.Message",
+        on_delete=models.SET_NULL,
+        related_name="generated_by_run",
+        null=True,
+        blank=True,
+    )
+
 
 class ExecutionTrace(models.Model):
     """Persistent trace of one query pipeline step."""

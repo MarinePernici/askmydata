@@ -48,3 +48,14 @@ class QueryRunResult:
     explanation: str
     execution: QueryExecutionResult
     answer: str
+
+
+@dataclass(frozen=True)
+class ConversationMessage:
+    role: str
+    content: str
+
+
+@dataclass(frozen=True)
+class ClarificationResult:
+    question: str

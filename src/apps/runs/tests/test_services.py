@@ -1,5 +1,7 @@
 from django.test import TestCase
 
+from apps.conversations.models import Conversation, Message
+from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.runs.models import ExecutionTrace, QuestionRun
@@ -7,6 +9,8 @@ from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
 from query_engine.types import (
     AnswerGenerationResult,
+    ClarificationResult,
+    ConversationMessage,
     QueryExecutionResult,
     ResultValidationResult,
     SQLGenerationResult,
@@ -15,7 +19,7 @@ from query_engine.types import (
 
 
 class FakeGenerator:
-    def generate(self, question, catalog):
+    def generate(self, question, catalog, history=()):
         return SQLGenerationResult(
             sql="SELECT 1 AS value;",
             explanation="Returns one value.",
@@ -48,8 +52,26 @@ class FakeAnswerGenerator:
 
 
 class FailingGenerator:
-    def generate(self, question, catalog):
+    def generate(self, question, catalog, history=()):
         raise RuntimeError("LLM unavailable")
+
+
+class RecordingGenerator:
+    def __init__(self):
+        self.history = None
+
+    def generate(
+        self,
+        question,
+        catalog,
+        history=(),
+    ):
+        self.history = history
+
+        return SQLGenerationResult(
+            sql="SELECT 1 AS value;",
+            explanation="Returns one value.",
+        )
 
 
 class FakeExecutorFactory:
@@ -71,7 +93,25 @@ class FakeCatalogReader:
         return self.catalog
 
 
+class ClarificationGenerator:
+    def generate(
+        self,
+        question,
+        catalog,
+        history=(),
+    ):
+        return ClarificationResult(
+            question="Which date range should I use?",
+        )
+
+
 class QuestionRunServiceTests(TestCase):
+    def create_conversation(self, project):
+        return Conversation.objects.create(
+            project=project,
+            title="Test conversation",
+        )
+    
     def create_project_with_data_source(self):
         project = Project.objects.create(
             name="Test project",
@@ -91,6 +131,7 @@ class QuestionRunServiceTests(TestCase):
 
     def test_successful_run_is_persisted(self):
         project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
 
         executor_factory = FakeExecutorFactory()
 
@@ -104,10 +145,12 @@ class QuestionRunServiceTests(TestCase):
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
             catalog_reader=catalog_reader,
+            conversation_service=ConversationService(),
         )
 
         result = service.run(
             project=project,
+            conversation=conversation,
             question="Return one.",
         )
 
@@ -129,6 +172,7 @@ class QuestionRunServiceTests(TestCase):
 
     def test_failed_run_is_persisted(self):
         project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
 
         service = QuestionRunService(
             generator=FailingGenerator(),
@@ -139,11 +183,13 @@ class QuestionRunServiceTests(TestCase):
             catalog_reader=FakeCatalogReader(
                 KnowledgeCatalog(tables=())
             ),
+            conversation_service=ConversationService(),
         )
 
         with self.assertRaises(RuntimeError):
             service.run(
                 project=project,
+                conversation=conversation,
                 question="Return one.",
             )
 
@@ -191,6 +237,7 @@ class QuestionRunServiceTests(TestCase):
 
     def test_executor_factory_receives_project_data_source_config(self):
         project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
 
         executor_factory = FakeExecutorFactory()
 
@@ -204,10 +251,12 @@ class QuestionRunServiceTests(TestCase):
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
             catalog_reader=catalog_reader,
+            conversation_service=ConversationService(),
         )
 
         service.run(
             project=project,
+            conversation=conversation,
             question="Return one.",
         )
 
@@ -236,6 +285,8 @@ class QuestionRunServiceTests(TestCase):
     def test_catalog_is_loaded_from_project(self):
         project = self.create_project_with_data_source()
 
+        conversation = self.create_conversation(project)
+
         catalog = KnowledgeCatalog(tables=())
         catalog_reader = FakeCatalogReader(catalog)
 
@@ -246,14 +297,389 @@ class QuestionRunServiceTests(TestCase):
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
             catalog_reader=catalog_reader,
+            conversation_service=ConversationService(),
         )
 
         service.run(
             project=project,
+            conversation=conversation,
             question="Return one.",
         )
 
         self.assertEqual(
             catalog_reader.project,
             project,
+        )
+
+    def test_successful_run_creates_conversation_messages(self):
+        project = self.create_project_with_data_source()
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="Return one.",
+        )
+
+        messages = list(
+            conversation.messages.all()
+        )
+
+        self.assertEqual(
+            len(messages),
+            2,
+        )
+
+        self.assertEqual(
+            messages[0].role,
+            Message.Role.USER,
+        )
+        self.assertEqual(
+            messages[0].content,
+            "Return one.",
+        )
+        self.assertEqual(
+            messages[0].sequence_number,
+            1,
+        )
+
+        self.assertEqual(
+            messages[1].role,
+            Message.Role.ASSISTANT,
+        )
+        self.assertEqual(
+            messages[1].content,
+            "There is one value.",
+        )
+        self.assertEqual(
+            messages[1].sequence_number,
+            2,
+        )
+
+        question_run = QuestionRun.objects.get()
+
+        self.assertEqual(
+            question_run.conversation,
+            conversation,
+        )
+        self.assertEqual(
+            question_run.user_message,
+            messages[0],
+        )
+        self.assertEqual(
+            question_run.assistant_message,
+            messages[1],
+        )
+
+    def test_failed_run_keeps_user_message_without_assistant_message(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FailingGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="Return one.",
+            )
+
+        messages = list(
+            conversation.messages.all()
+        )
+
+        self.assertEqual(
+            len(messages),
+            1,
+        )
+
+        self.assertEqual(
+            messages[0].role,
+            Message.Role.USER,
+        )
+        self.assertEqual(
+            messages[0].content,
+            "Return one.",
+        )
+        self.assertEqual(
+            messages[0].sequence_number,
+            1,
+        )
+
+        question_run = QuestionRun.objects.get()
+
+        self.assertEqual(
+            question_run.status,
+            QuestionRun.Status.FAILED,
+        )
+        self.assertEqual(
+            question_run.user_message,
+            messages[0],
+        )
+        self.assertIsNone(
+            question_run.assistant_message,
+        )
+
+    def test_run_appends_messages_after_highest_sequence_number(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="Previous question",
+            sequence_number=1,
+        )
+
+        message_to_delete = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="Previous answer",
+            sequence_number=2,
+        )
+
+        Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="Another question",
+            sequence_number=3,
+        )
+
+        message_to_delete.delete()
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="Return one.",
+        )
+
+        self.assertEqual(
+            list(
+                conversation.messages.values_list(
+                    "sequence_number",
+                    flat=True,
+                )
+            ),
+            [1, 3, 4, 5],
+        )
+
+    def test_run_passes_previous_conversation_history_to_generator(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+        
+        Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="How many orders are there?",
+            sequence_number=1,
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are 42 orders.",
+            sequence_number=2,
+        )
+
+        generator = RecordingGenerator()
+        catalog = KnowledgeCatalog(tables=())
+
+        service = QuestionRunService(
+            generator=generator,
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(catalog),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="And how many this month?",
+        )
+
+        self.assertEqual(
+            generator.history,
+            (
+                ConversationMessage(
+                    role="user",
+                    content="How many orders are there?",
+                ),
+                ConversationMessage(
+                    role="assistant",
+                    content="There are 42 orders.",
+                ),
+            ),
+        )
+
+    def test_run_rejects_conversation_from_another_project(self):
+        project = self.create_project_with_data_source()
+        other_project = self.create_project_with_data_source()
+
+        conversation = self.create_conversation(other_project)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(ValueError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="Return one.",
+            )
+
+        self.assertEqual(
+            conversation.messages.count(),
+            0,
+        )
+
+        self.assertFalse(
+            QuestionRun.objects.filter(
+                conversation=conversation,
+            ).exists()
+        )
+
+    def test_run_persists_clarification_request(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=ClarificationGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
+            conversation_service=ConversationService(),
+        )
+
+        result = service.run(
+            project=project,
+            conversation=conversation,
+            question="How many recent orders are there?",
+        )
+
+        run = QuestionRun.objects.get()
+
+        self.assertEqual(
+            result,
+            ClarificationResult(
+                question="Which date range should I use?",
+            ),
+        )
+
+        self.assertEqual(
+            run.status,
+            QuestionRun.Status.NEEDS_CLARIFICATION,
+        )
+
+        self.assertIsNotNone(run.assistant_message)
+        self.assertEqual(
+            run.assistant_message.content,
+            "Which date range should I use?",
+        )
+
+        self.assertEqual(
+            run.assistant_message.role,
+            Message.Role.ASSISTANT,
+        )
+
+    def test_answer_to_clarification_uses_previous_exchange_as_history(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="How many recent orders are there?",
+            sequence_number=1,
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="Which date range should I use?",
+            sequence_number=2,
+        )
+
+        generator = RecordingGenerator()
+        catalog = KnowledgeCatalog(tables=())
+
+        service = QuestionRunService(
+            generator=generator,
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(catalog),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="The last 30 days.",
+        )
+
+        self.assertEqual(
+            generator.history,
+            (
+                ConversationMessage(
+                    role="user",
+                    content="How many recent orders are there?",
+                ),
+                ConversationMessage(
+                    role="assistant",
+                    content="Which date range should I use?",
+                ),
+            ),
         )

@@ -5,6 +5,8 @@ from apps.catalogs.models import (
     SchemaSnapshot,
 )
 from apps.catalogs.readers import CatalogReader
+from apps.conversations.models import Conversation
+from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.runs.models import ExecutionTrace, QuestionRun
@@ -29,7 +31,7 @@ class RecordingGenerator:
     def __init__(self):
         self.catalog = None
 
-    def generate(self, question, catalog):
+    def generate(self, question, catalog, history=()):
         self.catalog = catalog
 
         return SQLGenerationResult(
@@ -141,10 +143,17 @@ class QuestionRunIntegrationTests(TestCase):
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
             catalog_reader=CatalogReader(),
+            conversation_service=ConversationService(),
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
         )
 
         result = service.run(
             project=project,
+            conversation=conversation,
             question="How many orders are there?",
         )
 

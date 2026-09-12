@@ -4,15 +4,17 @@ from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import ResultValidationError, SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import (
+    AnswerGenerationResult,
+    ClarificationResult,
+    ConversationMessage,
     QueryExecutionResult,
     ResultValidationResult,
     SQLGenerationResult,
     SQLValidationResult,
-    AnswerGenerationResult,
 )
 
 class FakeGenerator:
-    def generate(self, question, catalog):
+    def generate(self, question, catalog, history=()):
         return SQLGenerationResult(
             sql="SELECT 1 AS value;",
             explanation="Returns one value.",
@@ -113,8 +115,38 @@ class RecordingTracer:
 
 
 class FailingGenerator:
-    def generate(self, question, catalog):
+    def generate(self, question, catalog, history=()):
         raise RuntimeError("LLM unavailable")
+
+
+class RecordingGenerator:
+    def __init__(self):
+        self.history = None
+
+    def generate(
+        self,
+        question,
+        catalog,
+        history=(),
+    ):
+        self.history = history
+
+        return SQLGenerationResult(
+            sql="SELECT 1;",
+            explanation="Test query.",
+        )
+
+
+class ClarificationGenerator:
+    def generate(
+        self,
+        question,
+        catalog,
+        history=(),
+    ):
+        return ClarificationResult(
+            question="Which date range should I use?",
+        )
 
 class QueryOrchestratorTests(unittest.TestCase):
     def test_orchestrator_can_be_created(self):
@@ -281,6 +313,92 @@ class QueryOrchestratorTests(unittest.TestCase):
         self.assertEqual(event["error_code"], "RuntimeError")
         self.assertEqual(event["error_message"], "LLM unavailable")
         self.assertGreaterEqual(event["duration_ms"], 0)
+
+    def test_history_is_forwarded_to_sql_generator(self):
+        history = (
+            ConversationMessage(
+                role="user",
+                content="Previous question",
+            ),
+            ConversationMessage(
+                role="assistant",
+                content="Previous answer",
+            ),
+        )
+
+        generator = RecordingGenerator()
+
+        orchestrator = QueryOrchestrator(
+            generator=generator,
+            validator=FakeValidator(),
+            executor=FakeExecutor(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+        )
+
+        orchestrator.run(
+            question="Current question",
+            catalog=KnowledgeCatalog(tables=()),
+            history=history,
+        )
+
+        self.assertEqual(
+            generator.history,
+            history,
+        )
+
+    def test_run_returns_clarification_without_executing_query(self):
+        executor = RecordingExecutor()
+
+        orchestrator = QueryOrchestrator(
+            generator=ClarificationGenerator(),
+            validator=FakeValidator(),
+            executor=executor,
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+        )
+
+        result = orchestrator.run(
+            question="How many recent orders are there?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(
+            result,
+            ClarificationResult(
+                question="Which date range should I use?",
+            ),
+        )
+
+        self.assertFalse(executor.called)
+
+    def test_clarification_traces_only_sql_generation(self):
+        tracer = RecordingTracer()
+
+        orchestrator = QueryOrchestrator(
+            generator=ClarificationGenerator(),
+            validator=FakeValidator(),
+            executor=FakeExecutor(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            tracer=tracer,
+        )
+
+        orchestrator.run(
+            question="How many recent orders are there?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(len(tracer.events), 1)
+
+        self.assertEqual(
+            tracer.events[0]["step"],
+            "sql_generation",
+        )
+        self.assertEqual(
+            tracer.events[0]["status"],
+            "completed",
+        )
 
 if __name__ == "__main__":
     unittest.main()

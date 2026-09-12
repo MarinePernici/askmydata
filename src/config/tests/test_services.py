@@ -8,6 +8,7 @@ from config.services import (
     create_llm_provider,
     create_question_run_service,
 )
+from apps.conversations.services import ConversationService
 from query_engine.postgresql_executor import PostgreSQLQueryExecutor
 
 
@@ -54,6 +55,7 @@ class ServiceFactoryTests(SimpleTestCase):
         )
 
     @patch("config.services.QuestionRunService")
+    @patch("config.services.ConversationService")
     @patch("config.services.CatalogReader")
     @patch("config.services.AnswerGenerator")
     @patch("config.services.ResultValidator")
@@ -68,6 +70,7 @@ class ServiceFactoryTests(SimpleTestCase):
         mock_result_validator,
         mock_answer_generator,
         mock_catalog_reader,
+        mock_conversation_service,
         mock_question_run_service,
     ):
         provider = object()
@@ -76,6 +79,7 @@ class ServiceFactoryTests(SimpleTestCase):
         result_validator = object()
         answer_generator = object()
         catalog_reader = object()
+        conversation_service = object()
 
         mock_create_llm_provider.return_value = provider
         mock_sql_generator.return_value = generator
@@ -83,6 +87,7 @@ class ServiceFactoryTests(SimpleTestCase):
         mock_result_validator.return_value = result_validator
         mock_answer_generator.return_value = answer_generator
         mock_catalog_reader.return_value = catalog_reader
+        mock_conversation_service.return_value = conversation_service
 
         create_question_run_service()
 
@@ -96,6 +101,8 @@ class ServiceFactoryTests(SimpleTestCase):
 
         mock_catalog_reader.assert_called_once_with()
 
+        mock_conversation_service.assert_called_once_with()
+
         mock_question_run_service.assert_called_once_with(
             generator=generator,
             validator=validator,
@@ -103,4 +110,5 @@ class ServiceFactoryTests(SimpleTestCase):
             result_validator=result_validator,
             answer_generator=answer_generator,
             catalog_reader=catalog_reader,
+            conversation_service=conversation_service,
         )

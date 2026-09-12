@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from apps.conversations.models import Conversation, Message
 from apps.projects.models import Project
 from apps.runs.models import QuestionRun, ExecutionTrace
 
@@ -65,4 +66,113 @@ class QuestionRunModelTests(TestCase):
         self.assertEqual(
             trace.status,
             ExecutionTrace.Status.PENDING,
+        )
+
+
+class QuestionRunConversationTests(TestCase):
+    def test_question_run_can_be_linked_to_conversation_and_messages(self):
+        project = Project.objects.create(
+            name="Test project",
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+        )
+
+        user_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="How many orders are there?",
+            sequence_number=1,
+        )
+
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are two orders.",
+            sequence_number=2,
+        )
+
+        question_run = QuestionRun.objects.create(
+            project=project,
+            conversation=conversation,
+            user_message=user_message,
+            assistant_message=assistant_message,
+        )
+
+        self.assertEqual(
+            question_run.conversation,
+            conversation,
+        )
+        self.assertEqual(
+            question_run.user_message,
+            user_message,
+        )
+        self.assertEqual(
+            question_run.assistant_message,
+            assistant_message,
+        )
+
+    def test_deleting_conversation_deletes_question_run(self):
+        project = Project.objects.create(
+            name="Test project",
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+        )
+
+        question_run = QuestionRun.objects.create(
+            project=project,
+            conversation=conversation,
+        )
+
+        conversation.delete()
+
+        self.assertFalse(
+            QuestionRun.objects.filter(
+                id=question_run.id,
+            ).exists()
+        )
+
+    def test_deleting_messages_preserves_question_run(self):
+        project = Project.objects.create(
+            name="Test project",
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+        )
+
+        user_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="How many orders are there?",
+            sequence_number=1,
+        )
+
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are two orders.",
+            sequence_number=2,
+        )
+
+        question_run = QuestionRun.objects.create(
+            project=project,
+            conversation=conversation,
+            user_message=user_message,
+            assistant_message=assistant_message,
+        )
+
+        user_message.delete()
+        assistant_message.delete()
+
+        question_run.refresh_from_db()
+
+        self.assertIsNone(
+            question_run.user_message,
+        )
+        self.assertIsNone(
+            question_run.assistant_message,
         )

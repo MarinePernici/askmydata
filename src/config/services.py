@@ -2,6 +2,7 @@ from django.conf import settings
 
 from apps.catalogs.readers import CatalogReader
 from apps.catalogs.services import CatalogService
+from apps.conversations.services import ConversationService
 from apps.runs.services import QuestionRunService
 from catalog.semantic_enricher import SemanticEnricher
 from llm.openai import OpenAIProvider
@@ -43,4 +44,5 @@ def create_question_run_service() -> QuestionRunService:
             provider=provider,
         ),
         catalog_reader=CatalogReader(),
+        conversation_service=ConversationService(),
     )

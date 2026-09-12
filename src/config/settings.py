@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.runs",
     "apps.data_sources",
     "apps.catalogs",
+    "apps.conversations",
 ]
 
 MIDDLEWARE = [
