@@ -2,6 +2,7 @@ from django.utils import timezone
 
 from apps.conversations.models import Conversation, Message
 from apps.projects.models import Project
+from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
 from query_engine.orchestrator import QueryOrchestrator
@@ -33,6 +34,9 @@ class QuestionRunService:
         conversation: Conversation,
         question: str,
     ) -> QueryRunResult:
+        if project.status != Project.Status.READY:
+            raise ProjectNotReadyError("Project is not ready.")
+
         if conversation.project_id != project.id:
             raise ValueError("Conversation does not belong to project.")
         

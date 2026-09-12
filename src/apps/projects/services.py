@@ -21,3 +21,29 @@ class ProjectService:
     def mark_regenerating_catalog(self, project: Project) -> None:
         project.status = Project.Status.REGENERATING_CATALOG
         project.save(update_fields=["status"])
+
+    def create(
+        self,
+        name: str,
+        description: str = "",
+    ) -> Project:
+        return Project.objects.create(
+            name=name,
+            description=description,
+        )
+
+    def update(
+        self,
+        project: Project,
+        name: str,
+        description: str,
+    ) -> None:
+        project.name = name
+        project.description = description
+        project.save(
+            update_fields=[
+                "name",
+                "description",
+                "updated_at",
+            ]
+        )

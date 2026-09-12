@@ -87,3 +87,68 @@ class ProjectServiceTests(TestCase):
             project.status,
             Project.Status.REGENERATING_CATALOG,
         )
+
+    def test_create_project_creates_draft_project(self):
+        service = ProjectService()
+
+        project = service.create(
+            name="Sales analysis",
+            description="Analyze sales data.",
+        )
+
+        self.assertEqual(
+            project.name,
+            "Sales analysis",
+        )
+        self.assertEqual(
+            project.description,
+            "Analyze sales data.",
+        )
+        self.assertEqual(
+            project.status,
+            Project.Status.DRAFT,
+        )
+        self.assertTrue(
+            Project.objects.filter(id=project.id).exists()
+        )
+
+    def test_update_project_updates_name_and_description(self):
+        project = Project.objects.create(
+            name="Old name",
+            description="Old description",
+        )
+
+        service = ProjectService()
+
+        service.update(
+            project=project,
+            name="New name",
+            description="New description",
+        )
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.name,
+            "New name",
+        )
+        self.assertEqual(
+            project.description,
+            "New description",
+        )
+
+    def test_archive_is_idempotent(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.ARCHIVED,
+        )
+        service = ProjectService()
+
+        service.archive(project)
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.ARCHIVED,
+        )

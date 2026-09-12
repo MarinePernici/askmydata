@@ -1,8 +1,12 @@
 from apps.catalogs.services import CatalogService
+from apps.data_sources.exceptions import DataSourceConnectionError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
-from connectors.postgresql import PostgreSQLConnector
+from connectors.postgresql import (
+    PostgreSQLConnectionConfig,
+    PostgreSQLConnector,
+)
 
 
 class DataSourceService:
@@ -75,5 +79,48 @@ class DataSourceService:
 
         self._catalog_service.mark_stale(project)
         self._project_service.mark_configuring(project)
+
+        return data_source
+
+    def configure_and_test(
+        self,
+        project: Project,
+        host: str,
+        port: int,
+        database: str,
+        username: str,
+        password: str,
+    ) -> DataSource:
+        config = PostgreSQLConnectionConfig(
+            host=host,
+            port=port,
+            database=database,
+            user=username,
+            password=password,
+        )
+
+        connector = self._connector_class(config)
+
+        if not connector.test_connection():
+            raise DataSourceConnectionError(
+                "Unable to connect to the data source."
+            )
+
+        data_source = self.configure(
+            project=project,
+            host=host,
+            port=port,
+            database=database,
+            username=username,
+            password=password,
+        )
+
+        data_source.connection_status = DataSource.ConnectionStatus.CONNECTED
+        data_source.save(
+            update_fields=[
+                "connection_status",
+                "updated_at",
+            ]
+        )
 
         return data_source

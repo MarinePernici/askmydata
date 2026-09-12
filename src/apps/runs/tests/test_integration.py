@@ -81,7 +81,8 @@ class FakeAnswerGenerator:
 class QuestionRunIntegrationTests(TestCase):
     def test_run_uses_persisted_catalog_and_project_data_source(self):
         project = Project.objects.create(
-            name="Sales project",
+            name="Test project",
+            status=Project.Status.READY,
         )
 
         data_source = DataSource(

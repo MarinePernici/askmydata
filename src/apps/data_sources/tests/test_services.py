@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from apps.data_sources.exceptions import DataSourceConnectionError
 from apps.data_sources.models import DataSource
 from apps.data_sources.services import DataSourceService
 from apps.catalogs.models import KnowledgeCatalog, SchemaSnapshot
@@ -202,4 +203,111 @@ class DataSourceServiceTests(TestCase):
         self.assertEqual(
             knowledge_catalog.snapshots.count(),
             1,
+        )
+
+    def test_configure_and_test_saves_valid_configuration(self):
+        project = Project.objects.create(name="Test project")
+        service = DataSourceService(
+            connector_class=SuccessfulConnector,
+        )
+
+        data_source = service.configure_and_test(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="sales",
+            username="readonly",
+            password="secret",
+        )
+
+        self.assertEqual(
+            data_source.connection_status,
+            DataSource.ConnectionStatus.CONNECTED,
+        )
+
+    def test_configure_and_test_does_not_replace_existing_configuration_on_failure(self):
+        project = Project.objects.create(name="Test project")
+
+        existing = DataSource(
+            project=project,
+            host="old-host",
+            port=5432,
+            database="old-db",
+            username="old-user",
+            connection_status=DataSource.ConnectionStatus.CONNECTED,
+        )
+        existing.set_password("old-password")
+        existing.save()
+
+        service = DataSourceService(
+            connector_class=FailingConnector,
+        )
+
+        with self.assertRaises(DataSourceConnectionError):
+            service.configure_and_test(
+                project=project,
+                host="new-host",
+                port=5432,
+                database="new-db",
+                username="new-user",
+                password="new-password",
+            )
+
+        existing.refresh_from_db()
+
+        self.assertEqual(existing.host, "old-host")
+        self.assertEqual(existing.database, "old-db")
+        self.assertEqual(existing.username, "old-user")
+        self.assertEqual(
+            existing.connection_status,
+            DataSource.ConnectionStatus.CONNECTED,
+        )
+        self.assertEqual(existing.get_password(), "old-password")
+
+    def test_configure_and_test_does_not_create_data_source_on_failure(self):
+        project = Project.objects.create(name="Test project")
+
+        service = DataSourceService(
+            connector_class=FailingConnector,
+        )
+
+        with self.assertRaises(DataSourceConnectionError):
+            service.configure_and_test(
+                project=project,
+                host="localhost",
+                port=5432,
+                database="sales",
+                username="readonly",
+                password="wrong-password",
+            )
+
+        self.assertFalse(
+            DataSource.objects.filter(project=project).exists()
+        )
+
+    def test_configure_and_test_failure_does_not_change_project_status(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.READY,
+        )
+
+        service = DataSourceService(
+            connector_class=FailingConnector,
+        )
+
+        with self.assertRaises(DataSourceConnectionError):
+            service.configure_and_test(
+                project=project,
+                host="localhost",
+                port=5432,
+                database="sales",
+                username="readonly",
+                password="wrong-password",
+            )
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.READY,
         )

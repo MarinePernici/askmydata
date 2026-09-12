@@ -4,6 +4,7 @@ from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
@@ -115,6 +116,7 @@ class QuestionRunServiceTests(TestCase):
     def create_project_with_data_source(self):
         project = Project.objects.create(
             name="Test project",
+            status=Project.Status.READY,
         )
 
         data_source = DataSource(
@@ -682,4 +684,41 @@ class QuestionRunServiceTests(TestCase):
                     content="Which date range should I use?",
                 ),
             ),
+        )
+
+    def test_run_rejects_project_that_is_not_ready(self):
+        project = self.create_project_with_data_source()
+        project.status = Project.Status.CONFIGURING
+        project.save(
+            update_fields=["status"]
+        )
+
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(
+                KnowledgeCatalog(tables=())
+            ),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(ProjectNotReadyError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="How many orders are there?",
+            )
+
+        self.assertEqual(
+            project.question_runs.count(),
+            0,
+        )
+        self.assertEqual(
+            conversation.messages.count(),
+            0,
         )

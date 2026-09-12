@@ -1,0 +1,2 @@
+class ProjectNotReadyError(Exception):
+    pass
