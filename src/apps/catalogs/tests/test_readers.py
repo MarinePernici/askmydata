@@ -129,3 +129,25 @@ class CatalogReaderTests(TestCase):
             reader.get_current(
                 project=project,
             )
+
+    def test_get_current_rejects_stale_catalog(self):
+        project = Project.objects.create(
+            name="Test project",
+        )
+
+        knowledge_catalog = KnowledgeCatalogModel.objects.create(
+            project=project,
+            status=KnowledgeCatalogModel.Status.STALE,
+            version=1,
+        )
+
+        SchemaSnapshot.objects.create(
+            catalog=knowledge_catalog,
+            version=1,
+            schema_data={"tables": []},
+        )
+
+        reader = CatalogReader()
+
+        with self.assertRaises(CatalogNotReadyError):
+            reader.get_current(project)

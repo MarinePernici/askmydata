@@ -11,6 +11,7 @@ from apps.catalogs.models import (
     SchemaSnapshot,
 )
 from apps.projects.models import Project
+from apps.projects.services import ProjectService
 from catalog.builder import CatalogBuilder
 from catalog.semantic_enricher import SemanticEnricher
 from catalog.snapshot_serializer import CatalogSnapshotSerializer
@@ -23,9 +24,11 @@ class CatalogService:
         self,
         connector_class=PostgreSQLConnector,
         semantic_enricher: SemanticEnricher | None = None,
+        project_service: ProjectService | None = None,
     ) -> None:
         self._connector_class = connector_class
         self._semantic_enricher = semantic_enricher
+        self._project_service = project_service or ProjectService()
 
     def build_for_project(
         self,
@@ -55,6 +58,17 @@ class CatalogService:
             project=project,
         )
 
+        previous_status = knowledge_catalog.status
+
+        is_rebuild_from_stale = (
+            previous_status == KnowledgeCatalogModel.Status.STALE
+        )
+
+        if knowledge_catalog.version == 0 or is_rebuild_from_stale:
+            self._project_service.mark_building_catalog(project)
+        else:
+            self._project_service.mark_regenerating_catalog(project)
+
         knowledge_catalog.status = KnowledgeCatalogModel.Status.BUILDING
         knowledge_catalog.save(
             update_fields=[
@@ -72,14 +86,21 @@ class CatalogService:
                 catalog = self._semantic_enricher.enrich_catalog(catalog)
 
         except Exception:
-            if knowledge_catalog.version == 0:
-                knowledge_catalog.status = KnowledgeCatalogModel.Status.FAILED
+            if knowledge_catalog.version == 0 or is_rebuild_from_stale:
+                knowledge_catalog.status = (
+                    KnowledgeCatalogModel.Status.STALE
+                    if is_rebuild_from_stale
+                    else KnowledgeCatalogModel.Status.FAILED
+                )
                 knowledge_catalog.save(
                     update_fields=[
                         "status",
                         "updated_at",
                     ]
                 )
+
+                self._project_service.mark_configuring(project)
+
             else:
                 knowledge_catalog.status = KnowledgeCatalogModel.Status.READY
                 knowledge_catalog.save(
@@ -88,10 +109,10 @@ class CatalogService:
                         "updated_at",
                     ]
                 )
-            raise
 
-        if self._semantic_enricher is not None:
-            catalog = self._semantic_enricher.enrich_catalog(catalog)
+                self._project_service.mark_ready(project)
+
+            raise
 
         serializer = CatalogSnapshotSerializer()
         schema_data = serializer.serialize(catalog)
@@ -117,5 +138,23 @@ class CatalogService:
                 ]
             )
 
+        self._project_service.mark_ready(project)
+
         return catalog
-    
+
+    def mark_stale(
+        self,
+        project: Project,
+    ) -> None:
+        try:
+            knowledge_catalog = project.knowledge_catalog
+        except ObjectDoesNotExist:
+            return
+
+        knowledge_catalog.status = KnowledgeCatalogModel.Status.STALE
+        knowledge_catalog.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )

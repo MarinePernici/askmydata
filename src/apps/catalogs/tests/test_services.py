@@ -89,6 +89,61 @@ class FailingSemanticEnricher:
         )
 
 
+class ProjectStatusCheckingConnector:
+    project = None
+
+    def __init__(self, config):
+        self.config = config
+
+    def discover_columns(self, schema, table):
+        project = Project.objects.get(
+            id=self.project.id,
+        )
+
+        if project.status != Project.Status.BUILDING_CATALOG:
+            raise AssertionError(
+                f"Expected project to be BUILDING_CATALOG, "
+                f"got {project.status}"
+            )
+
+        return []
+
+    def discover_relationships(self, schema, table):
+        return []
+
+
+class ProjectRegeneratingStatusCheckingConnector:
+    project = None
+
+    def __init__(self, config):
+        self.config = config
+
+    def discover_columns(self, schema, table):
+        project = Project.objects.get(
+            id=self.project.id,
+        )
+
+        if project.status != Project.Status.REGENERATING_CATALOG:
+            raise AssertionError(
+                f"Expected project to be REGENERATING_CATALOG, "
+                f"got {project.status}"
+            )
+
+        return []
+
+    def discover_relationships(self, schema, table):
+        return []
+
+
+class CountingSemanticEnricher:
+    def __init__(self):
+        self.call_count = 0
+
+    def enrich_catalog(self, catalog):
+        self.call_count += 1
+        return catalog
+
+
 class CatalogServiceTests(TestCase):
     def test_build_for_project_uses_project_catalog_scope(self):
         project = Project.objects.create(
@@ -632,4 +687,440 @@ class CatalogServiceTests(TestCase):
             knowledge_catalog.snapshots.filter(
                 version=2,
             ).exists()
+        )
+
+    def test_first_build_marks_project_as_building_catalog(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.CONFIGURING,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        ProjectStatusCheckingConnector.project = project
+
+        service = CatalogService(
+            connector_class=ProjectStatusCheckingConnector,
+        )
+
+        service.build_for_project(project)
+
+    def test_regeneration_marks_project_as_regenerating_catalog(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.READY,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        knowledge_catalog = KnowledgeCatalog.objects.create(
+            project=project,
+            version=1,
+            status=KnowledgeCatalog.Status.READY,
+        )
+
+        SchemaSnapshot.objects.create(
+            catalog=knowledge_catalog,
+            version=1,
+            schema_data={
+                "tables": [],
+            },
+        )
+
+        ProjectRegeneratingStatusCheckingConnector.project = project
+
+        service = CatalogService(
+            connector_class=ProjectRegeneratingStatusCheckingConnector,
+        )
+
+        service.build_for_project(project)
+
+    def test_successful_first_build_marks_project_as_ready(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.CONFIGURING,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        service = CatalogService(
+            connector_class=FakeConnector,
+        )
+
+        service.build_for_project(project)
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.READY,
+        )
+
+    def test_successful_regeneration_marks_project_as_ready(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.READY,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        knowledge_catalog = KnowledgeCatalog.objects.create(
+            project=project,
+            version=1,
+            status=KnowledgeCatalog.Status.READY,
+        )
+
+        SchemaSnapshot.objects.create(
+            catalog=knowledge_catalog,
+            version=1,
+            schema_data={"tables": []},
+        )
+
+        service = CatalogService(
+            connector_class=FakeConnector,
+        )
+
+        service.build_for_project(project)
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.READY,
+        )
+
+    def test_first_build_failure_returns_project_to_configuring(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.CONFIGURING,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        service = CatalogService(
+            connector_class=FailingConnector,
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.build_for_project(project)
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.CONFIGURING,
+        )
+
+    def test_regeneration_failure_returns_project_to_ready(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.READY,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        knowledge_catalog = KnowledgeCatalog.objects.create(
+            project=project,
+            version=1,
+            status=KnowledgeCatalog.Status.READY,
+        )
+
+        SchemaSnapshot.objects.create(
+            catalog=knowledge_catalog,
+            version=1,
+            schema_data={"tables": []},
+        )
+
+        service = CatalogService(
+            connector_class=FailingConnector,
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.build_for_project(project)
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.READY,
+        )
+
+    def test_semantic_enrichment_is_called_once_per_build(self):
+        project = Project.objects.create(
+            name="Test project",
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        semantic_enricher = CountingSemanticEnricher()
+
+        service = CatalogService(
+            connector_class=FakeConnector,
+            semantic_enricher=semantic_enricher,
+        )
+
+        service.build_for_project(project)
+
+        self.assertEqual(
+            semantic_enricher.call_count,
+            1,
+        )
+
+    def test_stale_catalog_build_failure_keeps_project_configuring(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.CONFIGURING,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="new_database",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        knowledge_catalog = KnowledgeCatalog.objects.create(
+            project=project,
+            version=1,
+            status=KnowledgeCatalog.Status.STALE,
+        )
+
+        SchemaSnapshot.objects.create(
+            catalog=knowledge_catalog,
+            version=1,
+            schema_data={"tables": []},
+        )
+
+        service = CatalogService(
+            connector_class=FailingConnector,
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.build_for_project(project)
+
+        project.refresh_from_db()
+        knowledge_catalog.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.CONFIGURING,
+        )
+        self.assertEqual(
+            knowledge_catalog.status,
+            KnowledgeCatalog.Status.STALE,
+        )
+        self.assertEqual(
+            knowledge_catalog.version,
+            1,
+        )
+        self.assertEqual(
+            knowledge_catalog.snapshots.count(),
+            1,
+        )
+
+    def test_stale_catalog_successful_build_creates_new_version_and_marks_ready(self):
+        project = Project.objects.create(
+            name="Test project",
+            status=Project.Status.CONFIGURING,
+        )
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="new_database",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {
+                    "schema": "sales",
+                    "table": "orders",
+                }
+            ],
+        )
+
+        knowledge_catalog = KnowledgeCatalog.objects.create(
+            project=project,
+            version=1,
+            status=KnowledgeCatalog.Status.STALE,
+        )
+
+        SchemaSnapshot.objects.create(
+            catalog=knowledge_catalog,
+            version=1,
+            schema_data={"tables": []},
+        )
+
+        service = CatalogService(
+            connector_class=FakeConnector,
+        )
+
+        service.build_for_project(project)
+
+        project.refresh_from_db()
+        knowledge_catalog.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.READY,
+        )
+        self.assertEqual(
+            knowledge_catalog.status,
+            KnowledgeCatalog.Status.READY,
+        )
+        self.assertEqual(
+            knowledge_catalog.version,
+            2,
+        )
+        self.assertEqual(
+            list(
+                knowledge_catalog.snapshots
+                .order_by("version")
+                .values_list("version", flat=True)
+            ),
+            [1, 2],
         )

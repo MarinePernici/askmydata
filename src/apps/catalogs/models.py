@@ -47,6 +47,7 @@ class KnowledgeCatalog(models.Model):
         PENDING = "pending", "Pending"
         BUILDING = "building", "Building"
         READY = "ready", "Ready"
+        STALE = "stale", "Stale"
         FAILED = "failed", "Failed"
 
     id = models.UUIDField(

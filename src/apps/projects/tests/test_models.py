@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import Project
+from apps.projects.models import Project
 
 
 class ProjectModelTests(TestCase):
@@ -15,3 +15,13 @@ class ProjectModelTests(TestCase):
         self.assertIsNotNone(project.id)
         self.assertIsNotNone(project.created_at)
         self.assertIsNotNone(project.updated_at)
+
+    def test_project_is_draft_by_default(self):
+        project = Project.objects.create(
+            name="Sales project",
+        )
+
+        self.assertEqual(
+            project.status,
+            Project.Status.DRAFT,
+        )
