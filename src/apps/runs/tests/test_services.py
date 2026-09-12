@@ -4,6 +4,7 @@ from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
@@ -114,7 +115,7 @@ class QuestionRunServiceTests(TestCase):
         )
     
     def create_project_with_data_source(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.READY,
         )

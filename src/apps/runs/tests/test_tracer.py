@@ -1,13 +1,13 @@
 from django.test import TestCase
 
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
 
 
 class DjangoQueryTracerTests(TestCase):
     def setUp(self):
-        self.project = Project.objects.create(
+        self.project = create_test_project(
             name="Test project",
         )
         self.question_run = QuestionRun.objects.create(

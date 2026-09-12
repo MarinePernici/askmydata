@@ -3,12 +3,12 @@ from django.test import TestCase
 
 from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 
 
 class DataSourceModelTests(TestCase):
     def test_data_source_has_not_tested_status_by_default(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -22,7 +22,7 @@ class DataSourceModelTests(TestCase):
         )
 
     def test_project_can_have_only_one_data_source(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -36,7 +36,7 @@ class DataSourceModelTests(TestCase):
             )
 
     def test_data_source_encrypts_password(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -55,7 +55,7 @@ class DataSourceModelTests(TestCase):
         )
 
     def test_data_source_can_decrypt_password(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -74,7 +74,7 @@ class DataSourceModelTests(TestCase):
         )
 
     def test_data_source_is_not_configured_when_connection_fields_are_missing(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -85,7 +85,7 @@ class DataSourceModelTests(TestCase):
         self.assertFalse(data_source.is_configured())
 
     def test_data_source_is_configured_when_connection_fields_are_complete(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -101,7 +101,7 @@ class DataSourceModelTests(TestCase):
         self.assertTrue(data_source.is_configured())
 
     def test_data_source_builds_postgresql_connection_config(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -123,7 +123,7 @@ class DataSourceModelTests(TestCase):
         self.assertEqual(config.password, "secret-password")
 
     def test_data_source_cannot_build_config_when_not_configured(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 

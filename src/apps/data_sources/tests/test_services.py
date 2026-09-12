@@ -5,6 +5,7 @@ from apps.data_sources.models import DataSource
 from apps.data_sources.services import DataSourceService
 from apps.catalogs.models import KnowledgeCatalog, SchemaSnapshot
 from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 
 
 class SuccessfulConnector:
@@ -25,7 +26,7 @@ class FailingConnector:
 
 class DataSourceServiceTests(TestCase):
     def setUp(self):
-        self.project = Project.objects.create(
+        self.project = create_test_project(
             name="Test project",
         )
 
@@ -74,7 +75,7 @@ class DataSourceServiceTests(TestCase):
         )
 
     def test_configure_data_source_marks_project_as_configuring(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -206,7 +207,7 @@ class DataSourceServiceTests(TestCase):
         )
 
     def test_configure_and_test_saves_valid_configuration(self):
-        project = Project.objects.create(name="Test project")
+        project = create_test_project(name="Test project")
         service = DataSourceService(
             connector_class=SuccessfulConnector,
         )
@@ -226,7 +227,7 @@ class DataSourceServiceTests(TestCase):
         )
 
     def test_configure_and_test_does_not_replace_existing_configuration_on_failure(self):
-        project = Project.objects.create(name="Test project")
+        project = create_test_project(name="Test project")
 
         existing = DataSource(
             project=project,
@@ -265,7 +266,7 @@ class DataSourceServiceTests(TestCase):
         self.assertEqual(existing.get_password(), "old-password")
 
     def test_configure_and_test_does_not_create_data_source_on_failure(self):
-        project = Project.objects.create(name="Test project")
+        project = create_test_project(name="Test project")
 
         service = DataSourceService(
             connector_class=FailingConnector,
@@ -286,7 +287,7 @@ class DataSourceServiceTests(TestCase):
         )
 
     def test_configure_and_test_failure_does_not_change_project_status(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.READY,
         )

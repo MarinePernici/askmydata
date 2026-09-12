@@ -2,12 +2,12 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from apps.conversations.models import Conversation, Message
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 
 
 class ConversationModelTests(TestCase):
     def test_conversation_can_be_created_for_project(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -30,7 +30,7 @@ class ConversationModelTests(TestCase):
         )
 
     def test_project_can_have_multiple_conversations(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -51,7 +51,7 @@ class ConversationModelTests(TestCase):
 
 class MessageModelTests(TestCase):
     def test_messages_are_ordered_by_sequence_number(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -83,7 +83,7 @@ class MessageModelTests(TestCase):
         )
 
     def test_sequence_number_must_be_unique_within_conversation(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 

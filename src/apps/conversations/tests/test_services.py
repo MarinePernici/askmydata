@@ -2,13 +2,13 @@ from django.test import TestCase
 
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 from query_engine.types import ConversationMessage
 
 
 class ConversationServiceTests(TestCase):
     def setUp(self):
-        self.project = Project.objects.create(
+        self.project = create_test_project(
             name="Test project",
         )
 
@@ -188,7 +188,7 @@ class ConversationServiceTests(TestCase):
             title="Newer",
         )
 
-        other_project = Project.objects.create(
+        other_project = create_test_project(
             name="Other project",
         )
         Conversation.objects.create(
@@ -221,7 +221,7 @@ class ConversationServiceTests(TestCase):
         )
 
     def test_get_conversation_rejects_conversation_from_another_project(self):
-        other_project = Project.objects.create(
+        other_project = create_test_project(
             name="Other project",
         )
 

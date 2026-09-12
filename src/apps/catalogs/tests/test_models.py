@@ -2,12 +2,12 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from apps.catalogs.models import CatalogScope, KnowledgeCatalog, SchemaSnapshot
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 
 
 class CatalogScopeModelTests(TestCase):
     def test_catalog_scope_has_empty_selection_by_default(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -21,7 +21,7 @@ class CatalogScopeModelTests(TestCase):
         )
 
     def test_project_can_have_only_one_catalog_scope(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -35,7 +35,7 @@ class CatalogScopeModelTests(TestCase):
             )
 
     def test_catalog_scope_converts_selection_to_domain_scope(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -67,7 +67,7 @@ class CatalogScopeModelTests(TestCase):
         )
 
     def test_empty_catalog_scope_converts_to_empty_domain_scope(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -85,7 +85,7 @@ class CatalogScopeModelTests(TestCase):
 
 class KnowledgeCatalogModelTests(TestCase):
     def test_knowledge_catalog_defaults_to_pending_version_zero(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -103,7 +103,7 @@ class KnowledgeCatalogModelTests(TestCase):
         )
 
     def test_catalog_can_have_multiple_schema_snapshots(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -150,7 +150,7 @@ class KnowledgeCatalogModelTests(TestCase):
         )
 
     def test_catalog_cannot_have_two_snapshots_with_same_version(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 

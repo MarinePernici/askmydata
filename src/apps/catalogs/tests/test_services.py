@@ -10,6 +10,8 @@ from apps.catalogs.services import CatalogService
 from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
+
 from catalog.exceptions import SemanticEnrichmentError
 from catalog.types import SemanticMetadata
 from connectors.types import ColumnMetadata
@@ -146,7 +148,7 @@ class CountingSemanticEnricher:
 
 class CatalogServiceTests(TestCase):
     def test_build_for_project_uses_project_catalog_scope(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -187,7 +189,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_build_for_project_fails_when_data_source_is_missing(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -199,7 +201,7 @@ class CatalogServiceTests(TestCase):
             service.build_for_project(project)
 
     def test_build_for_project_fails_when_catalog_scope_is_missing(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -221,7 +223,7 @@ class CatalogServiceTests(TestCase):
             service.build_for_project(project)
 
     def test_build_for_project_fails_when_data_source_is_incomplete(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -247,7 +249,7 @@ class CatalogServiceTests(TestCase):
             service.build_for_project(project)
 
     def test_build_for_project_persists_new_schema_snapshot(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -307,7 +309,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_build_for_project_does_not_persist_snapshot_when_build_fails(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -366,7 +368,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_first_build_failure_marks_catalog_as_failed(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -415,7 +417,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_catalog_is_building_while_catalog_is_generated(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -461,7 +463,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_successful_regeneration_creates_new_snapshot_version(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -526,7 +528,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_build_for_project_persists_semantically_enriched_catalog(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -573,7 +575,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_build_for_project_marks_catalog_failed_when_semantic_enrichment_fails(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -623,7 +625,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_regeneration_preserves_previous_catalog_when_semantic_enrichment_fails(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -690,7 +692,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_first_build_marks_project_as_building_catalog(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.CONFIGURING,
         )
@@ -724,7 +726,7 @@ class CatalogServiceTests(TestCase):
         service.build_for_project(project)
 
     def test_regeneration_marks_project_as_regenerating_catalog(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.READY,
         )
@@ -772,7 +774,7 @@ class CatalogServiceTests(TestCase):
         service.build_for_project(project)
 
     def test_successful_first_build_marks_project_as_ready(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.CONFIGURING,
         )
@@ -811,7 +813,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_successful_regeneration_marks_project_as_ready(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.READY,
         )
@@ -862,7 +864,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_first_build_failure_returns_project_to_configuring(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.CONFIGURING,
         )
@@ -902,7 +904,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_regeneration_failure_returns_project_to_ready(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.READY,
         )
@@ -954,7 +956,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_semantic_enrichment_is_called_once_per_build(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -993,7 +995,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_stale_catalog_build_failure_keeps_project_configuring(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.CONFIGURING,
         )
@@ -1058,7 +1060,7 @@ class CatalogServiceTests(TestCase):
         )
 
     def test_stale_catalog_successful_build_creates_new_version_and_marks_ready(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.CONFIGURING,
         )

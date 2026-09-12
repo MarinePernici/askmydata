@@ -6,7 +6,8 @@ from apps.catalogs.models import (
     SchemaSnapshot,
 )
 from apps.catalogs.readers import CatalogReader
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
+
 from catalog.snapshot_serializer import CatalogSnapshotSerializer
 from catalog.types import (
     KnowledgeCatalog,
@@ -18,7 +19,7 @@ from connectors.types import ColumnMetadata
 
 class CatalogReaderTests(TestCase):
     def test_get_current_returns_current_catalog_snapshot(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -77,7 +78,7 @@ class CatalogReaderTests(TestCase):
         )
 
     def test_get_current_raises_when_project_has_no_catalog(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -89,7 +90,7 @@ class CatalogReaderTests(TestCase):
             )
 
     def test_get_current_raises_when_catalog_is_not_ready(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -107,7 +108,7 @@ class CatalogReaderTests(TestCase):
             )
 
     def test_get_current_raises_when_current_snapshot_does_not_exist(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -131,7 +132,7 @@ class CatalogReaderTests(TestCase):
             )
 
     def test_get_current_rejects_stale_catalog(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 

@@ -1,13 +1,13 @@
 from django.test import TestCase
 
 from apps.conversations.models import Conversation, Message
-from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 from apps.runs.models import QuestionRun, ExecutionTrace
 
 
 class QuestionRunModelTests(TestCase):
     def test_question_run_has_pending_status_by_default(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -21,7 +21,7 @@ class QuestionRunModelTests(TestCase):
         )
 
     def test_question_run_belongs_to_project(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -33,7 +33,7 @@ class QuestionRunModelTests(TestCase):
         self.assertIn(run, project.question_runs.all())
 
     def test_execution_trace_belongs_to_question_run(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -50,7 +50,7 @@ class QuestionRunModelTests(TestCase):
         self.assertIn(trace, run.execution_traces.all())
 
     def test_execution_trace_has_pending_status_by_default(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -71,7 +71,7 @@ class QuestionRunModelTests(TestCase):
 
 class QuestionRunConversationTests(TestCase):
     def test_question_run_can_be_linked_to_conversation_and_messages(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -114,7 +114,7 @@ class QuestionRunConversationTests(TestCase):
         )
 
     def test_deleting_conversation_deletes_question_run(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 
@@ -136,7 +136,7 @@ class QuestionRunConversationTests(TestCase):
         )
 
     def test_deleting_messages_preserves_question_run(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
         )
 

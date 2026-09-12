@@ -9,6 +9,7 @@ from apps.conversations.models import Conversation
 from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from apps.projects.tests.factories import create_test_project
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.snapshot_serializer import CatalogSnapshotSerializer
@@ -80,7 +81,7 @@ class FakeAnswerGenerator:
 
 class QuestionRunIntegrationTests(TestCase):
     def test_run_uses_persisted_catalog_and_project_data_source(self):
-        project = Project.objects.create(
+        project = create_test_project(
             name="Test project",
             status=Project.Status.READY,
         )

@@ -24,10 +24,12 @@ class ProjectService:
 
     def create(
         self,
+        owner,
         name: str,
         description: str = "",
     ) -> Project:
         return Project.objects.create(
+            owner=owner,
             name=name,
             description=description,
         )
@@ -46,4 +48,19 @@ class ProjectService:
                 "description",
                 "updated_at",
             ]
+        )
+
+    def get_for_user(
+        self,
+        project_id,
+        user,
+    ) -> Project:
+        return Project.objects.get(
+            id=project_id,
+            owner=user,
+        )
+
+    def list_for_user(self, user):
+        return Project.objects.filter(
+            owner=user,
         )
