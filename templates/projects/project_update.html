@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit project</title>
+</head>
+<body>
+    <h1>Edit project</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label for="name">Name</label>
+        <input
+            id="name"
+            name="name"
+            type="text"
+            value="{{ project.name }}"
+        >
+
+        <label for="description">Description</label>
+        <textarea
+            id="description"
+            name="description"
+        >{{ project.description }}</textarea>
+
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>

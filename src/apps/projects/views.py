@@ -47,3 +47,52 @@ def project_detail(request, project_id):
         "projects/project_detail.html",
         {"project": project},
     )
+
+@login_required
+def project_update(request, project_id):
+    service = ProjectService()
+
+    try:
+        project = service.get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    if request.method == "POST":
+        service.update(
+            project=project,
+            name=request.POST["name"],
+            description=request.POST.get("description", ""),
+        )
+
+        return redirect(
+            "project-detail",
+            project_id=project.id,
+        )
+
+    return render(
+        request,
+        "projects/project_update.html",
+        {"project": project},
+    )
+
+@login_required
+def project_archive(request, project_id):
+    service = ProjectService()
+
+    try:
+        project = service.get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    if request.method == "POST":
+        service.archive(project)
+
+        return redirect("project-list")
+
+    raise Http404

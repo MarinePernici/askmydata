@@ -136,3 +136,129 @@ class ProjectListViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, project.name)
         self.assertContains(response, project.description)
+
+    def test_user_can_update_own_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Old name",
+            description="Old description",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-update",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "name": "New name",
+                "description": "New description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        project.refresh_from_db()
+
+        self.assertEqual(project.name, "New name")
+        self.assertEqual(project.description, "New description")
+
+    def test_user_cannot_update_another_users_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+            description="Original description",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-update",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "name": "Hacked name",
+                "description": "Hacked description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        project.refresh_from_db()
+
+        self.assertEqual(project.name, "Other project")
+        self.assertEqual(project.description, "Original description")
+
+    def test_user_can_archive_own_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Project to archive",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-archive",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        project.refresh_from_db()
+
+        self.assertEqual(
+            project.status,
+            Project.Status.ARCHIVED,
+        )
+
+    def test_user_cannot_archive_another_users_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-archive",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        project.refresh_from_db()
+
+        self.assertNotEqual(
+            project.status,
+            Project.Status.ARCHIVED,
+        )
