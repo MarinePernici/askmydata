@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ conversation.title }}</title>
+</head>
+<body>
+    <h1>{{ conversation.title }}</h1>
+    <p>{{ project.name }}</p>
+
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}  
+    <div>
+        {% for message in conversation_messages %}
+            <article>
+                <strong>{{ message.get_role_display }}</strong>
+                <p>{{ message.content }}</p>
+            </article>
+        {% empty %}
+            <p>No messages yet.</p>
+        {% endfor %}
+    </div>
+    {% if project.status == "ready" %}
+        <form
+            method="post"
+            action="{% url 'conversation-ask' project.id conversation.id %}"
+        >
+            {% csrf_token %}
+
+            <label for="question">Question</label>
+            <input
+                id="question"
+                type="text"
+                name="question"
+                required
+            >
+
+            <button type="submit">Ask question</button>
+        </form>
+    {% else %}
+        <p>Project is not ready.</p>
+    {% endif %}
+</body>
+</html>

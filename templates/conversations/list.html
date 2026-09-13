@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conversations</title>
+</head>
+<body>
+    <h1>Conversations</h1>
+    <p>{{ project.name }}</p>
+
+    <form
+        method="post"
+        action="{% url 'conversation-create' project.id %}"
+    >
+        {% csrf_token %}
+
+        <label>
+            Title
+            <input
+                type="text"
+                name="title"
+                maxlength="255"
+            >
+        </label>
+
+        <button type="submit">New conversation</button>
+    </form>
+
+    <ul>
+        {% for conversation in conversations %}
+            <li>{{ conversation.title }}</li>
+        {% empty %}
+            <li>No conversations yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
