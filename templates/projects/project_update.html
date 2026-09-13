@@ -9,20 +9,7 @@
 
     <form method="post">
         {% csrf_token %}
-
-        <label for="name">Name</label>
-        <input
-            id="name"
-            name="name"
-            type="text"
-            value="{{ project.name }}"
-        >
-
-        <label for="description">Description</label>
-        <textarea
-            id="description"
-            name="description"
-        >{{ project.description }}</textarea>
+        {{ form.as_p }}
 
         <button type="submit">Save</button>
     </form>

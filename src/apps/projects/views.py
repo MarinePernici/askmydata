@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render, redirect
 
+from .forms import ProjectForm
 from .models import Project
 from .services import ProjectService
 
@@ -19,17 +20,23 @@ def project_list(request):
 @login_required
 def project_create(request):
     if request.method == "POST":
-        ProjectService().create(
-            owner=request.user,
-            name=request.POST["name"],
-            description=request.POST.get("description", ""),
-        )
+        form = ProjectForm(request.POST)
 
-        return redirect("project-list")
+        if form.is_valid():
+            ProjectService().create(
+                owner=request.user,
+                name=form.cleaned_data["name"],
+                description=form.cleaned_data["description"],
+            )
+
+            return redirect("project-list")
+    else:
+        form = ProjectForm()
 
     return render(
         request,
         "projects/project_create.html",
+        {"form": form},
     )
 
 @login_required
@@ -61,21 +68,34 @@ def project_update(request, project_id):
         raise Http404
 
     if request.method == "POST":
-        service.update(
-            project=project,
-            name=request.POST["name"],
-            description=request.POST.get("description", ""),
-        )
+        form = ProjectForm(request.POST)
 
-        return redirect(
-            "project-detail",
-            project_id=project.id,
+        if form.is_valid():
+            service.update(
+                project=project,
+                name=form.cleaned_data["name"],
+                description=form.cleaned_data["description"],
+            )
+
+            return redirect(
+                "project-detail",
+                project_id=project.id,
+            )
+    else:
+        form = ProjectForm(
+            initial={
+                "name": project.name,
+                "description": project.description,
+            }
         )
 
     return render(
         request,
         "projects/project_update.html",
-        {"project": project},
+        {
+            "project": project,
+            "form": form,
+        },
     )
 
 @login_required

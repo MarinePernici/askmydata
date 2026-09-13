@@ -262,3 +262,95 @@ class ProjectListViewTests(TestCase):
             project.status,
             Project.Status.ARCHIVED,
         )
+
+    def test_user_cannot_create_project_without_name(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("project-create"),
+            {
+                "name": "",
+                "description": "Test description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Project.objects.exists())
+
+    def test_user_cannot_update_project_without_name(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Original name",
+            description="Original description",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-update",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "name": "",
+                "description": "Updated description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        project.refresh_from_db()
+
+        self.assertEqual(project.name, "Original name")
+        self.assertEqual(project.description, "Original description")
+
+    def test_create_project_without_name_displays_form_error(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("project-create"),
+            {
+                "name": "",
+                "description": "Test description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This field is required.")
+
+    def test_update_project_without_name_displays_form_error(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Original name",
+            description="Original description",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-update",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "name": "",
+                "description": "Updated description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This field is required.")
