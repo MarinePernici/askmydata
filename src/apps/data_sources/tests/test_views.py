@@ -182,3 +182,202 @@ class DataSourceConfigurationViewTests(TestCase):
         self.assertFalse(
             DataSource.objects.filter(project=project).exists()
         )
+
+    def test_existing_data_source_prefills_form_without_password(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        data_source = DataSource.objects.create(
+            project=project,
+            host="db.example.com",
+            port=5433,
+            database="analytics",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        form = response.context["form"]
+
+        self.assertEqual(form["host"].value(), "db.example.com")
+        self.assertEqual(form["port"].value(), 5433)
+        self.assertEqual(form["database"].value(), "analytics")
+        self.assertEqual(form["username"].value(), "readonly")
+
+        self.assertNotContains(response, "secret-password")
+
+    def test_existing_data_source_requires_password_for_reconfiguration(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        data_source = DataSource.objects.create(
+            project=project,
+            host="db.example.com",
+            port=5432,
+            database="analytics",
+            username="readonly",
+        )
+        data_source.set_password("old-secret")
+        data_source.save()
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "host": "new-db.example.com",
+                "port": "5432",
+                "database": "analytics",
+                "username": "readonly",
+                "password": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This field is required.")
+
+        data_source.refresh_from_db()
+
+        self.assertEqual(data_source.host, "db.example.com")
+        self.assertEqual(data_source.get_password(), "old-secret")
+
+    @patch(
+        "apps.data_sources.views.DataSourceService",
+    )
+    def test_existing_data_source_can_be_reconfigured(
+        self,
+        data_source_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        data_source = DataSource.objects.create(
+            project=project,
+            host="old-db.example.com",
+            port=5432,
+            database="old_analytics",
+            username="old_user",
+        )
+        data_source.set_password("old-secret")
+        data_source.save()
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "host": "new-db.example.com",
+                "port": "5433",
+                "database": "new_analytics",
+                "username": "new_user",
+                "password": "new-secret",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        data_source_service_class.return_value.configure_and_test.assert_called_once_with(
+            project=project,
+            host="new-db.example.com",
+            port=5433,
+            database="new_analytics",
+            username="new_user",
+            password="new-secret",
+        )
+
+    @patch(
+        "apps.data_sources.views.DataSourceService",
+    )
+    def test_failed_reconfiguration_preserves_existing_data_source(
+        self,
+        data_source_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        data_source = DataSource.objects.create(
+            project=project,
+            host="old-db.example.com",
+            port=5432,
+            database="old_analytics",
+            username="old_user",
+        )
+        data_source.set_password("old-secret")
+        data_source.save()
+
+        data_source_service_class.return_value.configure_and_test.side_effect = (
+            DataSourceConnectionError(
+                "Unable to connect to the data source."
+            )
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "host": "new-db.example.com",
+                "port": "5433",
+                "database": "new_analytics",
+                "username": "new_user",
+                "password": "new-secret",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Unable to connect to the data source.",
+        )
+
+        data_source.refresh_from_db()
+
+        self.assertEqual(data_source.host, "old-db.example.com")
+        self.assertEqual(data_source.port, 5432)
+        self.assertEqual(data_source.database, "old_analytics")
+        self.assertEqual(data_source.username, "old_user")
+        self.assertEqual(data_source.get_password(), "old-secret")

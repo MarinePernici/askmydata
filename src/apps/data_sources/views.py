@@ -7,6 +7,7 @@ from apps.projects.services import ProjectService
 
 from .exceptions import DataSourceConnectionError
 from .forms import DataSourceForm
+from .models import DataSource
 from .services import DataSourceService
 
 @login_required
@@ -40,7 +41,19 @@ def data_source_configure(request, project_id):
                     project_id=project.id,
                 )
     else:
-        form = DataSourceForm()
+        try:
+            data_source = project.data_source
+        except DataSource.DoesNotExist:
+            form = DataSourceForm()
+        else:
+            form = DataSourceForm(
+                initial={
+                    "host": data_source.host,
+                    "port": data_source.port,
+                    "database": data_source.database,
+                    "username": data_source.username,
+                }
+            )
 
     return render(
         request,
