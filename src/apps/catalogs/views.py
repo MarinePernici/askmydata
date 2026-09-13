@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
@@ -6,11 +7,17 @@ from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
+from .exceptions import (
+    CatalogScopeNotConfiguredError,
+    DataSourceNotConfiguredError,
+)
 from .models import CatalogScope
 from .scope_service import (
     CatalogScopeService,
     InvalidCatalogScopeSelectionError,
 )
+from .services import CatalogService
+
 
 @login_required
 def catalog_scope(request, project_id):
@@ -92,4 +99,35 @@ def catalog_scope(request, project_id):
             "selected_tables": selected_tables,
             "data_source_missing": False,
         },
+    )
+
+@login_required
+def catalog_build(request, project_id):
+    if request.method != "POST":
+        raise Http404
+
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        CatalogService().build_for_project(project)
+    except (
+        CatalogScopeNotConfiguredError,
+        DataSourceNotConfiguredError,
+    ) as exc:
+        messages.error(request, str(exc))
+    except Exception:
+        messages.error(
+            request,
+            "Unable to build the catalog.",
+        )
+
+    return redirect(
+        "catalog-scope",
+        project_id=project.id,
     )

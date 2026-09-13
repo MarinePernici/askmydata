@@ -4,6 +4,10 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.catalogs.exceptions import (
+    CatalogScopeNotConfiguredError,
+    DataSourceNotConfiguredError,
+)
 from apps.catalogs.models import CatalogScope
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
@@ -271,4 +275,249 @@ class CatalogScopeViewTests(TestCase):
             response,
             '<input type="checkbox" name="tables" value="sales.orders" checked>',
             html=True,
+        )
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_user_can_build_catalog_for_own_project(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        catalog_service_class.return_value.build_for_project.assert_called_once_with(
+            project
+        )
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_user_cannot_build_catalog_for_another_users_project(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+        catalog_service_class.return_value.build_for_project.assert_not_called()
+
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_catalog_build_rejects_get(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+        catalog_service_class.return_value.build_for_project.assert_not_called()
+
+    @patch(
+        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
+        return_value={
+            "sales": ["customers", "orders"],
+        },
+    )
+    def test_catalog_scope_displays_build_catalog_action(
+        self,
+        discover_available_tables,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Build catalog")
+        self.assertContains(
+            response,
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_catalog_build_displays_error_when_scope_is_not_configured(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        catalog_service_class.return_value.build_for_project.side_effect = (
+            CatalogScopeNotConfiguredError(
+                "Project has no catalog scope."
+            )
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(response["Location"])
+
+        self.assertContains(
+            response,
+            "Project has no catalog scope.",
+        )
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_catalog_build_displays_error_when_data_source_is_not_configured(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        catalog_service_class.return_value.build_for_project.side_effect = (
+            DataSourceNotConfiguredError(
+                "Project has no data source."
+            )
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(response["Location"])
+
+        self.assertContains(
+            response,
+            "Project has no data source.",
+        )
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_catalog_build_displays_generic_error_on_unexpected_failure(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        catalog_service_class.return_value.build_for_project.side_effect = RuntimeError(
+            "database connection details"
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(response["Location"])
+
+        self.assertContains(
+            response,
+            "Unable to build the catalog.",
+        )
+        self.assertNotContains(
+            response,
+            "database connection details",
         )

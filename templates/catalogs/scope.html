@@ -8,6 +8,12 @@
     <h1>Catalog scope</h1>
     <p>{{ project.name }}</p>
 
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
     {% if error %}
         <p>{{ error }}</p>
     {% endif %}
@@ -41,6 +47,13 @@
             {% endfor %}
 
             <button type="submit">Save selection</button>
+        </form>
+        <form
+            method="post"
+            action="{% url 'catalog-build' project.id %}"
+        >
+            {% csrf_token %}
+            <button type="submit">Build catalog</button>
         </form>
     {% endif %}
 </body>
