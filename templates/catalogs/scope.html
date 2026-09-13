@@ -8,11 +8,20 @@
     <h1>Catalog scope</h1>
     <p>{{ project.name }}</p>
 
+    {% if knowledge_catalog %}
+        <p>Catalog status: {{ knowledge_catalog.get_status_display }}</p>
+        <p>Version: {{ knowledge_catalog.version }}</p>
+    {% else %}
+        <p>Catalog status: Not built</p>
+    {% endif %}
+
     {% if messages %}
         {% for message in messages %}
             <p>{{ message }}</p>
         {% endfor %}
     {% endif %}
+
+
 
     {% if error %}
         <p>{{ error }}</p>
@@ -48,13 +57,27 @@
 
             <button type="submit">Save selection</button>
         </form>
-        <form
-            method="post"
-            action="{% url 'catalog-build' project.id %}"
-        >
-            {% csrf_token %}
-            <button type="submit">Build catalog</button>
-        </form>
+        {% if not knowledge_catalog or knowledge_catalog.status == "pending" or knowledge_catalog.status == "failed" %}
+            <form
+                method="post"
+                action="{% url 'catalog-build' project.id %}"
+            >
+                {% csrf_token %}
+                <button type="submit">Build catalog</button>
+            </form>
+
+        {% elif knowledge_catalog.status == "ready" or knowledge_catalog.status == "stale" %}
+            <form
+                method="post"
+                action="{% url 'catalog-build' project.id %}"
+            >
+                {% csrf_token %}
+                <button type="submit">Rebuild catalog</button>
+            </form>
+
+        {% elif knowledge_catalog.status == "building" %}
+            <p>Catalog build in progress.</p>
+        {% endif %}
     {% endif %}
 </body>
 </html>

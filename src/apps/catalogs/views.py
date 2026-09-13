@@ -11,7 +11,7 @@ from .exceptions import (
     CatalogScopeNotConfiguredError,
     DataSourceNotConfiguredError,
 )
-from .models import CatalogScope
+from .models import CatalogScope, KnowledgeCatalog
 from .scope_service import (
     CatalogScopeService,
     InvalidCatalogScopeSelectionError,
@@ -90,6 +90,11 @@ def catalog_scope(request, project_id):
     except CatalogScope.DoesNotExist:
         selected_tables = set()
 
+    try:
+        knowledge_catalog = project.knowledge_catalog
+    except KnowledgeCatalog.DoesNotExist:
+        knowledge_catalog = None
+
     return render(
         request,
         "catalogs/scope.html",
@@ -98,6 +103,7 @@ def catalog_scope(request, project_id):
             "available_tables": available_tables,
             "selected_tables": selected_tables,
             "data_source_missing": False,
+            "knowledge_catalog": knowledge_catalog,
         },
     )
 
