@@ -354,3 +354,22 @@ class ProjectListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "This field is required.")
+
+    def test_user_cannot_create_project_with_blank_name(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("project-create"),
+            {
+                "name": "   ",
+                "description": "Test description",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Project.objects.exists())
+        self.assertContains(response, "This field is required.")

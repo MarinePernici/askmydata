@@ -24,4 +24,5 @@ urlpatterns = [
         include("apps.authentication.urls"),
     ),
     path("", include("apps.projects.urls")),
+    path("", include("apps.data_sources.urls")),
 ]

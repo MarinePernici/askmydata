@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Configure data source</title>
+</head>
+<body>
+    <h1>Configure data source</h1>
+    <p>{{ project.name }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">Test and save</button>
+    </form>
+</body>
+</html>
