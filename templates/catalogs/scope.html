@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catalog scope</title>
+</head>
+<body>
+    <h1>Catalog scope</h1>
+    <p>{{ project.name }}</p>
+
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+
+    {% if data_source_missing %}
+        <p>Configure a data source before selecting tables.</p>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+
+            {% for schema, tables in available_tables.items %}
+                <h2>{{ schema }}</h2>
+
+                <ul>
+                    {% for table in tables %}
+                        {% with table_key=schema|add:"."|add:table %}
+                            <li>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="tables"
+                                        value="{{ table_key }}"
+                                        {% if table_key in selected_tables %}checked{% endif %}
+                                    >
+                                    {{ table_key }}
+                                </label>
+                            </li>
+                        {% endwith %}
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+
+            <button type="submit">Save selection</button>
+        </form>
+    {% endif %}
+</body>
+</html>
