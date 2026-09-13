@@ -23,13 +23,16 @@ def project_create(request):
         form = ProjectForm(request.POST)
 
         if form.is_valid():
-            ProjectService().create(
+            project = ProjectService().create(
                 owner=request.user,
                 name=form.cleaned_data["name"],
                 description=form.cleaned_data["description"],
             )
 
-            return redirect("project-list")
+            return redirect(
+                "data-source-configure",
+                project_id=project.id,
+            )
     else:
         form = ProjectForm()
 

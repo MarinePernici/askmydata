@@ -5,6 +5,15 @@
     <title>Configure data source</title>
 </head>
 <body>
+    <nav>
+        <a href="{% url 'project-list' %}">
+            Projects
+        </a>
+
+        <a href="{% url 'project-detail' project.id %}">
+            {{ project.name }}
+        </a>
+    </nav>
     <h1>Configure data source</h1>
     <p>{{ project.name }}</p>
 

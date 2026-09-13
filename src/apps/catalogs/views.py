@@ -127,13 +127,23 @@ def catalog_build(request, project_id):
         DataSourceNotConfiguredError,
     ) as exc:
         messages.error(request, str(exc))
+
+        return redirect(
+            "catalog-scope",
+            project_id=project.id,
+        )
     except Exception:
         messages.error(
             request,
             "Unable to build the catalog.",
         )
 
+        return redirect(
+            "catalog-scope",
+            project_id=project.id,
+        )
+
     return redirect(
-        "catalog-scope",
+        "conversation-list",
         project_id=project.id,
     )

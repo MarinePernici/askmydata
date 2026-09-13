@@ -7,8 +7,18 @@
 <body>
     <h1>Projects</h1>
 
+    <a href="{% url 'project-create' %}">
+        Create project
+    </a>
+
     {% for project in projects %}
-        <p>{{ project.name }}</p>
+        <p>
+            <a href="{% url 'project-detail' project.id %}">
+                {{ project.name }}
+            </a>
+        </p>
+    {% empty %}
+        <p>No projects yet.</p>
     {% endfor %}
 </body>
 </html>

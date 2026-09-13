@@ -5,6 +5,16 @@
     <title>Conversations</title>
 </head>
 <body>
+    <nav>
+        <a href="{% url 'project-list' %}">
+            Projects
+        </a>
+
+        <a href="{% url 'project-detail' project.id %}">
+            {{ project.name }}
+        </a>
+    </nav>
+
     <h1>Conversations</h1>
     <p>{{ project.name }}</p>
 
@@ -28,7 +38,11 @@
 
     <ul>
         {% for conversation in conversations %}
-            <li>{{ conversation.title }}</li>
+            <li>
+                <a href="{% url 'conversation-detail' project.id conversation.id %}">
+                    {{ conversation.title }}
+                </a>
+            </li>
         {% empty %}
             <li>No conversations yet.</li>
         {% endfor %}

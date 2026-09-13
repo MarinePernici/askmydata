@@ -5,6 +5,20 @@
     <title>{{ project.name }}</title>
 </head>
 <body>
+    <nav>
+        <a href="{% url 'data-source-configure' project.id %}">
+            Data source
+        </a>
+
+        <a href="{% url 'catalog-scope' project.id %}">
+            Catalog
+        </a>
+
+        <a href="{% url 'conversation-list' project.id %}">
+            Conversations
+        </a>
+    </nav>
+    
     <h1>{{ project.name }}</h1>
     <p>{{ project.description }}</p>
 </body>

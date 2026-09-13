@@ -109,7 +109,7 @@ class ConversationViewTests(TestCase):
             name="Other project",
         )
 
-        Conversation.objects.create(
+        conversation = Conversation.objects.create(
             project=project,
             title="My conversation",
         )
@@ -130,6 +130,28 @@ class ConversationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "My conversation")
         self.assertNotContains(response, "Other conversation")
+        self.assertContains(
+            response,
+            reverse("project-list"),
+        )
+
+        self.assertContains(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
 
     def test_user_can_create_conversation_for_own_project(self):
         user = get_user_model().objects.create_user(
@@ -259,6 +281,26 @@ class ConversationViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Sales analysis")
+        self.assertContains(
+            response,
+            reverse("project-list"),
+        )
+
+        self.assertContains(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertContains(
+            response,
+            reverse(
+                "conversation-list",
+                kwargs={"project_id": project.id},
+            ),
+        )
 
     def test_user_cannot_view_conversation_from_another_users_project(self):
         user = get_user_model().objects.create_user(

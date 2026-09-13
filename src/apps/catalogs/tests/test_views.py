@@ -68,6 +68,18 @@ class CatalogScopeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, project.name)
+        self.assertContains(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertContains(
+            response,
+            reverse("project-list"),
+        )
 
     @patch("apps.catalogs.views.CatalogScopeService")
     def test_catalog_scope_displays_discovered_tables(
@@ -302,6 +314,13 @@ class CatalogScopeViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                "conversation-list",
+                kwargs={"project_id": project.id},
+            ),
+        )
 
         catalog_service_class.return_value.build_for_project.assert_called_once_with(
             project

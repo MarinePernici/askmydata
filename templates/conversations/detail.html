@@ -5,6 +5,19 @@
     <title>{{ conversation.title }}</title>
 </head>
 <body>
+    <nav>
+        <a href="{% url 'project-list' %}">
+            Projects
+        </a>
+
+        <a href="{% url 'project-detail' project.id %}">
+            {{ project.name }}
+        </a>
+
+        <a href="{% url 'conversation-list' project.id %}">
+            Conversations
+        </a>
+    </nav>
     <h1>{{ conversation.title }}</h1>
     <p>{{ project.name }}</p>
 

@@ -37,7 +37,7 @@ def data_source_configure(request, project_id):
                 form.add_error(None, str(exc))
             else:
                 return redirect(
-                    "project-detail",
+                    "catalog-scope",
                     project_id=project.id,
                 )
     else:

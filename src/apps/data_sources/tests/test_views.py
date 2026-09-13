@@ -58,6 +58,18 @@ class DataSourceConfigurationViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, project.name)
+        self.assertContains(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertContains(
+            response,
+            reverse("project-list"),
+        )
 
     def test_invalid_data_source_form_is_not_persisted(self):
         user = get_user_model().objects.create_user(
@@ -126,7 +138,13 @@ class DataSourceConfigurationViewTests(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+        )
 
         data_source_service_class.return_value.configure_and_test.assert_called_once_with(
             project=project,

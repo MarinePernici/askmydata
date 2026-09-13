@@ -34,6 +34,32 @@ class ProjectListViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, own_project.name)
         self.assertNotContains(response, other_project.name)
+        self.assertContains(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": own_project.id},
+            ),
+        )
+
+    def test_project_list_displays_create_project_action(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("project-list"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Create project")
+        self.assertContains(
+            response,
+            reverse("project-create"),
+        )
 
     def test_anonymous_user_is_redirected_to_login(self):
         response = self.client.get(
@@ -64,6 +90,14 @@ class ProjectListViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
         project = Project.objects.get(name="New project")
+
+        self.assertEqual(
+            response.url,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
 
         self.assertEqual(project.owner, user)
         self.assertEqual(project.description, "Test description")
@@ -136,6 +170,29 @@ class ProjectListViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, project.name)
         self.assertContains(response, project.description)
+        self.assertContains(
+            response,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertContains(
+            response,
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertContains(
+            response,
+            reverse(
+                "conversation-list",
+                kwargs={"project_id": project.id},
+            ),
+        )
 
     def test_user_can_update_own_project(self):
         user = get_user_model().objects.create_user(
