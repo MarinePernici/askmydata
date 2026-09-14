@@ -35,7 +35,7 @@ The Knowledge Catalog is built from the selected Catalog Scope and contains:
 - discovered technical metadata;
 - schema snapshots;
 - automatically generated semantic descriptions;
-- business synonyms.
+- automatically generated business synonyms.
 
 The Query Engine never reasons directly over the complete database schema.
 

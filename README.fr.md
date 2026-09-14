@@ -104,14 +104,20 @@ L'accès aux LLM repose également sur une interface indépendante du fournisseu
 
 ### Accès aux données et IA
 
-- connecteur PostgreSQL
-- SQLAlchemy Core ou outil SQL équivalent
+- psycopg pour l'accès à PostgreSQL
+- pglast pour l'analyse et la validation du SQL
 - intégration LLM indépendante du fournisseur
 
 ### Ingénierie et déploiement
 
-- pytest
+Actuellement implémentés :
+
+- tests automatisés
+- formatage du code avec Ruff
 - Docker / Docker Compose
+
+Prévus pour la phase Production-ready Portfolio :
+
 - GitHub Actions
 - analyse statique et vérification des types
 - logs structurés

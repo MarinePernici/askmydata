@@ -104,14 +104,20 @@ LLM access also relies on a provider-independent interface.
 
 ### Data Access and AI
 
-- PostgreSQL connector
-- SQLAlchemy Core or equivalent SQL tooling
+- psycopg for PostgreSQL access
+- pglast for SQL parsing and validation
 - provider-independent LLM integration
 
 ### Engineering and Deployment
 
-- pytest
+Currently implemented:
+
+- automated testing
+- Ruff code formatting
 - Docker / Docker Compose
+
+Planned for the Production-ready Portfolio phase:
+
 - GitHub Actions
 - static analysis and type checking
 - structured logging
