@@ -1,24 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Projects</title>
-</head>
-<body>
-    <h1>Projects</h1>
+{% extends "base.html" %}
 
-    <a href="{% url 'project-create' %}">
-        Create project
-    </a>
+{% block title %}Projects · AskMyData{% endblock %}
 
-    {% for project in projects %}
-        <p>
-            <a href="{% url 'project-detail' project.id %}">
-                {{ project.name }}
+{% block content %}
+    <header class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Projects</h1>
+            <p class="page-header-description">
+                Manage your data exploration projects.
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a href="{% url 'project-create' %}" class="btn btn-primary">
+                Create project
             </a>
-        </p>
-    {% empty %}
-        <p>No projects yet.</p>
-    {% endfor %}
-</body>
-</html>
+        </div>
+    </header>
+
+    {% if projects %}
+        <div class="projects-grid">
+            {% for project in projects %}
+                <a
+                    href="{% url 'project-detail' project.id %}"
+                    class="card project-card"
+                >
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            {{ project.name }}
+                        </h2>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="empty-state">
+            <div class="empty-state-icon" aria-hidden="true">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <path d="M17.5 14v7" />
+                    <path d="M14 17.5h7" />
+                </svg>
+            </div>
+
+            <div class="empty-state-content">
+                <h2 class="empty-state-title">No projects yet</h2>
+
+                <p class="empty-state-description">
+                    Create your first project to connect a data source and start exploring your data.
+                </p>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,5 @@
+{{ project.name }}
+
+{% for table in selected_tables %}
+    {{ table.schema }}.{{ table.table }}
+{% endfor %}

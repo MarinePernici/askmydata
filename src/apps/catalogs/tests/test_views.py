@@ -192,6 +192,13 @@ class CatalogScopeViewTests(TestCase):
                 {"schema": "sales", "table": "orders"},
             ],
         )
+        self.assertEqual(
+            response.url,
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+        )
 
     @patch(
         "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
@@ -858,3 +865,137 @@ class CatalogScopeViewTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, expected)
                 self.assertNotContains(response, unexpected)
+
+
+class CatalogConfirmationViewTests(TestCase):
+    def test_user_can_access_catalog_confirmation_for_own_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        data_source = DataSource.objects.create(
+            project=project,
+        )
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {"schema": "sales", "table": "customers"},
+                {"schema": "sales", "table": "orders"},
+            ],
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["project"], project)
+        self.assertEqual(response.context["data_source"], data_source)
+        self.assertEqual(
+            response.context["selected_tables"],
+            [
+                {"schema": "sales", "table": "customers"},
+                {"schema": "sales", "table": "orders"},
+            ],
+        )
+
+    def test_catalog_confirmation_redirects_when_data_source_is_missing(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+    def test_catalog_confirmation_redirects_when_scope_is_missing(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+    def test_user_cannot_access_catalog_confirmation_for_another_users_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)

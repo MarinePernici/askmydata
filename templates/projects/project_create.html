@@ -1,17 +1,114 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create project</title>
-</head>
-<body>
-    <h1>Create project</h1>
+{% extends "base.html" %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% block title %}Create project · AskMyData{% endblock %}
 
-        <button type="submit">Create</button>
-    </form>
-</body>
-</html>
+{% block content %}
+    <header class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Create project</h1>
+            <p class="page-header-description">
+                Set up a new project to explore your data with AskMyData.
+            </p>
+        </div>
+    </header>
+
+    <div class="wizard">
+        <div class="wizard-steps" aria-label="Project creation progress">
+            <div class="wizard-step wizard-step-active">
+                <div class="wizard-step-indicator">1</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Project info</span>
+                </div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator">2</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data source</span>
+                </div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator">3</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data selection</span>
+                </div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator">4</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Confirmation</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="card wizard-card">
+            <div class="section-header">
+                <div class="section-header-content">
+                    <h2 class="section-header-title">Project info</h2>
+                    <p class="section-header-description">
+                        Give your project a name and an optional description.
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" class="wizard-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                        Project name
+                    </label>
+
+                    <input
+                        type="text"
+                        name="{{ form.name.html_name }}"
+                        id="{{ form.name.id_for_label }}"
+                        value="{{ form.name.value|default_if_none:'' }}"
+                        class="form-input"
+                        {% if form.name.field.required %}required{% endif %}
+                        {% if form.name.errors %}aria-invalid="true"{% endif %}
+                    >
+
+                    {% for error in form.name.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                        Description
+                    </label>
+
+                    <textarea
+                        name="{{ form.description.html_name }}"
+                        id="{{ form.description.id_for_label }}"
+                        class="form-textarea"
+                        {% if form.description.errors %}aria-invalid="true"{% endif %}
+                    >{{ form.description.value|default_if_none:'' }}</textarea>
+
+                    {% for error in form.description.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="wizard-actions">
+                    <a href="{% url 'project-list' %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        Continue
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}

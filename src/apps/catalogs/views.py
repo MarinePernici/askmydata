@@ -78,7 +78,7 @@ def catalog_scope(request, project_id):
             )
 
         return redirect(
-            "catalog-scope",
+            "catalog-confirmation",
             project_id=project.id,
         )
 
@@ -104,6 +104,43 @@ def catalog_scope(request, project_id):
             "selected_tables": selected_tables,
             "data_source_missing": False,
             "knowledge_catalog": knowledge_catalog,
+        },
+    )
+
+
+@login_required
+def catalog_confirmation(request, project_id):
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        data_source = project.data_source
+    except DataSource.DoesNotExist:
+        return redirect(
+            "data-source-configure",
+            project_id=project.id,
+        )
+
+    try:
+        selected_tables = project.catalog_scope.selected_tables
+    except CatalogScope.DoesNotExist:
+        return redirect(
+            "catalog-scope",
+            project_id=project.id,
+        )
+
+    return render(
+        request,
+        "catalogs/confirmation.html",
+        {
+            "project": project,
+            "data_source": data_source,
+            "selected_tables": selected_tables,
         },
     )
 
