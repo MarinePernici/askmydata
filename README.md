@@ -120,6 +120,66 @@ LLM access also relies on a provider-independent interface.
 
 Specific infrastructure and observability tools will be selected during the Production-ready Portfolio phase.
 
+## Local Development with Docker
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Environment Configuration
+
+Create the local environment file from the provided example:
+
+```bash
+cp .env.example .env
+```
+
+Then configure the required values in `.env`.
+
+### Start the Application
+
+Build the application image:
+
+```bash
+docker compose build
+```
+
+Start the services:
+
+```bash
+docker compose up -d
+```
+
+Apply the database migrations:
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+The application is then available at:
+
+```text
+http://localhost:8000/projects/
+```
+Unauthenticated users are redirected to the login page.
+
+### Run the Test Suite
+
+```bash
+docker compose exec web python manage.py test
+```
+
+### Stop the Application
+
+```bash
+docker compose down
+```
+
+The Docker Compose development environment runs the Django application and its PostgreSQL application database in separate containers.
+
+PostgreSQL integration tests use the external test database configured through the `TEST_SOURCE_DB_*` environment variables. When the tests are executed inside Docker Desktop, the test database running on the host is reached through `host.docker.internal`.
+
 ## Development Roadmap
 
 Development is organized into three incremental stages.

@@ -120,6 +120,67 @@ L'accès aux LLM repose également sur une interface indépendante du fournisseu
 
 Les outils précis d'infrastructure et d'observabilité seront sélectionnés au cours de la phase Production-ready Portfolio.
 
+## Développement local avec Docker
+
+### Prérequis
+
+- Docker
+- Docker Compose
+
+### Configuration de l'environnement
+
+Créez le fichier d'environnement local à partir de l'exemple fourni :
+
+```bash
+cp .env.example .env
+```
+
+Configurez ensuite les valeurs requises dans `.env`.
+
+### Démarrer l'application
+
+Construisez l'image de l'application :
+
+```bash
+docker compose build
+```
+
+Démarrez les services :
+
+```bash
+docker compose up -d
+```
+
+Appliquez les migrations de la base de données :
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+L'application est ensuite accessible à l'adresse :
+
+```text
+http://localhost:8000/projects/
+```
+
+Les utilisateurs non authentifiés sont redirigés vers la page de connexion.
+
+### Exécuter les tests
+
+```bash
+docker compose exec web python manage.py test
+```
+
+### Arrêter l'application
+
+```bash
+docker compose down
+```
+
+L'environnement de développement Docker Compose exécute l'application Django et sa base de données PostgreSQL applicative dans des conteneurs distincts.
+
+Les tests d'intégration PostgreSQL utilisent la base de données de test externe configurée à l'aide des variables d'environnement `TEST_SOURCE_DB_*`. Lorsque les tests sont exécutés dans Docker Desktop, la base de données de test exécutée sur l'hôte est accessible via `host.docker.internal`.
+
 ## Roadmap de développement
 
 Le développement est organisé en trois étapes incrémentales.
