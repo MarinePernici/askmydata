@@ -171,6 +171,22 @@ Les utilisateurs non authentifiés sont redirigés vers la page de connexion.
 docker compose exec web python manage.py test
 ```
 
+### Formatage du code
+
+Le code Python est formaté automatiquement avec Ruff.
+
+Vérifier que le code est correctement formaté :
+
+```bash
+uv run ruff format --check .
+```
+
+Appliquer le formatage :
+
+```bash
+uv run ruff format .
+```
+
 ### Arrêter l'application
 
 ```bash

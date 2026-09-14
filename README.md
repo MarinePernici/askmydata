@@ -170,6 +170,22 @@ Unauthenticated users are redirected to the login page.
 docker compose exec web python manage.py test
 ```
 
+### Code Formatting
+
+Python code is automatically formatted with Ruff.
+
+Check that the code is correctly formatted:
+
+```bash
+uv run ruff format --check .
+```
+
+Apply formatting:
+
+```bash
+uv run ruff format .
+```
+
 ### Stop the Application
 
 ```bash
