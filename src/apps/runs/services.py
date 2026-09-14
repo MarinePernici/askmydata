@@ -39,7 +39,7 @@ class QuestionRunService:
 
         if conversation.project_id != project.id:
             raise ValueError("Conversation does not belong to project.")
-        
+
         history = self._conversation_service.get_history(
             conversation=conversation,
         )

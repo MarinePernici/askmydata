@@ -141,12 +141,8 @@ class DataSourceServiceTests(TestCase):
         )
 
     def test_configure_resets_connection_status_to_not_tested(self):
-        self.data_source.connection_status = (
-            DataSource.ConnectionStatus.CONNECTED
-        )
-        self.data_source.save(
-            update_fields=["connection_status"]
-        )
+        self.data_source.connection_status = DataSource.ConnectionStatus.CONNECTED
+        self.data_source.save(update_fields=["connection_status"])
 
         service = DataSourceService()
 
@@ -226,7 +222,9 @@ class DataSourceServiceTests(TestCase):
             DataSource.ConnectionStatus.CONNECTED,
         )
 
-    def test_configure_and_test_does_not_replace_existing_configuration_on_failure(self):
+    def test_configure_and_test_does_not_replace_existing_configuration_on_failure(
+        self,
+    ):
         project = create_test_project(name="Test project")
 
         existing = DataSource(
@@ -282,9 +280,7 @@ class DataSourceServiceTests(TestCase):
                 password="wrong-password",
             )
 
-        self.assertFalse(
-            DataSource.objects.filter(project=project).exists()
-        )
+        self.assertFalse(DataSource.objects.filter(project=project).exists())
 
     def test_configure_and_test_failure_does_not_change_project_status(self):
         project = create_test_project(

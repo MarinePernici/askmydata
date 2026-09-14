@@ -86,9 +86,7 @@ class FakeSemanticEnricher:
 
 class FailingSemanticEnricher:
     def enrich_catalog(self, catalog):
-        raise SemanticEnrichmentError(
-            "Semantic enrichment failed."
-        )
+        raise SemanticEnrichmentError("Semantic enrichment failed.")
 
 
 class ProjectStatusCheckingConnector:
@@ -104,8 +102,7 @@ class ProjectStatusCheckingConnector:
 
         if project.status != Project.Status.BUILDING_CATALOG:
             raise AssertionError(
-                f"Expected project to be BUILDING_CATALOG, "
-                f"got {project.status}"
+                f"Expected project to be BUILDING_CATALOG, got {project.status}"
             )
 
         return []
@@ -127,8 +124,7 @@ class ProjectRegeneratingStatusCheckingConnector:
 
         if project.status != Project.Status.REGENERATING_CATALOG:
             raise AssertionError(
-                f"Expected project to be REGENERATING_CATALOG, "
-                f"got {project.status}"
+                f"Expected project to be REGENERATING_CATALOG, got {project.status}"
             )
 
         return []
@@ -520,9 +516,9 @@ class CatalogServiceTests(TestCase):
 
         self.assertEqual(
             list(
-                knowledge_catalog.snapshots
-                .order_by("version")
-                .values_list("version", flat=True)
+                knowledge_catalog.snapshots.order_by("version").values_list(
+                    "version", flat=True
+                )
             ),
             [1, 2],
         )
@@ -574,7 +570,9 @@ class CatalogServiceTests(TestCase):
             "Description for orders",
         )
 
-    def test_build_for_project_marks_catalog_failed_when_semantic_enrichment_fails(self):
+    def test_build_for_project_marks_catalog_failed_when_semantic_enrichment_fails(
+        self,
+    ):
         project = create_test_project(
             name="Test project",
         )
@@ -624,7 +622,9 @@ class CatalogServiceTests(TestCase):
             0,
         )
 
-    def test_regeneration_preserves_previous_catalog_when_semantic_enrichment_fails(self):
+    def test_regeneration_preserves_previous_catalog_when_semantic_enrichment_fails(
+        self,
+    ):
         project = create_test_project(
             name="Test project",
         )
@@ -1120,9 +1120,9 @@ class CatalogServiceTests(TestCase):
         )
         self.assertEqual(
             list(
-                knowledge_catalog.snapshots
-                .order_by("version")
-                .values_list("version", flat=True)
+                knowledge_catalog.snapshots.order_by("version").values_list(
+                    "version", flat=True
+                )
             ),
             [1, 2],
         )

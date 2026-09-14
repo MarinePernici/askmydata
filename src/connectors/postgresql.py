@@ -4,6 +4,7 @@ import psycopg
 from connectors.base import Connector
 from connectors.types import ColumnMetadata, RelationshipMetadata
 
+
 @dataclass(frozen=True)
 class PostgreSQLConnectionConfig:
     host: str

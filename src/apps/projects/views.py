@@ -17,6 +17,7 @@ def project_list(request):
         {"projects": projects},
     )
 
+
 @login_required
 def project_create(request):
     if request.method == "POST":
@@ -42,6 +43,7 @@ def project_create(request):
         {"form": form},
     )
 
+
 @login_required
 def project_detail(request, project_id):
     try:
@@ -57,6 +59,7 @@ def project_detail(request, project_id):
         "projects/project_detail.html",
         {"project": project},
     )
+
 
 @login_required
 def project_update(request, project_id):
@@ -100,6 +103,7 @@ def project_update(request, project_id):
             "form": form,
         },
     )
+
 
 @login_required
 def project_archive(request, project_id):

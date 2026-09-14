@@ -12,9 +12,7 @@ class SQLValidatorTests(unittest.TestCase):
     def test_accepts_select_query(self):
         validator = SQLValidator()
 
-        result = validator.validate(
-            "SELECT id, amount FROM sales.orders;"
-        )
+        result = validator.validate("SELECT id, amount FROM sales.orders;")
 
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.error)
@@ -33,9 +31,7 @@ class SQLValidatorTests(unittest.TestCase):
     def test_rejects_multiple_statements(self):
         validator = SQLValidator()
 
-        result = validator.validate(
-            "SELECT 1; SELECT 2;"
-        )
+        result = validator.validate("SELECT 1; SELECT 2;")
 
         self.assertFalse(result.is_valid)
         self.assertEqual(
@@ -46,9 +42,7 @@ class SQLValidatorTests(unittest.TestCase):
     def test_rejects_delete_statement(self):
         validator = SQLValidator()
 
-        result = validator.validate(
-            "DELETE FROM sales.orders;"
-        )
+        result = validator.validate("DELETE FROM sales.orders;")
 
         self.assertFalse(result.is_valid)
         self.assertEqual(

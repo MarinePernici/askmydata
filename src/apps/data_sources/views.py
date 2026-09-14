@@ -10,6 +10,7 @@ from .forms import DataSourceForm
 from .models import DataSource
 from .services import DataSourceService
 
+
 @login_required
 def data_source_configure(request, project_id):
     try:

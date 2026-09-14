@@ -12,3 +12,17 @@ dependencies = [
     "pglast>=8.4",
     "psycopg[binary]>=3.3.5",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.7",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

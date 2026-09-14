@@ -437,9 +437,9 @@ class ConversationViewTests(TestCase):
 
     @patch("apps.conversations.views.create_question_run_service")
     def test_user_cannot_ask_question_in_another_users_conversation(
-    self,
-    create_question_run_service,
-):
+        self,
+        create_question_run_service,
+    ):
         user = get_user_model().objects.create_user(
             username="marine",
             password="test-password",
@@ -858,9 +858,7 @@ class ConversationViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        messages = list(
-            conversation.messages.order_by("sequence_number")
-        )
+        messages = list(conversation.messages.order_by("sequence_number"))
 
         self.assertEqual(len(messages), 2)
 

@@ -146,10 +146,7 @@ class KnowledgeCatalogTests(unittest.TestCase):
 
         catalog = builder.build()
 
-        tables = {
-            (table.schema, table.name): table
-            for table in catalog.tables
-        }
+        tables = {(table.schema, table.name): table for table in catalog.tables}
 
         self.assertIn(("sales", "customers"), tables)
         self.assertIn(("sales", "orders"), tables)

@@ -130,9 +130,7 @@ class QuestionRunIntegrationTests(TestCase):
         SchemaSnapshot.objects.create(
             catalog=catalog_model,
             version=1,
-            schema_data=CatalogSnapshotSerializer().serialize(
-                domain_catalog
-            ),
+            schema_data=CatalogSnapshotSerializer().serialize(domain_catalog),
         )
 
         generator = RecordingGenerator()

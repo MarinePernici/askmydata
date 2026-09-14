@@ -37,9 +37,7 @@ class CatalogService:
         try:
             data_source = project.data_source
         except ObjectDoesNotExist as exc:
-            raise DataSourceNotConfiguredError(
-                "Project has no data source."
-            ) from exc
+            raise DataSourceNotConfiguredError("Project has no data source.") from exc
 
         try:
             scope = project.catalog_scope
@@ -60,9 +58,7 @@ class CatalogService:
 
         previous_status = knowledge_catalog.status
 
-        is_rebuild_from_stale = (
-            previous_status == KnowledgeCatalogModel.Status.STALE
-        )
+        is_rebuild_from_stale = previous_status == KnowledgeCatalogModel.Status.STALE
 
         if knowledge_catalog.version == 0 or is_rebuild_from_stale:
             self._project_service.mark_building_catalog(project)

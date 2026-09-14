@@ -5,7 +5,6 @@ from django.db import models
 
 
 class Project(models.Model):
-
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         CONFIGURING = "configuring", "Configuring"

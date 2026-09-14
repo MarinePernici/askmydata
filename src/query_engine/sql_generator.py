@@ -5,7 +5,11 @@ from llm.base import LLMProvider
 from llm.types import LLMMessage
 from query_engine.catalog_serializer import CatalogSerializer
 from query_engine.exceptions import SQLGenerationError
-from query_engine.types import ClarificationResult, ConversationMessage, SQLGenerationResult
+from query_engine.types import (
+    ClarificationResult,
+    ConversationMessage,
+    SQLGenerationResult,
+)
 
 
 class SQLGenerator:
@@ -26,10 +30,7 @@ class SQLGenerator:
         if not history:
             return "No previous conversation."
 
-        return "\n".join(
-            f"{message.role}: {message.content}"
-            for message in history
-        )
+        return "\n".join(f"{message.role}: {message.content}" for message in history)
 
     def generate(
         self,

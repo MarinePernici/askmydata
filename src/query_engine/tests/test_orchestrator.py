@@ -13,6 +13,7 @@ from query_engine.types import (
     SQLValidationResult,
 )
 
+
 class FakeGenerator:
     def generate(self, question, catalog, history=()):
         return SQLGenerationResult(
@@ -148,6 +149,7 @@ class ClarificationGenerator:
             question="Which date range should I use?",
         )
 
+
 class QueryOrchestratorTests(unittest.TestCase):
     def test_orchestrator_can_be_created(self):
         orchestrator = QueryOrchestrator(
@@ -278,13 +280,9 @@ class QueryOrchestratorTests(unittest.TestCase):
             ],
         )
 
-        self.assertTrue(
-            all(event["status"] == "completed" for event in tracer.events)
-        )
+        self.assertTrue(all(event["status"] == "completed" for event in tracer.events))
 
-        self.assertTrue(
-            all(event["duration_ms"] >= 0 for event in tracer.events)
-        )
+        self.assertTrue(all(event["duration_ms"] >= 0 for event in tracer.events))
 
     def test_orchestrator_traces_failed_sql_generation(self):
         tracer = RecordingTracer()
@@ -399,6 +397,7 @@ class QueryOrchestratorTests(unittest.TestCase):
             tracer.events[0]["status"],
             "completed",
         )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -49,13 +49,9 @@ class CatalogSnapshotDeserializerTests(SimpleTestCase):
             )
         )
 
-        serialized = CatalogSnapshotSerializer().serialize(
-            catalog
-        )
+        serialized = CatalogSnapshotSerializer().serialize(catalog)
 
-        deserialized = CatalogSnapshotDeserializer().deserialize(
-            serialized
-        )
+        deserialized = CatalogSnapshotDeserializer().deserialize(serialized)
 
         self.assertEqual(
             deserialized,

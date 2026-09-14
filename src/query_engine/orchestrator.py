@@ -54,9 +54,7 @@ class QueryOrchestrator:
 
         validation_result = self._run_traced_step(
             step="sql_validation",
-            operation=lambda: self._validator.validate(
-                generation_result.sql
-            ),
+            operation=lambda: self._validator.validate(generation_result.sql),
         )
 
         if not validation_result.is_valid:
@@ -66,22 +64,17 @@ class QueryOrchestrator:
 
         execution_result = self._run_traced_step(
             step="query_execution",
-            operation=lambda: self._executor.execute(
-                generation_result.sql
-            ),
+            operation=lambda: self._executor.execute(generation_result.sql),
         )
 
         result_validation = self._run_traced_step(
             step="result_validation",
-            operation=lambda: self._result_validator.validate(
-                execution_result
-            ),
+            operation=lambda: self._result_validator.validate(execution_result),
         )
 
         if not result_validation.is_valid:
             raise ResultValidationError(
-                result_validation.error
-                or "Query result validation failed."
+                result_validation.error or "Query result validation failed."
             )
 
         answer_result = self._run_traced_step(
@@ -110,9 +103,7 @@ class QueryOrchestrator:
         try:
             result = operation()
         except Exception as exc:
-            duration_ms = int(
-                (perf_counter() - started_at) * 1000
-            )
+            duration_ms = int((perf_counter() - started_at) * 1000)
 
             self._tracer.record(
                 step=step,
@@ -124,9 +115,7 @@ class QueryOrchestrator:
 
             raise
 
-        duration_ms = int(
-            (perf_counter() - started_at) * 1000
-        )
+        duration_ms = int((perf_counter() - started_at) * 1000)
 
         self._tracer.record(
             step=step,

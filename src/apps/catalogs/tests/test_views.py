@@ -356,7 +356,6 @@ class CatalogScopeViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
         catalog_service_class.return_value.build_for_project.assert_not_called()
 
-
     @patch("apps.catalogs.views.CatalogService")
     def test_catalog_build_rejects_get(
         self,
@@ -440,9 +439,7 @@ class CatalogScopeViewTests(TestCase):
         )
 
         catalog_service_class.return_value.build_for_project.side_effect = (
-            CatalogScopeNotConfiguredError(
-                "Project has no catalog scope."
-            )
+            CatalogScopeNotConfiguredError("Project has no catalog scope.")
         )
 
         self.client.force_login(user)
@@ -478,9 +475,7 @@ class CatalogScopeViewTests(TestCase):
         )
 
         catalog_service_class.return_value.build_for_project.side_effect = (
-            DataSourceNotConfiguredError(
-                "Project has no data source."
-            )
+            DataSourceNotConfiguredError("Project has no data source.")
         )
 
         self.client.force_login(user)
@@ -863,6 +858,3 @@ class CatalogScopeViewTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, expected)
                 self.assertNotContains(response, unexpected)
-
-
-

@@ -124,4 +124,3 @@ class CatalogScopeServiceTests(TestCase):
             project.catalog_scope.selected_tables,
             selections,
         )
-            

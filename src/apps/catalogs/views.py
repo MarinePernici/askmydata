@@ -84,7 +84,7 @@ def catalog_scope(request, project_id):
 
     try:
         selected_tables = {
-            f'{selection["schema"]}.{selection["table"]}'
+            f"{selection['schema']}.{selection['table']}"
             for selection in project.catalog_scope.selected_tables
         }
     except CatalogScope.DoesNotExist:
@@ -106,6 +106,7 @@ def catalog_scope(request, project_id):
             "knowledge_catalog": knowledge_catalog,
         },
     )
+
 
 @login_required
 def catalog_build(request, project_id):

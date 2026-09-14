@@ -56,10 +56,7 @@ class CatalogScopeModelTests(TestCase):
         domain_scope = scope.to_domain()
 
         self.assertEqual(
-            [
-                (table.schema, table.table)
-                for table in domain_scope.tables
-            ],
+            [(table.schema, table.table) for table in domain_scope.tables],
             [
                 ("sales", "customers"),
                 ("sales", "orders"),
@@ -174,5 +171,3 @@ class KnowledgeCatalogModelTests(TestCase):
                     "tables": [],
                 },
             )
-
-    

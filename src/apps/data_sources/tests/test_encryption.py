@@ -10,9 +10,7 @@ class CredentialCipherTests(SimpleTestCase):
         self.cipher = CredentialCipher(key)
 
     def test_encrypt_does_not_return_plain_text(self):
-        encrypted = self.cipher.encrypt(
-            "secret-password"
-        )
+        encrypted = self.cipher.encrypt("secret-password")
 
         self.assertNotEqual(
             encrypted,
@@ -20,9 +18,7 @@ class CredentialCipherTests(SimpleTestCase):
         )
 
     def test_decrypt_restores_original_value(self):
-        encrypted = self.cipher.encrypt(
-            "secret-password"
-        )
+        encrypted = self.cipher.encrypt("secret-password")
 
         decrypted = self.cipher.decrypt(encrypted)
 

@@ -73,9 +73,7 @@ class MessageModelTests(TestCase):
             sequence_number=1,
         )
 
-        messages = list(
-            conversation.messages.all()
-        )
+        messages = list(conversation.messages.all())
 
         self.assertEqual(
             [message.sequence_number for message in messages],

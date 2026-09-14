@@ -8,6 +8,7 @@ class SemanticMetadata:
     description: str
     business_synonyms: tuple[str, ...]
 
+
 @dataclass(frozen=True)
 class TableMetadata:
     """Metadata describing a table in the Knowledge Catalog."""
@@ -17,6 +18,7 @@ class TableMetadata:
     columns: tuple[ColumnMetadata, ...]
     relationships: tuple[RelationshipMetadata, ...]
     semantic_metadata: SemanticMetadata | None = None
+
 
 @dataclass(frozen=True)
 class KnowledgeCatalog:
@@ -34,8 +36,3 @@ class CatalogTableSelection:
 @dataclass(frozen=True)
 class CatalogScope:
     tables: tuple[CatalogTableSelection, ...]
-
-
-
-
-

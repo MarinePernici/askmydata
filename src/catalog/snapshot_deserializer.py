@@ -41,13 +41,9 @@ class CatalogSnapshotDeserializer:
                     ),
                     semantic_metadata=(
                         SemanticMetadata(
-                            description=table["semantic_metadata"][
-                                "description"
-                            ],
+                            description=table["semantic_metadata"]["description"],
                             business_synonyms=tuple(
-                                table["semantic_metadata"][
-                                    "business_synonyms"
-                                ]
+                                table["semantic_metadata"]["business_synonyms"]
                             ),
                         )
                         if table["semantic_metadata"] is not None

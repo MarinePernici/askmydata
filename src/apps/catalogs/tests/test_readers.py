@@ -63,9 +63,7 @@ class CatalogReaderTests(TestCase):
         SchemaSnapshot.objects.create(
             catalog=catalog,
             version=2,
-            schema_data=CatalogSnapshotSerializer().serialize(
-                domain_catalog
-            ),
+            schema_data=CatalogSnapshotSerializer().serialize(domain_catalog),
         )
 
         result = CatalogReader().get_current(

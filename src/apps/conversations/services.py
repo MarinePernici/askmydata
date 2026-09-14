@@ -30,8 +30,7 @@ class ConversationService:
         max_messages: int = 20,
     ) -> tuple[ConversationMessage, ...]:
         messages = list(
-            conversation.messages
-            .order_by("-sequence_number")[:max_messages]
+            conversation.messages.order_by("-sequence_number")[:max_messages]
         )
 
         messages.reverse()

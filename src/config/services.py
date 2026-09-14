@@ -12,6 +12,7 @@ from query_engine.result_validator import ResultValidator
 from query_engine.sql_generator import SQLGenerator
 from query_engine.sql_validator import SQLValidator
 
+
 def create_llm_provider() -> OpenAIProvider:
     return OpenAIProvider(
         api_key=settings.OPENAI_API_KEY,
@@ -29,6 +30,7 @@ def create_catalog_service() -> CatalogService:
     return CatalogService(
         semantic_enricher=semantic_enricher,
     )
+
 
 def create_question_run_service() -> QuestionRunService:
     provider = create_llm_provider()

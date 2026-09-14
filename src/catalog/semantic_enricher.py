@@ -17,13 +17,9 @@ class SemanticEnricher:
         self,
         table: TableMetadata,
     ) -> TableMetadata:
-        response = self._provider.generate(
-            messages=self._build_messages(table)
-        )
+        response = self._provider.generate(messages=self._build_messages(table))
 
-        semantic_metadata = self._parse_semantic_metadata(
-            response.content
-        )
+        semantic_metadata = self._parse_semantic_metadata(response.content)
 
         return TableMetadata(
             schema=table.schema,
@@ -38,10 +34,7 @@ class SemanticEnricher:
         catalog: KnowledgeCatalog,
     ) -> KnowledgeCatalog:
         return KnowledgeCatalog(
-            tables=tuple(
-                self.enrich_table(table)
-                for table in catalog.tables
-            )
+            tables=tuple(self.enrich_table(table) for table in catalog.tables)
         )
 
     def _parse_semantic_metadata(
@@ -73,10 +66,7 @@ class SemanticEnricher:
                 "Semantic metadata business_synonyms must be a list."
             )
 
-        if not all(
-            isinstance(synonym, str)
-            for synonym in business_synonyms
-        ):
+        if not all(isinstance(synonym, str) for synonym in business_synonyms):
             raise SemanticEnrichmentError(
                 "Semantic metadata business_synonyms must contain only strings."
             )
@@ -91,8 +81,7 @@ class SemanticEnricher:
         table: TableMetadata,
     ) -> list[LLMMessage]:
         columns_text = "\n".join(
-            f"- {column.name}: {column.data_type}"
-            for column in table.columns
+            f"- {column.name}: {column.data_type}" for column in table.columns
         )
 
         relationships_text = "\n".join(

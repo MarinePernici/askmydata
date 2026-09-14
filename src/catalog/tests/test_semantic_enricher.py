@@ -38,8 +38,7 @@ class InvalidFieldTypeProvider:
     def generate(self, messages):
         return LLMResponse(
             content=(
-                '{"description": "Customer orders", '
-                '"business_synonyms": "orders"}'
+                '{"description": "Customer orders", "business_synonyms": "orders"}'
             ),
             model="fake-model",
         )
@@ -76,8 +75,7 @@ class CapturingProvider:
 
         return LLMResponse(
             content=(
-                '{"description": "Customer orders", '
-                '"business_synonyms": ["orders"]}'
+                '{"description": "Customer orders", "business_synonyms": ["orders"]}'
             ),
             model="fake-model",
         )

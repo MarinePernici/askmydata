@@ -25,8 +25,7 @@ class CatalogBuilder:
             ]
         else:
             selections = [
-                (selection.schema, selection.table)
-                for selection in scope.tables
+                (selection.schema, selection.table) for selection in scope.tables
             ]
 
         for schema, table in selections:

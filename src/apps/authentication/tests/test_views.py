@@ -65,8 +65,8 @@ class LoginViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(
             response,
-            f'{reverse("login")}?next={reverse("dashboard")}',
-    )
+            f"{reverse('login')}?next={reverse('dashboard')}",
+        )
 
     def test_authenticated_user_can_access_dashboard(self):
         user = get_user_model().objects.create_user(

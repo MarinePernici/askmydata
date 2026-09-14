@@ -20,7 +20,7 @@ class CatalogSnapshotSerializerTests(unittest.TestCase):
                             default=None,
                         ),
                     ),
-                    relationships=()
+                    relationships=(),
                 ),
             )
         )

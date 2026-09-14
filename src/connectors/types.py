@@ -10,6 +10,7 @@ class ColumnMetadata:
     nullable: bool
     default: str | None
 
+
 @dataclass(frozen=True)
 class RelationshipMetadata:
     """Technology-independent metadata describing a foreign-key relationship."""

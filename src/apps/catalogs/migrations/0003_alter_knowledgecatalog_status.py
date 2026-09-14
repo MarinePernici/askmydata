@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalogs', '0002_knowledgecatalog_schemasnapshot'),
+        ("catalogs", "0002_knowledgecatalog_schemasnapshot"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='knowledgecatalog',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('building', 'Building'), ('ready', 'Ready'), ('stale', 'Stale'), ('failed', 'Failed')], default='pending', max_length=20),
+            model_name="knowledgecatalog",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("building", "Building"),
+                    ("ready", "Ready"),
+                    ("stale", "Stale"),
+                    ("failed", "Failed"),
+                ],
+                default="pending",
+                max_length=20,
+            ),
         ),
     ]

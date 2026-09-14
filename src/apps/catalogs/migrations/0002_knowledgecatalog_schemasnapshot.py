@@ -6,36 +6,82 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalogs', '0001_initial'),
-        ('projects', '0001_initial'),
+        ("catalogs", "0001_initial"),
+        ("projects", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='KnowledgeCatalog',
+            name="KnowledgeCatalog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('building', 'Building'), ('ready', 'Ready'), ('failed', 'Failed')], default='pending', max_length=20)),
-                ('version', models.PositiveIntegerField(default=0)),
-                ('last_regenerated_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('project', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='knowledge_catalog', to='projects.project')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("building", "Building"),
+                            ("ready", "Ready"),
+                            ("failed", "Failed"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("version", models.PositiveIntegerField(default=0)),
+                ("last_regenerated_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "project",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="knowledge_catalog",
+                        to="projects.project",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SchemaSnapshot',
+            name="SchemaSnapshot",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('version', models.PositiveIntegerField()),
-                ('schema_data', models.JSONField(default=dict)),
-                ('captured_at', models.DateTimeField(auto_now_add=True)),
-                ('catalog', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='snapshots', to='catalogs.knowledgecatalog')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("version", models.PositiveIntegerField()),
+                ("schema_data", models.JSONField(default=dict)),
+                ("captured_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "catalog",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="snapshots",
+                        to="catalogs.knowledgecatalog",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('catalog', 'version'), name='unique_catalog_snapshot_version')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("catalog", "version"),
+                        name="unique_catalog_snapshot_version",
+                    )
+                ],
             },
         ),
     ]

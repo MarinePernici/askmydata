@@ -39,10 +39,7 @@ class PostgreSQLQueryExecutor(QueryExecutor):
                 )
                 cursor.execute(sql)
 
-                columns = tuple(
-                    column.name
-                    for column in cursor.description or ()
-                )
+                columns = tuple(column.name for column in cursor.description or ())
                 rows = tuple(cursor.fetchmany(self._max_rows))
 
         return QueryExecutionResult(

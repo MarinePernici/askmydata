@@ -55,10 +55,7 @@ class ResultValidatorTests(unittest.TestCase):
         self.assertFalse(result.is_valid)
         self.assertEqual(
             result.error,
-            (
-                "Query result row length does not match "
-                "the number of columns."
-            ),
+            ("Query result row length does not match the number of columns."),
         )
 
 

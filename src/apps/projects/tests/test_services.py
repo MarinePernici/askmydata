@@ -121,9 +121,7 @@ class ProjectServiceTests(TestCase):
             project.owner,
             user,
         )
-        self.assertTrue(
-            Project.objects.filter(id=project.id).exists()
-        )
+        self.assertTrue(Project.objects.filter(id=project.id).exists())
 
     def test_update_project_updates_name_and_description(self):
         project = create_test_project(

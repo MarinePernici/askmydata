@@ -102,9 +102,7 @@ class DataSourceService:
         connector = self._connector_class(config)
 
         if not connector.test_connection():
-            raise DataSourceConnectionError(
-                "Unable to connect to the data source."
-            )
+            raise DataSourceConnectionError("Unable to connect to the data source.")
 
         data_source = self.configure(
             project=project,

@@ -32,6 +32,7 @@ def conversation_list(request, project_id):
         },
     )
 
+
 @login_required
 def conversation_create(request, project_id):
     if request.method != "POST":
@@ -54,6 +55,7 @@ def conversation_create(request, project_id):
         "conversation-list",
         project_id=project.id,
     )
+
 
 @login_required
 def conversation_detail(
@@ -88,6 +90,7 @@ def conversation_detail(
             "conversation_messages": conversation_messages,
         },
     )
+
 
 @login_required
 def conversation_ask(

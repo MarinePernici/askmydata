@@ -6,25 +6,51 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('runs', '0001_initial'),
+        ("runs", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExecutionTrace',
+            name="ExecutionTrace",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('step', models.CharField(max_length=100)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('running', 'Running'), ('completed', 'Completed'), ('failed', 'Failed')], default='pending', max_length=32)),
-                ('started_at', models.DateTimeField(blank=True, null=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('duration_ms', models.PositiveIntegerField(blank=True, null=True)),
-                ('technical_metadata', models.JSONField(blank=True, default=dict)),
-                ('error_code', models.CharField(blank=True, max_length=100)),
-                ('error_message', models.TextField(blank=True)),
-                ('question_run', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='execution_traces', to='runs.questionrun')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("step", models.CharField(max_length=100)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("running", "Running"),
+                            ("completed", "Completed"),
+                            ("failed", "Failed"),
+                        ],
+                        default="pending",
+                        max_length=32,
+                    ),
+                ),
+                ("started_at", models.DateTimeField(blank=True, null=True)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                ("duration_ms", models.PositiveIntegerField(blank=True, null=True)),
+                ("technical_metadata", models.JSONField(blank=True, default=dict)),
+                ("error_code", models.CharField(blank=True, max_length=100)),
+                ("error_message", models.TextField(blank=True)),
+                (
+                    "question_run",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="execution_traces",
+                        to="runs.questionrun",
+                    ),
+                ),
             ],
         ),
     ]

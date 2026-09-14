@@ -4,35 +4,34 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('data_sources', '0001_initial'),
+        ("data_sources", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='datasource',
-            name='database',
+            model_name="datasource",
+            name="database",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='datasource',
-            name='encrypted_password',
+            model_name="datasource",
+            name="encrypted_password",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='datasource',
-            name='host',
+            model_name="datasource",
+            name="host",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='datasource',
-            name='port',
+            model_name="datasource",
+            name="port",
             field=models.PositiveIntegerField(default=5432),
         ),
         migrations.AddField(
-            model_name='datasource',
-            name='username',
+            model_name="datasource",
+            name="username",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

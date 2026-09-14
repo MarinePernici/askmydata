@@ -41,14 +41,11 @@ class CatalogScopeService:
         }
 
         selected = {
-            (selection["schema"], selection["table"])
-            for selection in selections
+            (selection["schema"], selection["table"]) for selection in selections
         }
 
         if not selected.issubset(allowed):
-            raise InvalidCatalogScopeSelectionError(
-                "Invalid table selection."
-            )
+            raise InvalidCatalogScopeSelectionError("Invalid table selection.")
 
         catalog_scope, _ = CatalogScope.objects.update_or_create(
             project=project,
@@ -58,5 +55,3 @@ class CatalogScopeService:
         )
 
         return catalog_scope
-
-

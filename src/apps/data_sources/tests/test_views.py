@@ -100,9 +100,7 @@ class DataSourceConfigurationViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertFalse(
-            DataSource.objects.filter(project=project).exists()
-        )
+        self.assertFalse(DataSource.objects.filter(project=project).exists())
 
     @patch(
         "apps.data_sources.views.DataSourceService",
@@ -173,9 +171,7 @@ class DataSourceConfigurationViewTests(TestCase):
         self.client.force_login(user)
 
         data_source_service_class.return_value.configure_and_test.side_effect = (
-            DataSourceConnectionError(
-                "Unable to connect to the data source."
-            )
+            DataSourceConnectionError("Unable to connect to the data source.")
         )
 
         response = self.client.post(
@@ -197,9 +193,7 @@ class DataSourceConfigurationViewTests(TestCase):
             response,
             "Unable to connect to the data source.",
         )
-        self.assertFalse(
-            DataSource.objects.filter(project=project).exists()
-        )
+        self.assertFalse(DataSource.objects.filter(project=project).exists())
 
     def test_existing_data_source_prefills_form_without_password(self):
         user = get_user_model().objects.create_user(
@@ -365,9 +359,7 @@ class DataSourceConfigurationViewTests(TestCase):
         data_source.save()
 
         data_source_service_class.return_value.configure_and_test.side_effect = (
-            DataSourceConnectionError(
-                "Unable to connect to the data source."
-            )
+            DataSourceConnectionError("Unable to connect to the data source.")
         )
 
         self.client.force_login(user)

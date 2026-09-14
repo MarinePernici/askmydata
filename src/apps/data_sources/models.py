@@ -9,7 +9,6 @@ from apps.projects.models import Project
 from connectors.postgresql import PostgreSQLConnectionConfig
 
 
-
 class DataSource(models.Model):
     class SourceType(models.TextChoices):
         POSTGRESQL = "postgresql", "PostgreSQL"
@@ -74,15 +73,11 @@ class DataSource(models.Model):
     )
 
     def set_password(self, password: str) -> None:
-        cipher = CredentialCipher(
-            settings.DATASOURCE_ENCRYPTION_KEY
-        )
+        cipher = CredentialCipher(settings.DATASOURCE_ENCRYPTION_KEY)
         self.encrypted_password = cipher.encrypt(password)
 
     def get_password(self) -> str:
-        cipher = CredentialCipher(
-            settings.DATASOURCE_ENCRYPTION_KEY
-        )
+        cipher = CredentialCipher(settings.DATASOURCE_ENCRYPTION_KEY)
         return cipher.decrypt(self.encrypted_password)
 
     def is_configured(self) -> bool:
@@ -98,9 +93,7 @@ class DataSource(models.Model):
 
     def to_connection_config(self) -> PostgreSQLConnectionConfig:
         if not self.is_configured():
-            raise DataSourceConfigurationError(
-                "Data source is not fully configured."
-            )
+            raise DataSourceConfigurationError("Data source is not fully configured.")
 
         return PostgreSQLConnectionConfig(
             host=self.host,

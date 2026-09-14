@@ -5,26 +5,43 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('conversations', '0001_initial'),
-        ('runs', '0002_executiontrace'),
+        ("conversations", "0001_initial"),
+        ("runs", "0002_executiontrace"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='questionrun',
-            name='assistant_message',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='generated_by_run', to='conversations.message'),
+            model_name="questionrun",
+            name="assistant_message",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="generated_by_run",
+                to="conversations.message",
+            ),
         ),
         migrations.AddField(
-            model_name='questionrun',
-            name='conversation',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='question_runs', to='conversations.conversation'),
+            model_name="questionrun",
+            name="conversation",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="question_runs",
+                to="conversations.conversation",
+            ),
         ),
         migrations.AddField(
-            model_name='questionrun',
-            name='user_message',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='question_run', to='conversations.message'),
+            model_name="questionrun",
+            name="user_message",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="question_run",
+                to="conversations.message",
+            ),
         ),
     ]

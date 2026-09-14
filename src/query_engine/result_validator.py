@@ -18,8 +18,7 @@ class ResultValidator:
                 return ResultValidationResult(
                     is_valid=False,
                     error=(
-                        "Query result row length does not match "
-                        "the number of columns."
+                        "Query result row length does not match the number of columns."
                     ),
                 )
 

@@ -69,7 +69,7 @@ class ProjectListViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(
             response,
-            f'{reverse("login")}?next={reverse("project-list")}',
+            f"{reverse('login')}?next={reverse('project-list')}",
         )
 
     def test_authenticated_user_can_create_project(self):
@@ -114,11 +114,9 @@ class ProjectListViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(
             response,
-            f'{reverse("login")}?next={reverse("project-create")}',
+            f"{reverse('login')}?next={reverse('project-create')}",
         )
-        self.assertFalse(
-            Project.objects.filter(name="New project").exists()
-        )
+        self.assertFalse(Project.objects.filter(name="New project").exists())
 
     def test_user_cannot_access_another_users_project(self):
         user = get_user_model().objects.create_user(

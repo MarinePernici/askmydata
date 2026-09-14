@@ -85,10 +85,7 @@ class PostgreSQLQueryExecutorTests(unittest.TestCase):
         )
 
         with self.assertRaises(psycopg.errors.QueryCanceled):
-            executor.execute(
-                "SELECT pg_sleep(1);"
-            )
-
+            executor.execute("SELECT pg_sleep(1);")
 
 
 if __name__ == "__main__":

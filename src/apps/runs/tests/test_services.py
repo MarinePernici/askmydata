@@ -113,7 +113,7 @@ class QuestionRunServiceTests(TestCase):
             project=project,
             title="Test conversation",
         )
-    
+
     def create_project_with_data_source(self):
         project = create_test_project(
             name="Test project",
@@ -167,9 +167,7 @@ class QuestionRunServiceTests(TestCase):
         self.assertEqual(result.answer, "There is one value.")
 
         self.assertEqual(
-            ExecutionTrace.objects.filter(
-                question_run=run
-            ).count(),
+            ExecutionTrace.objects.filter(question_run=run).count(),
             5,
         )
 
@@ -183,9 +181,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 
@@ -328,9 +324,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 
@@ -340,9 +334,7 @@ class QuestionRunServiceTests(TestCase):
             question="Return one.",
         )
 
-        messages = list(
-            conversation.messages.all()
-        )
+        messages = list(conversation.messages.all())
 
         self.assertEqual(
             len(messages),
@@ -400,9 +392,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 
@@ -413,9 +403,7 @@ class QuestionRunServiceTests(TestCase):
                 question="Return one.",
             )
 
-        messages = list(
-            conversation.messages.all()
-        )
+        messages = list(conversation.messages.all())
 
         self.assertEqual(
             len(messages),
@@ -482,9 +470,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 
@@ -507,7 +493,7 @@ class QuestionRunServiceTests(TestCase):
     def test_run_passes_previous_conversation_history_to_generator(self):
         project = self.create_project_with_data_source()
         conversation = self.create_conversation(project)
-        
+
         Message.objects.create(
             conversation=conversation,
             role=Message.Role.USER,
@@ -566,9 +552,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 
@@ -600,9 +584,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 
@@ -690,9 +672,7 @@ class QuestionRunServiceTests(TestCase):
     def test_run_rejects_project_that_is_not_ready(self):
         project = self.create_project_with_data_source()
         project.status = Project.Status.CONFIGURING
-        project.save(
-            update_fields=["status"]
-        )
+        project.save(update_fields=["status"])
 
         conversation = self.create_conversation(project)
 
@@ -702,9 +682,7 @@ class QuestionRunServiceTests(TestCase):
             executor_factory=FakeExecutorFactory(),
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
-            catalog_reader=FakeCatalogReader(
-                KnowledgeCatalog(tables=())
-            ),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
             conversation_service=ConversationService(),
         )
 

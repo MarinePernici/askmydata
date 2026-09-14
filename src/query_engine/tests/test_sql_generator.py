@@ -56,10 +56,7 @@ class ClarificationProvider(LLMProvider):
         messages: list[LLMMessage],
     ) -> LLMResponse:
         return LLMResponse(
-            content=(
-                '{"clarification": '
-                '"Which date range should I use?"}'
-            ),
+            content=('{"clarification": "Which date range should I use?"}'),
             model="fake-model",
         )
 
