@@ -40,7 +40,10 @@ def project_create(request):
     return render(
         request,
         "projects/project_create.html",
-        {"form": form},
+        {
+            "form": form,
+            "creation_mode": True,
+        },
     )
 
 
@@ -54,10 +57,9 @@ def project_detail(request, project_id):
     except Project.DoesNotExist:
         raise Http404
 
-    return render(
-        request,
-        "projects/project_detail.html",
-        {"project": project},
+    return redirect(
+        "data-overview",
+        project_id=project.id,
     )
 
 

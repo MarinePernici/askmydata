@@ -144,7 +144,7 @@ class ProjectListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_user_can_access_own_project(self):
+    def test_project_detail_redirects_owner_to_data_overview(self):
         user = get_user_model().objects.create_user(
             username="marine",
             password="test-password",
@@ -165,31 +165,13 @@ class ProjectListViewTests(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, project.name)
-        self.assertContains(response, project.description)
-        self.assertContains(
+        self.assertRedirects(
             response,
             reverse(
-                "data-source-configure",
+                "data-overview",
                 kwargs={"project_id": project.id},
             ),
-        )
-
-        self.assertContains(
-            response,
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertContains(
-            response,
-            reverse(
-                "conversation-list",
-                kwargs={"project_id": project.id},
-            ),
+            fetch_redirect_response=False,
         )
 
     def test_user_can_update_own_project(self):

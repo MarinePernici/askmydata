@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Data Schema · AskMyData{% endblock %}
+
+{% block content %}
+    <header class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Data</h1>
+        </div>
+    </header>
+
+    <nav class="tabs" aria-label="Data navigation">
+        <a
+            href="{% url 'data-overview' project.id %}"
+            class="tab"
+        >
+            Overview
+        </a>
+
+        <a
+            href="{% url 'data-schema' project.id %}"
+            class="tab tab-active"
+            aria-current="page"
+        >
+            Schema
+        </a>
+    </nav>
+
+    <section class="section data-overview-section">
+        <div class="section-header">
+            <div class="section-header-content">
+                <h2 class="section-header-title">Database schema</h2>
+            </div>
+        </div>
+
+        {% if catalog and selected_table %}
+            <div class="schema-explorer">
+                <aside class="schema-table-list">
+                    <div class="schema-table-list-header">
+                        <span>Tables</span>
+                        <span class="schema-table-count">
+                            {{ catalog.tables|length }}
+                        </span>
+                    </div>
+
+                    <nav class="schema-table-navigation" aria-label="Database tables">
+                        {% for table in catalog.tables %}
+                            <a
+                                href="{% url 'data-schema' project.id %}?table={{ table.schema }}.{{ table.name }}"
+                                class="schema-table-list-item{% if table == selected_table %} schema-table-list-item-active{% endif %}"
+                            >
+                                <span class="schema-table-icon" aria-hidden="true">
+                                    ▦
+                                </span>
+
+                                <span>{{ table.name }}</span>
+                            </a>
+                        {% endfor %}
+                    </nav>
+                </aside>
+
+                <div class="schema-table-detail">
+                    <header class="schema-detail-header">
+                        <div>
+                            <h3 class="schema-detail-title">
+                                {{ selected_table.name }}
+                            </h3>
+                            <span class="schema-detail-schema">
+                                {{ selected_table.schema }}
+                            </span>
+                        </div>
+                    </header>
+
+                    <section class="schema-detail-section">
+                        <h4 class="schema-detail-section-title">
+                            Columns
+                        </h4>
+
+                        <div class="schema-columns">
+                            <div class="schema-column schema-column-heading">
+                                <span>Column</span>
+                                <span>Type</span>
+                            </div>
+
+                            {% for column in selected_table.columns %}
+                                <div class="schema-column">
+                                    <span class="schema-column-name">
+                                        {{ column.name }}
+                                    </span>
+                                    <span class="schema-column-type">
+                                        {{ column.data_type }}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="schema-columns-empty">
+                                    No columns available.
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="schema-detail-section">
+                        <h4 class="schema-detail-section-title">
+                            Relationships
+                        </h4>
+
+                        <div class="schema-relationship-groups">
+                            <div class="schema-relationship-group">
+                                <span class="schema-relationship-label">
+                                    Referenced by
+                                </span>
+
+                                {% if referenced_by %}
+                                    {% for relationship in referenced_by %}
+                                        <span class="schema-relationship-value">
+                                            {{ relationship.source_table }}.{{ relationship.source_column }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="schema-relationship-value">
+                                        —
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="schema-relationship-group">
+                                <span class="schema-relationship-label">
+                                    References
+                                </span>
+
+                                {% if references %}
+                                    {% for relationship in references %}
+                                        <span class="schema-relationship-value">
+                                            {{ relationship.target_table }}.{{ relationship.target_column }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="schema-relationship-value">
+                                        —
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-content">
+                    <h2 class="empty-state-title">
+                        Schema unavailable
+                    </h2>
+                    <p class="empty-state-description">
+                        The database schema will be available when the catalog is ready.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

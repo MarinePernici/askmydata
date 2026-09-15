@@ -23,10 +23,15 @@ class CatalogScopeService:
     def discover_available_tables(self, project):
         connector = self.connector_factory(project)
 
-        return {
-            schema: connector.discover_tables(schema)
-            for schema in connector.discover_schemas()
-        }
+        available_tables = {}
+
+        for schema in connector.discover_schemas():
+            tables = connector.discover_tables(schema)
+
+            if tables:
+                available_tables[schema] = tables
+
+        return available_tables
 
     def save_selection(
         self,

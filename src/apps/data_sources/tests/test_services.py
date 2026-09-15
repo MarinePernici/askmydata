@@ -56,6 +56,9 @@ class DataSourceServiceTests(TestCase):
             self.data_source.connection_status,
             DataSource.ConnectionStatus.CONNECTED,
         )
+        self.assertIsNotNone(
+            self.data_source.last_connection_at,
+        )
 
     def test_failed_connection_updates_status_to_failed(self):
         service = DataSourceService(
@@ -72,6 +75,9 @@ class DataSourceServiceTests(TestCase):
         self.assertEqual(
             self.data_source.connection_status,
             DataSource.ConnectionStatus.FAILED,
+        )
+        self.assertIsNotNone(
+            self.data_source.last_connection_at,
         )
 
     def test_configure_data_source_marks_project_as_configuring(self):
@@ -160,6 +166,22 @@ class DataSourceServiceTests(TestCase):
             DataSource.ConnectionStatus.NOT_TESTED,
         )
 
+    def test_configure_does_not_set_last_connection_at(self):
+        service = DataSourceService()
+
+        data_source = service.configure(
+            project=self.project,
+            host="new-host",
+            port=5432,
+            database="new_database",
+            username="new_user",
+            password="new-password",
+        )
+
+        self.assertIsNone(
+            data_source.last_connection_at,
+        )
+
     def test_configure_marks_existing_catalog_as_stale(self):
         self.project.status = Project.Status.READY
         self.project.save(update_fields=["status"])
@@ -220,6 +242,9 @@ class DataSourceServiceTests(TestCase):
         self.assertEqual(
             data_source.connection_status,
             DataSource.ConnectionStatus.CONNECTED,
+        )
+        self.assertIsNotNone(
+            data_source.last_connection_at,
         )
 
     def test_configure_and_test_does_not_replace_existing_configuration_on_failure(

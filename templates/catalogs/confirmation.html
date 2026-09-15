@@ -1,5 +1,148 @@
-{{ project.name }}
+{% extends "base.html" %}
 
-{% for table in selected_tables %}
-    {{ table.schema }}.{{ table.table }}
-{% endfor %}
+{% block title %}Confirm project · AskMyData{% endblock %}
+
+{% block content %}
+    <header class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Create project</h1>
+            <p class="page-header-description">
+                Review your project configuration before creating the catalog.
+            </p>
+        </div>
+    </header>
+
+    <div class="wizard">
+        <div class="wizard-steps" aria-label="Project creation progress">
+            <div class="wizard-step wizard-step-complete">
+                <div class="wizard-step-indicator">1</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Project info</span>
+                </div>
+            </div>
+
+            <div class="wizard-step wizard-step-complete">
+                <div class="wizard-step-indicator">2</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data source</span>
+                </div>
+            </div>
+
+            <div class="wizard-step wizard-step-complete">
+                <div class="wizard-step-indicator">3</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data selection</span>
+                </div>
+            </div>
+
+            <div class="wizard-step wizard-step-active">
+                <div class="wizard-step-indicator">4</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Confirmation</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="card wizard-card">
+            <div class="section-header">
+                <div class="section-header-content">
+                    <h2 class="section-header-title">Confirmation</h2>
+                    <p class="section-header-description">
+                        Review the project configuration before creating the catalog.
+                    </p>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-error">
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="confirmation-sections">
+                <section class="confirmation-section">
+                    <h3 class="confirmation-section-title">
+                        Project
+                    </h3>
+
+                    <dl class="confirmation-details">
+                        <div class="confirmation-detail">
+                            <dt>Name</dt>
+                            <dd>{{ project.name }}</dd>
+                        </div>
+
+                        {% if project.description %}
+                            <div class="confirmation-detail">
+                                <dt>Description</dt>
+                                <dd>{{ project.description }}</dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+                </section>
+
+                <section class="confirmation-section">
+                    <h3 class="confirmation-section-title">
+                        Data source
+                    </h3>
+
+                    <dl class="confirmation-details">
+                        <div class="confirmation-detail">
+                            <dt>Type</dt>
+                            <dd>PostgreSQL</dd>
+                        </div>
+
+                        <div class="confirmation-detail">
+                            <dt>Host</dt>
+                            <dd>{{ data_source.host }}</dd>
+                        </div>
+
+                        <div class="confirmation-detail">
+                            <dt>Database</dt>
+                            <dd>{{ data_source.database }}</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="confirmation-section">
+                    <h3 class="confirmation-section-title">
+                        Selected tables
+                    </h3>
+
+                    <div class="confirmation-tables">
+                        {% for table in selected_tables %}
+                            <span class="confirmation-table">
+                                {{ table.schema }}.{{ table.table }}
+                            </span>
+                        {% empty %}
+                            <p class="confirmation-empty">
+                                No tables selected.
+                            </p>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <div class="wizard-actions">
+                <a
+                    href="{% url 'catalog-scope' project.id %}"
+                    class="btn btn-secondary"
+                >
+                    Back
+                </a>
+
+                <form
+                    method="post"
+                    action="{% url 'catalog-build' project.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-primary">
+                        Create project
+                    </button>
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}

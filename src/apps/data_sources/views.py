@@ -2,6 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from apps.catalogs.models import CatalogScope
+from apps.catalogs.exceptions import CatalogNotReadyError
+from apps.catalogs.readers import CatalogReader
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
@@ -62,5 +65,105 @@ def data_source_configure(request, project_id):
         {
             "project": project,
             "form": form,
+            "creation_mode": True,
+        },
+    )
+
+
+@login_required
+def data_overview(request, project_id):
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        data_source = project.data_source
+    except DataSource.DoesNotExist:
+        raise Http404
+
+    try:
+        selected_tables_count = len(project.catalog_scope.selected_tables)
+    except CatalogScope.DoesNotExist:
+        selected_tables_count = 0
+
+    return render(
+        request,
+        "data_sources/overview.html",
+        {
+            "project": project,
+            "data_source": data_source,
+            "selected_tables_count": selected_tables_count,
+        },
+    )
+
+
+@login_required
+def data_schema(request, project_id):
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        catalog = CatalogReader().get_current(project)
+    except CatalogNotReadyError:
+        catalog = None
+
+    selected_table = None
+
+    if catalog and catalog.tables:
+        requested_table = request.GET.get("table")
+
+        if requested_table:
+            selected_table = next(
+                (
+                    table
+                    for table in catalog.tables
+                    if f"{table.schema}.{table.name}" == requested_table
+                ),
+                None,
+            )
+
+        if selected_table is None:
+            selected_table = catalog.tables[0]
+
+    references = ()
+    referenced_by = ()
+
+    if selected_table:
+        references = tuple(
+            relationship
+            for relationship in selected_table.relationships
+            if (
+                relationship.source_schema == selected_table.schema
+                and relationship.source_table == selected_table.name
+            )
+        )
+
+        referenced_by = tuple(
+            relationship
+            for relationship in selected_table.relationships
+            if (
+                relationship.target_schema == selected_table.schema
+                and relationship.target_table == selected_table.name
+            )
+        )
+
+    return render(
+        request,
+        "data_sources/schema.html",
+        {
+            "project": project,
+            "catalog": catalog,
+            "selected_table": selected_table,
+            "references": references,
+            "referenced_by": referenced_by,
         },
     )

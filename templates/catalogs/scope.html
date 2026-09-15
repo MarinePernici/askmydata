@@ -1,92 +1,152 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Catalog scope</title>
-</head>
-<body>
-    <nav>
-        <a href="{% url 'project-list' %}">
-            Projects
-        </a>
+{% extends "base.html" %}
 
-        <a href="{% url 'project-detail' project.id %}">
-            {{ project.name }}
-        </a>
-    </nav>
-    <h1>Catalog scope</h1>
-    <p>{{ project.name }}</p>
+{% block title %}Select data · AskMyData{% endblock %}
 
-    {% if knowledge_catalog %}
-        <p>Catalog status: {{ knowledge_catalog.get_status_display }}</p>
-        <p>Version: {{ knowledge_catalog.version }}</p>
-    {% else %}
-        <p>Catalog status: Not built</p>
-    {% endif %}
+{% block content %}
+    <header class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Create project</h1>
+            <p class="page-header-description">
+                Choose the data you want AskMyData to explore.
+            </p>
+        </div>
+    </header>
 
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endif %}
+    <div class="wizard">
+        <div class="wizard-steps" aria-label="Project creation progress">
+            <div class="wizard-step wizard-step-complete">
+                <div class="wizard-step-indicator">1</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Project info</span>
+                </div>
+            </div>
 
+            <div class="wizard-step wizard-step-complete">
+                <div class="wizard-step-indicator">2</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data source</span>
+                </div>
+            </div>
 
+            <div class="wizard-step wizard-step-active">
+                <div class="wizard-step-indicator">3</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data selection</span>
+                </div>
+            </div>
 
-    {% if error %}
-        <p>{{ error }}</p>
-    {% endif %}
+            <div class="wizard-step">
+                <div class="wizard-step-indicator">4</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Confirmation</span>
+                </div>
+            </div>
+        </div>
 
-    {% if data_source_missing %}
-        <p>Configure a data source before selecting tables.</p>
-    {% else %}
-        <form method="post">
-            {% csrf_token %}
+        <section class="card wizard-card">
+            <div class="section-header">
+                <div class="section-header-content">
+                    <h2 class="section-header-title">Data selection</h2>
+                    <p class="section-header-description">
+                        Select the PostgreSQL tables that should be included in this project.
+                    </p>
+                </div>
+            </div>
 
-            {% for schema, tables in available_tables.items %}
-                <h2>{{ schema }}</h2>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-error">
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-                <ul>
-                    {% for table in tables %}
-                        {% with table_key=schema|add:"."|add:table %}
-                            <li>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        name="tables"
-                                        value="{{ table_key }}"
-                                        {% if table_key in selected_tables %}checked{% endif %}
-                                    >
-                                    {{ table_key }}
-                                </label>
-                            </li>
-                        {% endwith %}
-                    {% endfor %}
-                </ul>
-            {% endfor %}
+            {% if error %}
+                <div class="alert alert-error">
+                    <p>{{ error }}</p>
+                </div>
+            {% endif %}
 
-            <button type="submit">Save selection</button>
-        </form>
-        {% if not knowledge_catalog or knowledge_catalog.status == "pending" or knowledge_catalog.status == "failed" %}
-            <form
-                method="post"
-                action="{% url 'catalog-build' project.id %}"
-            >
-                {% csrf_token %}
-                <button type="submit">Build catalog</button>
-            </form>
+            {% if data_source_missing %}
+                <div class="alert alert-error">
+                    <p>Configure a data source before selecting tables.</p>
+                </div>
 
-        {% elif knowledge_catalog.status == "ready" or knowledge_catalog.status == "stale" %}
-            <form
-                method="post"
-                action="{% url 'catalog-build' project.id %}"
-            >
-                {% csrf_token %}
-                <button type="submit">Rebuild catalog</button>
-            </form>
+                <div class="wizard-actions">
+                    <a
+                        href="{% url 'data-source-configure' project.id %}"
+                        class="btn btn-secondary"
+                    >
+                        Back
+                    </a>
+                </div>
+            {% else %}
+                <form method="post" class="wizard-form">
+                    {% csrf_token %}
 
-        {% elif knowledge_catalog.status == "building" %}
-            <p>Catalog build in progress.</p>
-        {% endif %}
-    {% endif %}
-</body>
-</html>
+                    <div class="table-selection">
+                        {% for schema, tables in available_tables.items %}
+                            {% if tables %}
+                                <section class="table-selection-schema">
+                                    <div class="table-selection-header">
+                                        <h3 class="table-selection-title">
+                                            {{ schema }}
+                                        </h3>
+                                    </div>
+
+                                    <div class="table-selection-list">
+                                        {% for table in tables %}
+                                            {% with table_key=schema|add:"."|add:table %}
+                                                <label class="table-selection-item">
+                                                    <input
+                                                        type="checkbox"
+                                                        name="tables"
+                                                        value="{{ table_key }}"
+                                                        class="form-checkbox"
+                                                        {% if table_key in selected_tables %}checked{% endif %}
+                                                    >
+
+                                                    <span class="table-selection-name">
+                                                        {{ table }}
+                                                    </span>
+
+                                                    <span class="table-selection-schema-name">
+                                                        {{ schema }}
+                                                    </span>
+                                                </label>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                </section>
+                            {% endif %}
+                        {% empty %}
+                            <div class="empty-state table-selection-empty">
+                                <div class="empty-state-content">
+                                    <h3 class="empty-state-title">
+                                        No tables found
+                                    </h3>
+                                    <p class="empty-state-description">
+                                        No PostgreSQL tables are available for selection.
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="wizard-actions">
+                        <a
+                            href="{% url 'data-source-configure' project.id %}"
+                            class="btn btn-secondary"
+                        >
+                            Back
+                        </a>
+
+                        <button type="submit" class="btn btn-primary">
+                            Continue
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

@@ -36,7 +36,7 @@
     </a>
 </nav>
 
-{% if project %}
+{% if project and not creation_mode %}
     <div class="sidebar-project">
         <div class="sidebar-section-label">
             Current project
@@ -68,8 +68,8 @@
 
         <nav class="sidebar-nav" aria-label="Project navigation">
             <a
-                href="{% url 'data-source-configure' project.id %}"
-                class="nav-item{% if request.resolver_match.url_name == 'data-source-configure' %} nav-item-active{% endif %}"
+                href="{% url 'data-overview' project.id %}"
+                class="nav-item{% if request.resolver_match.url_name == 'data-overview' %} nav-item-active{% endif %}"
             >
                 <span>Data</span>
             </a>

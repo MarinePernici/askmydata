@@ -8,7 +8,7 @@ from apps.catalogs.exceptions import (
     CatalogScopeNotConfiguredError,
     DataSourceNotConfiguredError,
 )
-from apps.catalogs.models import CatalogScope, KnowledgeCatalog
+from apps.catalogs.models import CatalogScope
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 
@@ -67,19 +67,8 @@ class CatalogScopeViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, project.name)
-        self.assertContains(
-            response,
-            reverse(
-                "project-detail",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertContains(
-            response,
-            reverse("project-list"),
-        )
+        self.assertContains(response, "Create project")
+        self.assertContains(response, "Data selection")
 
     @patch("apps.catalogs.views.CatalogScopeService")
     def test_catalog_scope_displays_discovered_tables(
@@ -292,8 +281,11 @@ class CatalogScopeViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            '<input type="checkbox" name="tables" value="sales.orders" checked>',
-            html=True,
+            'value="sales.orders"',
+        )
+        self.assertContains(
+            response,
+            "checked",
         )
 
     @patch("apps.catalogs.views.CatalogService")
@@ -388,48 +380,6 @@ class CatalogScopeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
         catalog_service_class.return_value.build_for_project.assert_not_called()
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_build_catalog_action(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-        project = Project.objects.create(
-            owner=user,
-            name="My project",
-        )
-
-        DataSource.objects.create(
-            project=project,
-        )
-
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Build catalog")
-        self.assertContains(
-            response,
-            reverse(
-                "catalog-build",
-                kwargs={"project_id": project.id},
-            ),
-        )
 
     @patch("apps.catalogs.views.CatalogService")
     def test_catalog_build_displays_error_when_scope_is_not_configured(
@@ -542,329 +492,6 @@ class CatalogScopeViewTests(TestCase):
             response,
             "database connection details",
         )
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_ready_catalog_status(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        project = Project.objects.create(
-            owner=user,
-            name="My project",
-        )
-
-        DataSource.objects.create(
-            project=project,
-        )
-
-        KnowledgeCatalog.objects.create(
-            project=project,
-            status=KnowledgeCatalog.Status.READY,
-            version=2,
-        )
-
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Catalog status: Ready")
-        self.assertContains(response, "Version: 2")
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_catalog_status(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        self.client.force_login(user)
-
-        cases = [
-            (KnowledgeCatalog.Status.PENDING, "Pending"),
-            (KnowledgeCatalog.Status.BUILDING, "Building"),
-            (KnowledgeCatalog.Status.STALE, "Stale"),
-            (KnowledgeCatalog.Status.FAILED, "Failed"),
-        ]
-
-        for status, label in cases:
-            with self.subTest(status=status):
-                project = Project.objects.create(
-                    owner=user,
-                    name=f"Project {status}",
-                )
-
-                DataSource.objects.create(
-                    project=project,
-                )
-
-                KnowledgeCatalog.objects.create(
-                    project=project,
-                    status=status,
-                )
-
-                response = self.client.get(
-                    reverse(
-                        "catalog-scope",
-                        kwargs={"project_id": project.id},
-                    ),
-                )
-
-                self.assertEqual(response.status_code, 200)
-                self.assertContains(
-                    response,
-                    f"Catalog status: {label}",
-                )
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_not_built_when_catalog_does_not_exist(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        project = Project.objects.create(
-            owner=user,
-            name="My project",
-        )
-
-        DataSource.objects.create(
-            project=project,
-        )
-
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            "Catalog status: Not built",
-        )
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_rebuild_action_when_catalog_is_ready(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        project = Project.objects.create(
-            owner=user,
-            name="My project",
-        )
-
-        DataSource.objects.create(
-            project=project,
-        )
-
-        KnowledgeCatalog.objects.create(
-            project=project,
-            status=KnowledgeCatalog.Status.READY,
-            version=1,
-        )
-
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Rebuild catalog")
-        self.assertNotContains(response, ">Build catalog<")
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_disables_build_action_when_catalog_is_building(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        project = Project.objects.create(
-            owner=user,
-            name="My project",
-        )
-
-        DataSource.objects.create(
-            project=project,
-        )
-
-        KnowledgeCatalog.objects.create(
-            project=project,
-            status=KnowledgeCatalog.Status.BUILDING,
-        )
-
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            "Catalog build in progress.",
-        )
-        self.assertNotContains(response, ">Build catalog<")
-        self.assertNotContains(response, ">Rebuild catalog<")
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_build_action_when_catalog_is_pending(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        project = Project.objects.create(
-            owner=user,
-            name="My project",
-        )
-
-        DataSource.objects.create(
-            project=project,
-        )
-
-        KnowledgeCatalog.objects.create(
-            project=project,
-            status=KnowledgeCatalog.Status.PENDING,
-        )
-
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse(
-                "catalog-scope",
-                kwargs={"project_id": project.id},
-            ),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, ">Build catalog<")
-        self.assertNotContains(response, ">Rebuild catalog<")
-
-    @patch(
-        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
-        return_value={
-            "sales": ["customers", "orders"],
-        },
-    )
-    def test_catalog_scope_displays_expected_action_for_failed_and_stale_catalog(
-        self,
-        discover_available_tables,
-    ):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-
-        self.client.force_login(user)
-
-        cases = [
-            (
-                KnowledgeCatalog.Status.FAILED,
-                "Build catalog",
-                "Rebuild catalog",
-            ),
-            (
-                KnowledgeCatalog.Status.STALE,
-                "Rebuild catalog",
-                ">Build catalog<",
-            ),
-        ]
-
-        for status, expected, unexpected in cases:
-            with self.subTest(status=status):
-                project = Project.objects.create(
-                    owner=user,
-                    name=f"Project {status}",
-                )
-
-                DataSource.objects.create(
-                    project=project,
-                )
-
-                KnowledgeCatalog.objects.create(
-                    project=project,
-                    status=status,
-                )
-
-                response = self.client.get(
-                    reverse(
-                        "catalog-scope",
-                        kwargs={"project_id": project.id},
-                    ),
-                )
-
-                self.assertEqual(response.status_code, 200)
-                self.assertContains(response, expected)
-                self.assertNotContains(response, unexpected)
 
 
 class CatalogConfirmationViewTests(TestCase):
