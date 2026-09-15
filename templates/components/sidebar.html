@@ -75,8 +75,8 @@
             </a>
 
             <a
-                href="{% url 'catalog-scope' project.id %}"
-                class="nav-item{% if request.resolver_match.url_name == 'catalog-scope' or request.resolver_match.url_name == 'catalog-build' %} nav-item-active{% endif %}"
+                href="{% url 'catalog-detail' project.id %}"
+                class="nav-item{% if request.resolver_match.url_name == 'catalog-detail' %} nav-item-active{% endif %}"
             >
                 <span>Catalog</span>
             </a>

@@ -8,15 +8,85 @@ from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
 from .exceptions import (
+    CatalogNotReadyError,
     CatalogScopeNotConfiguredError,
     DataSourceNotConfiguredError,
 )
-from .models import CatalogScope
+from .models import CatalogScope, KnowledgeCatalog
+from .readers import CatalogReader
 from .scope_service import (
     CatalogScopeService,
     InvalidCatalogScopeSelectionError,
 )
 from .services import CatalogService
+
+
+@login_required
+def catalog_detail(request, project_id):
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        catalog_model = project.knowledge_catalog
+    except KnowledgeCatalog.DoesNotExist:
+        catalog_model = None
+
+    catalog = None
+
+    if catalog_model is not None:
+        try:
+            catalog = CatalogReader().get_current(project)
+        except CatalogNotReadyError:
+            pass
+
+    selected_table = None
+    tables_count = 0
+    columns_count = 0
+    business_synonyms_count = 0
+
+    if catalog is not None:
+        tables_count = len(catalog.tables)
+        columns_count = sum(len(table.columns) for table in catalog.tables)
+        business_synonyms_count = sum(
+            len(table.semantic_metadata.business_synonyms)
+            for table in catalog.tables
+            if table.semantic_metadata is not None
+        )
+
+        if catalog.tables:
+            requested_table = request.GET.get("table")
+
+            if requested_table:
+                selected_table = next(
+                    (
+                        table
+                        for table in catalog.tables
+                        if f"{table.schema}.{table.name}" == requested_table
+                    ),
+                    None,
+                )
+
+            if selected_table is None:
+                selected_table = catalog.tables[0]
+
+    return render(
+        request,
+        "catalogs/detail.html",
+        {
+            "project": project,
+            "catalog_model": catalog_model,
+            "catalog": catalog,
+            "selected_table": selected_table,
+            "tables_count": tables_count,
+            "columns_count": columns_count,
+            "business_synonyms_count": business_synonyms_count,
+        },
+    )
 
 
 @login_required
@@ -181,5 +251,35 @@ def catalog_build(request, project_id):
 
     return redirect(
         "conversation-list",
+        project_id=project.id,
+    )
+
+
+@login_required
+def catalog_regenerate(request, project_id):
+    if request.method != "POST":
+        raise Http404
+
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        CatalogService().build_for_project(project)
+    except (
+        DataSourceNotConfiguredError,
+        CatalogScopeNotConfiguredError,
+    ):
+        return redirect(
+            "catalog-detail",
+            project_id=project.id,
+        )
+
+    return redirect(
+        "catalog-detail",
         project_id=project.id,
     )

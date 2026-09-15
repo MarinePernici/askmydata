@@ -5,12 +5,19 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.catalogs.exceptions import (
+    CatalogNotReadyError,
     CatalogScopeNotConfiguredError,
     DataSourceNotConfiguredError,
 )
-from apps.catalogs.models import CatalogScope
+from apps.catalogs.models import CatalogScope, KnowledgeCatalog
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from catalog.types import (
+    KnowledgeCatalog as DomainKnowledgeCatalog,
+    SemanticMetadata,
+    TableMetadata,
+)
+from connectors.types import ColumnMetadata
 
 
 class CatalogScopeViewTests(TestCase):
@@ -626,3 +633,375 @@ class CatalogConfirmationViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+
+class CatalogDetailViewTests(TestCase):
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_user_can_access_ready_catalog_for_own_project(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-catalog-detail",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        catalog_model = KnowledgeCatalog.objects.create(
+            project=project,
+            status=KnowledgeCatalog.Status.READY,
+            version=1,
+        )
+        catalog = DomainKnowledgeCatalog(
+            tables=(),
+        )
+
+        catalog_reader_class.return_value.get_current.return_value = catalog
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["project"], project)
+        self.assertEqual(response.context["catalog_model"], catalog_model)
+        self.assertEqual(response.context["catalog"], catalog)
+
+        catalog_reader_class.return_value.get_current.assert_called_once_with(project)
+
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_catalog_detail_is_available_when_catalog_is_not_ready(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-catalog-not-ready",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        catalog_model = KnowledgeCatalog.objects.create(
+            project=project,
+            status=KnowledgeCatalog.Status.BUILDING,
+        )
+
+        catalog_reader_class.return_value.get_current.side_effect = (
+            CatalogNotReadyError("Project knowledge catalog is not ready.")
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["catalog_model"], catalog_model)
+        self.assertIsNone(response.context["catalog"])
+
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_catalog_detail_is_available_when_catalog_does_not_exist(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-catalog-missing",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["catalog_model"])
+        self.assertIsNone(response.context["catalog"])
+
+        catalog_reader_class.return_value.get_current.assert_not_called()
+
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_user_cannot_access_catalog_for_another_users_project(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-catalog-detail",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-catalog-user",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+        catalog_reader_class.return_value.get_current.assert_not_called()
+
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_catalog_detail_displays_catalog_metrics(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-catalog-metrics",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        KnowledgeCatalog.objects.create(
+            project=project,
+            status=KnowledgeCatalog.Status.READY,
+            version=1,
+        )
+
+        catalog = DomainKnowledgeCatalog(
+            tables=(
+                TableMetadata(
+                    schema="sales",
+                    name="customers",
+                    columns=(
+                        ColumnMetadata(
+                            name="id",
+                            data_type="integer",
+                            nullable=False,
+                            default=None,
+                        ),
+                        ColumnMetadata(
+                            name="email",
+                            data_type="text",
+                            nullable=False,
+                            default=None,
+                        ),
+                    ),
+                    relationships=(),
+                    semantic_metadata=SemanticMetadata(
+                        description="Customer accounts.",
+                        business_synonyms=("customer", "client"),
+                    ),
+                ),
+                TableMetadata(
+                    schema="sales",
+                    name="orders",
+                    columns=(
+                        ColumnMetadata(
+                            name="id",
+                            data_type="integer",
+                            nullable=False,
+                            default=None,
+                        ),
+                    ),
+                    relationships=(),
+                    semantic_metadata=SemanticMetadata(
+                        description="Customer orders.",
+                        business_synonyms=("order",),
+                    ),
+                ),
+            ),
+        )
+
+        catalog_reader_class.return_value.get_current.return_value = catalog
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.context["tables_count"], 2)
+        self.assertEqual(response.context["columns_count"], 3)
+        self.assertEqual(response.context["business_synonyms_count"], 3)
+        self.assertEqual(
+            response.context["selected_table"],
+            catalog.tables[0],
+        )
+
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_catalog_detail_selects_requested_table(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-catalog-selection",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        KnowledgeCatalog.objects.create(
+            project=project,
+            status=KnowledgeCatalog.Status.READY,
+            version=1,
+        )
+
+        customers = TableMetadata(
+            schema="sales",
+            name="customers",
+            columns=(),
+            relationships=(),
+            semantic_metadata=None,
+        )
+        orders = TableMetadata(
+            schema="sales",
+            name="orders",
+            columns=(),
+            relationships=(),
+            semantic_metadata=None,
+        )
+
+        catalog = DomainKnowledgeCatalog(
+            tables=(customers, orders),
+        )
+
+        catalog_reader_class.return_value.get_current.return_value = catalog
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+            {"table": "sales.orders"},
+        )
+
+        self.assertEqual(
+            response.context["selected_table"],
+            orders,
+        )
+
+
+@patch("apps.catalogs.views.CatalogService")
+class CatalogRegenerateViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="catalog-regenerate-user",
+            password="password",
+        )
+        self.client.force_login(self.user)
+
+        self.project = Project.objects.create(
+            owner=self.user,
+            name="Catalog regenerate project",
+        )
+
+    def test_regenerate_catalog_calls_service_and_redirects_to_catalog(
+        self,
+        catalog_service_class,
+    ):
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": self.project.id},
+            ),
+        )
+
+        catalog_service_class.return_value.build_for_project.assert_called_once_with(
+            self.project
+        )
+
+    def test_regenerate_catalog_rejects_get(
+        self,
+        catalog_service_class,
+    ):
+        response = self.client.get(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+        catalog_service_class.return_value.build_for_project.assert_not_called()
+
+    def test_regenerate_catalog_returns_404_for_another_users_project(
+        self,
+        catalog_service_class,
+    ):
+        other_user = get_user_model().objects.create_user(
+            username="other-catalog-user",
+            password="password",
+        )
+        other_project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": other_project.id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+        catalog_service_class.return_value.build_for_project.assert_not_called()
+
+    def test_regenerate_catalog_redirects_to_catalog_when_configuration_is_missing(
+        self,
+        catalog_service_class,
+    ):
+        catalog_service_class.return_value.build_for_project.side_effect = (
+            DataSourceNotConfiguredError("Data source is not configured.")
+        )
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": self.project.id},
+            ),
+        )
