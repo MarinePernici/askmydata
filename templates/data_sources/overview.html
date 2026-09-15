@@ -80,7 +80,7 @@
                     <dt>Last connection</dt>
                     <dd>
                         {% if data_source.last_connection_at %}
-                            {{ data_source.last_connection_at|date:"M j, Y H:i" }}
+                            {{ data_source.last_connection_at|date:"M j, Y H:i" }} UTC
                         {% else %}
                             Never
                         {% endif %}
@@ -89,9 +89,16 @@
             </dl>
 
             <div class="data-source-card-actions">
-                <button type="button" class="btn btn-secondary" disabled>
-                    Test connection
-                </button>
+                <form
+                    method="post"
+                    action="{% url 'data-test-connection' project.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-secondary">
+                        Test connection
+                    </button>
+                </form>
             </div>
         </div>
     </section>

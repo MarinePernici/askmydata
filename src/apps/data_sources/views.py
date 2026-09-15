@@ -102,6 +102,32 @@ def data_overview(request, project_id):
 
 
 @login_required
+def data_test_connection(request, project_id):
+    if request.method != "POST":
+        raise Http404
+
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        data_source = project.data_source
+    except DataSource.DoesNotExist:
+        raise Http404
+
+    DataSourceService().test_connection(data_source)
+
+    return redirect(
+        "data-overview",
+        project_id=project.id,
+    )
+
+
+@login_required
 def data_schema(request, project_id):
     try:
         project = ProjectService().get_for_user(
