@@ -40,3 +40,17 @@ class ProjectModelTests(TestCase):
         )
 
         self.assertEqual(project.owner, user)
+
+    def test_ready_project_is_not_archived(self):
+        project = create_test_project(
+            status=Project.Status.READY,
+        )
+
+        self.assertFalse(project.is_archived)
+
+    def test_archived_project_is_archived(self):
+        project = create_test_project(
+            status=Project.Status.ARCHIVED,
+        )
+
+        self.assertTrue(project.is_archived)

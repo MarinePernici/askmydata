@@ -1,17 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit project</title>
-</head>
-<body>
-    <h1>Edit project</h1>
+{% extends "base.html" %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% block title %}Settings · AskMyData{% endblock %}
 
-        <button type="submit">Save</button>
-    </form>
-</body>
-</html>
+{% block content %}
+<header class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-header-title">Settings</h1>
+    </div>
+</header>
+
+<div class="settings-content">
+    <section class="settings-section">
+        <div class="section-header">
+            <div class="section-header-content">
+                <h2 class="section-header-title">General</h2>
+            </div>
+        </div>
+
+        <form method="post" class="settings-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-field">
+                <label
+                    for="{{ form.name.id_for_label }}"
+                    class="form-label"
+                >
+                    Project name
+                </label>
+
+                <input
+                    type="text"
+                    name="{{ form.name.html_name }}"
+                    id="{{ form.name.id_for_label }}"
+                    value="{{ form.name.value|default_if_none:'' }}"
+                    class="form-input"
+                    maxlength="255"
+                    {% if form.name.field.required %}required{% endif %}
+                    {% if form.name.errors %}aria-invalid="true"{% endif %}
+                    {% if project.is_archived %}disabled{% endif %}
+                >
+
+                {% for error in form.name.errors %}
+                    <span class="form-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-field">
+                <label
+                    for="{{ form.description.id_for_label }}"
+                    class="form-label"
+                >
+                    Description
+                </label>
+
+                <input
+                    type="text"
+                    name="{{ form.description.html_name }}"
+                    id="{{ form.description.id_for_label }}"
+                    value="{{ form.description.value|default_if_none:'' }}"
+                    class="form-input"
+                    {% if form.description.errors %}aria-invalid="true"{% endif %}
+                    {% if project.is_archived %}disabled{% endif %}
+                >
+
+                {% for error in form.description.errors %}
+                    <span class="form-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            {% if not project.is_archived %}
+                <div class="settings-actions">
+                    <button type="submit" class="btn btn-primary">
+                        Save changes
+                    </button>
+                </div>
+            {% endif %}
+        </form>
+    </section>
+
+    <section class="settings-section settings-danger-section">
+        <div class="section-header">
+            <div class="section-header-content">
+                <h2 class="section-header-title">Danger zone</h2>
+            </div>
+        </div>
+
+        {% if project.is_archived %}
+            <div class="settings-danger-action">
+                <div>
+                    <h3 class="settings-danger-title">Restore project</h3>
+                    <p class="settings-danger-description">
+                        Restore this project to make it active and editable again.
+                    </p>
+                </div>
+
+                <form
+                    method="post"
+                    action="{% url 'project-restore' project.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-secondary">
+                        Restore project
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <div class="settings-danger-action">
+                <div>
+                    <h3 class="settings-danger-title">Archive project</h3>
+                    <p class="settings-danger-description">
+                        Archive this project and make it read-only.
+                    </p>
+                </div>
+
+                <form
+                    method="post"
+                    action="{% url 'project-archive' project.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-destructive">
+                        Archive project
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

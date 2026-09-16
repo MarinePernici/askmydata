@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from config.services import create_question_run_service
@@ -45,6 +46,14 @@ def conversation_create(request, project_id):
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "conversation-list",
+            project_id=project.id,
+        )
 
     conversation = ConversationService().create_conversation(
         project=project,
@@ -117,6 +126,15 @@ def conversation_rename(request, project_id, conversation_id):
     except Conversation.DoesNotExist:
         raise Http404
 
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "conversation-detail",
+            project_id=project.id,
+            conversation_id=conversation.id,
+        )
+
     title = request.POST.get("title", "").strip()
 
     if title:
@@ -156,6 +174,15 @@ def conversation_ask(
         )
     except Conversation.DoesNotExist:
         raise Http404
+
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "conversation-detail",
+            project_id=project.id,
+            conversation_id=conversation.id,
+        )
 
     question = request.POST.get("question", "").strip()
 

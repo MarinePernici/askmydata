@@ -544,6 +544,33 @@ class DataOverviewViewTests(TestCase):
         )
         self.assertContains(response, "Test connection")
 
+    def test_data_overview_disables_test_connection_for_archived_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-overview",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "data-overview",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Test connection")
+        self.assertContains(response, "disabled")
+
 
 class DataSchemaViewTests(TestCase):
     @patch("apps.data_sources.views.CatalogReader")
@@ -937,4 +964,42 @@ class DataTestConnectionViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+        data_source_service_class.return_value.test_connection.assert_not_called()
+
+    @patch("apps.data_sources.views.DataSourceService")
+    def test_archived_project_cannot_test_data_source_connection(
+        self,
+        data_source_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-test-connection",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "data-test-connection",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-overview",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
         data_source_service_class.return_value.test_connection.assert_not_called()

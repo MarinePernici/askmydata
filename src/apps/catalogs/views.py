@@ -4,6 +4,7 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from apps.data_sources.models import DataSource
+from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
@@ -267,6 +268,14 @@ def catalog_regenerate(request, project_id):
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "catalog-detail",
+            project_id=project.id,
+        )
 
     try:
         CatalogService().build_for_project(project)

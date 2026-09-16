@@ -48,11 +48,13 @@
                         maxlength="255"
                         class="conversation-title-input"
                         required
+                        {% if project.is_archived %}disabled{% endif %}
                     >
 
                     <button
                         type="submit"
                         class="btn btn-secondary conversation-title-save"
+                        {% if project.is_archived %}disabled{% endif %}
                     >
                         Save
                     </button>
@@ -86,7 +88,11 @@
                 {% endfor %}
             </div>
 
-            {% if project.status == "ready" %}
+            {% if project.is_archived %}
+                <div class="conversation-project-warning">
+                    This project is archived and read-only.
+                </div>
+            {% elif project.status == "ready" %}
                 <form
                     method="post"
                     action="{% url 'conversation-ask' project.id conversation.id %}"

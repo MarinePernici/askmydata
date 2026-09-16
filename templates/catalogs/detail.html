@@ -58,7 +58,7 @@
             <button
                 type="submit"
                 class="btn btn-secondary"
-                {% if catalog_model.status == "building" %}disabled{% endif %}
+                {% if catalog_model.status == "building" or project.is_archived %}disabled{% endif %}
             >
                 Regenerate catalog
             </button>

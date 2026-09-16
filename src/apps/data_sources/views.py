@@ -5,6 +5,7 @@ from django.shortcuts import redirect, render
 from apps.catalogs.models import CatalogScope
 from apps.catalogs.exceptions import CatalogNotReadyError
 from apps.catalogs.readers import CatalogReader
+from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
@@ -113,6 +114,14 @@ def data_test_connection(request, project_id):
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "data-overview",
+            project_id=project.id,
+        )
 
     try:
         data_source = project.data_source

@@ -95,7 +95,11 @@
                 >
                     {% csrf_token %}
 
-                    <button type="submit" class="btn btn-secondary">
+                    <button
+                        type="submit"
+                        class="btn btn-secondary"
+                        {% if project.is_archived %}disabled{% endif %}
+                    >
                         Test connection
                     </button>
                 </form>

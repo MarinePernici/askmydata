@@ -908,6 +908,43 @@ class CatalogDetailViewTests(TestCase):
             orders,
         )
 
+    @patch("apps.catalogs.views.CatalogReader")
+    def test_archived_project_disables_regenerate_catalog(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-catalog",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        KnowledgeCatalog.objects.create(
+            project=project,
+            status=KnowledgeCatalog.Status.READY,
+            version=1,
+        )
+
+        catalog_reader_class.return_value.get_current.return_value = (
+            DomainKnowledgeCatalog(tables=())
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Regenerate catalog")
+        self.assertContains(response, "disabled")
+
 
 @patch("apps.catalogs.views.CatalogService")
 class CatalogRegenerateViewTests(TestCase):
@@ -1005,3 +1042,27 @@ class CatalogRegenerateViewTests(TestCase):
                 kwargs={"project_id": self.project.id},
             ),
         )
+
+    def test_archived_project_cannot_regenerate_catalog(
+        self,
+        catalog_service_class,
+    ):
+        self.project.status = Project.Status.ARCHIVED
+        self.project.save(update_fields=["status"])
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": self.project.id},
+            ),
+        )
+
+        catalog_service_class.return_value.build_for_project.assert_not_called()

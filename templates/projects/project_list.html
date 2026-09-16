@@ -19,19 +19,157 @@
     </header>
 
     {% if projects %}
-        <div class="projects-grid">
-            {% for project in projects %}
-                <a
-                    href="{% url 'project-detail' project.id %}"
-                    class="card project-card"
-                >
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            {{ project.name }}
-                        </h2>
+        <div class="project-sections">
+            {% if active_projects %}
+                <section class="project-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Projects</h2>
+                            <p class="section-description">
+                                Active projects ready for data exploration.
+                            </p>
+                        </div>
                     </div>
-                </a>
-            {% endfor %}
+
+                    <div class="projects-grid">
+                        {% for project in active_projects %}
+                            <article class="card project-card">
+                                <a
+                                    href="{% url 'project-detail' project.id %}"
+                                    class="project-card-main"
+                                >
+                                    <h3 class="card-title">
+                                        {{ project.name }}
+                                    </h3>
+
+                                    {% if project.status == "regenerating_catalog" %}
+                                        <span class="badge">
+                                            Regenerating catalog
+                                        </span>
+                                    {% endif %}
+                                </a>
+
+                                <div class="project-card-actions">
+                                    <a
+                                        href="{% url 'project-detail' project.id %}"
+                                        class="btn btn-secondary"
+                                    >
+                                        Open
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            {% if setup_project_items %}
+                <section class="project-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Setup in progress</h2>
+                            <p class="section-description">
+                                Projects that still need to be configured.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="projects-grid">
+                        {% for item in setup_project_items %}
+                            <article class="card project-card">
+                                <a
+                                    href="{% url item.setup_url_name item.project.id %}"
+                                    class="project-card-main"
+                                >
+                                    <h3 class="card-title">
+                                        {{ item.project.name }}
+                                    </h3>
+
+                                    <span class="badge">
+                                        Setup in progress
+                                    </span>
+                                </a>
+
+                                <div class="project-card-actions">
+                                    <a
+                                        href="{% url item.setup_url_name item.project.id %}"
+                                        class="btn btn-secondary"
+                                    >
+                                        Continue setup
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'project-delete' item.project.id %}"
+                                    >
+                                        {% csrf_token %}
+                                        <button
+                                            type="submit"
+                                            class="btn btn-destructive"
+                                        >
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            {% if archived_projects %}
+                <section class="project-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Archived</h2>
+                            <p class="section-description">
+                                Read-only projects kept for reference.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="projects-grid">
+                        {% for project in archived_projects %}
+                            <article class="card project-card project-card-archived">
+                                <a
+                                    href="{% url 'project-detail' project.id %}"
+                                    class="project-card-main"
+                                >
+                                    <h3 class="card-title">
+                                        {{ project.name }}
+                                    </h3>
+
+                                    <span class="badge">
+                                        Archived
+                                    </span>
+                                </a>
+
+                                <div class="project-card-actions">
+                                    <a
+                                        href="{% url 'project-detail' project.id %}"
+                                        class="btn btn-secondary"
+                                    >
+                                        View
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'project-restore' project.id %}"
+                                    >
+                                        {% csrf_token %}
+                                        <button
+                                            type="submit"
+                                            class="btn btn-secondary"
+                                        >
+                                            Restore
+                                        </button>
+                                    </form>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
         </div>
     {% else %}
         <section class="empty-state">

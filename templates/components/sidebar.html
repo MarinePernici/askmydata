@@ -42,29 +42,63 @@
             Current project
         </div>
 
-        <a
-            href="{% url 'project-detail' project.id %}"
-            class="project-selector"
-        >
-            <span class="project-selector-content">
-                <span class="project-selector-name">
-                    {{ project.name }}
-                </span>
-            </span>
-
-            <svg
-                class="project-selector-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+        <div class="project-switcher">
+            <button
+                type="button"
+                class="project-selector"
+                aria-expanded="false"
+                aria-haspopup="true"
+                data-project-switcher-toggle
             >
-                <path d="m9 18 6-6-6-6" />
-            </svg>
-        </a>
+                <span class="project-selector-content">
+                    <span class="project-selector-name">
+                        {{ project.name }}
+                    </span>
+
+                    {% if project.is_archived %}
+                        <span class="project-selector-status">
+                            Archived
+                        </span>
+                    {% endif %}
+                </span>
+
+                <svg
+                    class="project-selector-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </button>
+
+            <div
+                class="project-switcher-menu"
+                data-project-switcher-menu
+                hidden
+            >
+                {% for sidebar_project in sidebar_projects %}
+                    <a
+                        href="{% url 'project-detail' sidebar_project.id %}"
+                        class="project-switcher-option{% if sidebar_project.id == project.id %} project-switcher-option-active{% endif %}"
+                    >
+                        <span class="project-switcher-option-name">
+                            {{ sidebar_project.name }}
+                        </span>
+
+                        {% if sidebar_project.is_archived %}
+                            <span class="project-selector-status">
+                                Archived
+                            </span>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
 
         <nav class="sidebar-nav" aria-label="Project navigation">
             <a
