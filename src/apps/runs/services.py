@@ -50,6 +50,11 @@ class QuestionRunService:
             content=question,
         )
 
+        self._conversation_service.set_title_from_question(
+            conversation=conversation,
+            question=question,
+        )
+
         question_run = QuestionRun.objects.create(
             project=project,
             conversation=conversation,

@@ -1,0 +1,39 @@
+<div class="conversation-panel">
+    <form
+        method="post"
+        action="{% url 'conversation-create' project.id %}"
+    >
+        {% csrf_token %}
+        <button
+            type="submit"
+            class="btn btn-secondary conversation-new-button"
+        >
+            New conversation
+        </button>
+    </form>
+
+    {% if conversations %}
+        <div class="conversation-panel-group">
+            <p class="conversation-panel-label">
+                Conversations
+            </p>
+
+            <nav class="conversation-panel-list">
+                {% for item in conversations %}
+                    <a
+                        href="{% url 'conversation-detail' project.id item.id %}"
+                        class="conversation-panel-item{% if conversation and conversation.id == item.id %} conversation-panel-item-active{% endif %}"
+                    >
+                        <span>
+                            {% if item.title %}
+                                {{ item.title }}
+                            {% else %}
+                                Untitled conversation
+                            {% endif %}
+                        </span>
+                    </a>
+                {% endfor %}
+            </nav>
+        </div>
+    {% endif %}
+</div>

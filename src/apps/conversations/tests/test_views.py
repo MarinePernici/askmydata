@@ -186,6 +186,16 @@ class ConversationViewTests(TestCase):
             conversation.title,
             "Sales analysis",
         )
+        self.assertEqual(
+            response.url,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
 
     def test_user_cannot_create_conversation_for_another_users_project(self):
         user = get_user_model().objects.create_user(
@@ -388,6 +398,121 @@ class ConversationViewTests(TestCase):
             content.index("How many customers?"),
             content.index("There are 42 customers."),
         )
+
+    def test_user_can_rename_own_conversation(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Old title",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            {
+                "title": "New title",
+            },
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            conversation.title,
+            "New title",
+        )
+        self.assertRedirects(
+            response,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
+
+    def test_user_cannot_rename_conversation_from_another_users_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+        other_project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+        conversation = Conversation.objects.create(
+            project=other_project,
+            title="Private conversation",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": other_project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            {
+                "title": "Changed title",
+            },
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            conversation.title,
+            "Private conversation",
+        )
+
+    def test_rename_conversation_rejects_get_request(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     @patch("apps.conversations.views.create_question_run_service")
     def test_user_can_ask_question_in_own_conversation(

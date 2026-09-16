@@ -382,6 +382,36 @@ class QuestionRunServiceTests(TestCase):
             messages[1],
         )
 
+    def test_first_question_sets_conversation_title(self):
+        project = self.create_project_with_data_source()
+
+        conversation = Conversation.objects.create(
+            project=project,
+        )
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="How many customers do we have?",
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            conversation.title,
+            "How many customers do we have?",
+        )
+
     def test_failed_run_keeps_user_message_without_assistant_message(self):
         project = self.create_project_with_data_source()
         conversation = self.create_conversation(project)

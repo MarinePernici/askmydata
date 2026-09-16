@@ -17,12 +17,18 @@ class ConversationService:
 
         next_sequence = (max_sequence or 0) + 1
 
-        return Message.objects.create(
+        message = Message.objects.create(
             conversation=conversation,
             role=role,
             content=content,
             sequence_number=next_sequence,
         )
+
+        conversation.save(
+            update_fields=["updated_at"],
+        )
+
+        return message
 
     def get_history(
         self,
@@ -70,3 +76,39 @@ class ConversationService:
             id=conversation_id,
             project=project,
         )
+
+    def set_title_from_question(
+        self,
+        conversation: Conversation,
+        question: str,
+        max_length: int = 80,
+    ) -> None:
+        if conversation.title:
+            return
+
+        title = question.strip()
+
+        if len(title) > max_length:
+            title = f"{title[: max_length - 1].rstrip()}…"
+
+        conversation.title = title
+        conversation.save(
+            update_fields=[
+                "title",
+                "updated_at",
+            ]
+        )
+
+    def rename_conversation(
+        self,
+        conversation: Conversation,
+        title: str,
+    ) -> Conversation:
+        conversation.title = title.strip()
+        conversation.save(
+            update_fields=[
+                "title",
+                "updated_at",
+            ]
+        )
+        return conversation

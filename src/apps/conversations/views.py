@@ -46,14 +46,15 @@ def conversation_create(request, project_id):
     except Project.DoesNotExist:
         raise Http404
 
-    ConversationService().create_conversation(
+    conversation = ConversationService().create_conversation(
         project=project,
         title=request.POST.get("title", "").strip(),
     )
 
     return redirect(
-        "conversation-list",
+        "conversation-detail",
         project_id=project.id,
+        conversation_id=conversation.id,
     )
 
 
@@ -81,6 +82,8 @@ def conversation_detail(
 
     conversation_messages = conversation.messages.order_by("sequence_number")
 
+    conversations = ConversationService().list_conversations(project)
+
     return render(
         request,
         "conversations/detail.html",
@@ -88,7 +91,44 @@ def conversation_detail(
             "project": project,
             "conversation": conversation,
             "conversation_messages": conversation_messages,
+            "conversations": conversations,
         },
+    )
+
+
+@login_required
+def conversation_rename(request, project_id, conversation_id):
+    if request.method != "POST":
+        raise Http404
+
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        conversation = ConversationService().get_conversation(
+            project=project,
+            conversation_id=conversation_id,
+        )
+    except Conversation.DoesNotExist:
+        raise Http404
+
+    title = request.POST.get("title", "").strip()
+
+    if title:
+        ConversationService().rename_conversation(
+            conversation=conversation,
+            title=title,
+        )
+
+    return redirect(
+        "conversation-detail",
+        project_id=project.id,
+        conversation_id=conversation.id,
     )
 
 

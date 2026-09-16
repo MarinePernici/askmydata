@@ -1,51 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Conversations</title>
-</head>
-<body>
-    <nav>
-        <a href="{% url 'project-list' %}">
-            Projects
-        </a>
+{% extends "base.html" %}
 
-        <a href="{% url 'project-detail' project.id %}">
-            {{ project.name }}
-        </a>
-    </nav>
+{% block title %}Conversations · AskMyData{% endblock %}
 
-    <h1>Conversations</h1>
-    <p>{{ project.name }}</p>
+{% block content %}
+<div class="conversations-page">
+    <header class="conversations-header">
+        <h1>Conversations</h1>
+    </header>
 
-    <form
-        method="post"
-        action="{% url 'conversation-create' project.id %}"
-    >
-        {% csrf_token %}
+    <div class="conversations-workspace">
+        {% include "conversations/_conversation_panel.html" %}
 
-        <label>
-            Title
-            <input
-                type="text"
-                name="title"
-                maxlength="255"
-            >
-        </label>
-
-        <button type="submit">New conversation</button>
-    </form>
-
-    <ul>
-        {% for conversation in conversations %}
-            <li>
-                <a href="{% url 'conversation-detail' project.id conversation.id %}">
-                    {{ conversation.title }}
-                </a>
-            </li>
-        {% empty %}
-            <li>No conversations yet.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+        <main class="conversation-main conversation-main-empty">
+            <div class="conversation-welcome">
+                <h2>Start a conversation</h2>
+                <p>
+                    Ask questions about your data using natural language.
+                </p>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
