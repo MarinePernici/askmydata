@@ -12,8 +12,20 @@
         </div>
 
         <div class="page-header-actions">
-            <a href="{% url 'project-create' %}" class="btn btn-primary">
-                Create project
+            <a href="{% url 'project-create' %}" class="btn btn-primary btn-with-icon">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                </svg>
+                <span>Create project</span>
             </a>
         </div>
     </header>
@@ -105,9 +117,24 @@
                                         {% csrf_token %}
                                         <button
                                             type="submit"
-                                            class="btn btn-destructive"
+                                            class="btn btn-destructive btn-with-icon"
                                         >
-                                            Delete
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                aria-hidden="true"
+                                            >
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M19 6l-1 14H6L5 6" />
+                                                <path d="M10 11v5" />
+                                                <path d="M14 11v5" />
+                                            </svg>
+                                            <span>Delete</span>
                                         </button>
                                     </form>
                                 </div>

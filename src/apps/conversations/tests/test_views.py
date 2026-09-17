@@ -769,7 +769,10 @@ class ConversationViewTests(TestCase):
                 },
             ),
         )
-        self.assertContains(response, "Ask question")
+        self.assertContains(
+            response,
+            'aria-label="Ask question"',
+        )
         self.assertContains(
             response,
             "data-conversation-question-form",
@@ -1126,8 +1129,18 @@ class ConversationViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'name="question"')
-        self.assertNotContains(response, "Ask question")
+        self.assertNotContains(
+            response,
+            "data-conversation-question-form",
+        )
+        self.assertNotContains(
+            response,
+            "data-conversation-question-input",
+        )
+        self.assertNotContains(
+            response,
+            "data-conversation-question-submit",
+        )
 
     def test_user_cannot_view_conversation_through_another_own_project(self):
         user = get_user_model().objects.create_user(

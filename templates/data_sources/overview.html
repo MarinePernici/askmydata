@@ -37,7 +37,18 @@
             <div class="data-source-card-header">
                 <div class="data-source-identity">
                     <div class="data-source-icon" aria-hidden="true">
-                        DB
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
+                            <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
+                        </svg>
                     </div>
 
                     <span class="data-source-name">
@@ -97,10 +108,24 @@
 
                     <button
                         type="submit"
-                        class="btn btn-secondary"
+                        class="btn btn-secondary btn-with-icon"
                         {% if project.is_archived %}disabled{% endif %}
                     >
-                        Test connection
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M21 12a9 9 0 0 0-15-6.7L3 8" />
+                            <path d="M3 3v5h5" />
+                            <path d="M3 12a9 9 0 0 0 15 6.7L21 16" />
+                            <path d="M16 16h5v5" />
+                        </svg>
+                        <span>Test connection</span>
                     </button>
                 </form>
             </div>

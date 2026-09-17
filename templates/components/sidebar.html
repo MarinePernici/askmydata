@@ -105,6 +105,19 @@
                 href="{% url 'data-overview' project.id %}"
                 class="nav-item{% if request.resolver_match.url_name == 'data-overview' %} nav-item-active{% endif %}"
             >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
+                        <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
+                    </svg>
+                </span>
                 <span>Data</span>
             </a>
 
@@ -112,6 +125,18 @@
                 href="{% url 'catalog-detail' project.id %}"
                 class="nav-item{% if request.resolver_match.url_name == 'catalog-detail' %} nav-item-active{% endif %}"
             >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M12 7v14" />
+                        <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+                    </svg>
+                </span>
                 <span>Catalog</span>
             </a>
 
@@ -119,6 +144,17 @@
                 href="{% url 'conversation-list' project.id %}"
                 class="nav-item{% if request.resolver_match.url_name == 'conversation-list' or request.resolver_match.url_name == 'conversation-create' or request.resolver_match.url_name == 'conversation-detail' or request.resolver_match.url_name == 'conversation-ask' %} nav-item-active{% endif %}"
             >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                    </svg>
+                </span>
                 <span>Conversations</span>
             </a>
 
@@ -126,6 +162,18 @@
                 href="{% url 'project-update' project.id %}"
                 class="nav-item{% if request.resolver_match.url_name == 'project-update' %} nav-item-active{% endif %}"
             >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </span>
                 <span>Settings</span>
             </a>
         </nav>
@@ -142,6 +190,19 @@
             {% csrf_token %}
 
             <button type="submit" class="nav-item">
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M10 17l5-5-5-5" />
+                        <path d="M15 12H3" />
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    </svg>
+                </span>
                 <span>Log out</span>
             </button>
         </form>

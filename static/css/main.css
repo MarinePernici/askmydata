@@ -289,6 +289,21 @@ a {
     padding: 0;
 }
 
+.btn-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-with-icon {
+    gap: var(--space-2);
+}
+
+.btn-with-icon svg {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+}
+
 /* Form fields */
 
 .form-field {
@@ -1364,6 +1379,11 @@ a {
     font-weight: 600;
 }
 
+.data-source-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
 .data-source-name {
     color: var(--color-neutral-950);
     font-size: var(--text-body-size);
@@ -1480,10 +1500,17 @@ a {
 }
 
 .schema-table-icon {
+    display: flex;
     flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
     width: 16px;
-    text-align: center;
-    font-size: var(--text-small-size);
+    height: 16px;
+}
+
+.schema-table-icon svg {
+    width: 16px;
+    height: 16px;
 }
 
 .schema-table-detail {
@@ -1764,10 +1791,17 @@ a {
 }
 
 .catalog-table-icon {
+    display: flex;
     flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
     width: 16px;
-    text-align: center;
-    font-size: var(--text-small-size);
+    height: 16px;
+}
+
+.catalog-table-icon svg {
+    width: 16px;
+    height: 16px;
 }
 
 .catalog-table-detail {
