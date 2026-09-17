@@ -80,10 +80,17 @@
                     </article>
                 {% empty %}
                     <div class="conversation-empty">
-                        <h3>Ask your first question</h3>
-                        <p>
-                            Ask a question about your data using natural language.
-                        </p>
+                        {% if project.is_archived %}
+                            <h3>No messages</h3>
+                            <p>
+                                This conversation has no messages.
+                            </p>
+                        {% else %}
+                            <h3>Ask your first question</h3>
+                            <p>
+                                Ask a question about your data using natural language.
+                            </p>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>

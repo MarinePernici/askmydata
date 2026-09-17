@@ -5,7 +5,10 @@ from django.shortcuts import redirect, render
 from apps.catalogs.models import CatalogScope
 from apps.catalogs.exceptions import CatalogNotReadyError
 from apps.catalogs.readers import CatalogReader
-from apps.projects.exceptions import ArchivedProjectError
+from apps.projects.exceptions import (
+    ArchivedProjectError,
+    InvalidProjectStateError,
+)
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
@@ -17,13 +20,23 @@ from .services import DataSourceService
 
 @login_required
 def data_source_configure(request, project_id):
+    project_service = ProjectService()
+
     try:
-        project = ProjectService().get_for_user(
+        project = project_service.get_for_user(
             project_id=project_id,
             user=request.user,
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        project_service.ensure_setup_incomplete(project)
+    except InvalidProjectStateError:
+        return redirect(
+            "project-detail",
+            project_id=project.id,
+        )
 
     if request.method == "POST":
         form = DataSourceForm(request.POST)

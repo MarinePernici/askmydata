@@ -70,6 +70,89 @@ class DataSourceConfigurationViewTests(TestCase):
             ),
         )
 
+    @patch("apps.data_sources.views.DataSourceService")
+    def test_archived_project_cannot_access_data_source_configuration_post(
+        self,
+        data_source_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-configure",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+            data={
+                "host": "new-host",
+                "port": 5432,
+                "database": "new-database",
+                "username": "new-user",
+                "password": "new-password",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        data_source_service_class.return_value.configure_and_test.assert_not_called()
+
+    @patch("apps.data_sources.views.DataSourceService")
+    def test_ready_project_cannot_access_data_source_configuration(
+        self,
+        data_source_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-ready-configure",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Ready project",
+            status=Project.Status.READY,
+        )
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        data_source_service_class.return_value.configure_and_test.assert_not_called()
+
     def test_invalid_data_source_form_is_not_persisted(self):
         user = get_user_model().objects.create_user(
             username="marine",

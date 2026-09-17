@@ -4,7 +4,10 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from apps.data_sources.models import DataSource
-from apps.projects.exceptions import ArchivedProjectError
+from apps.projects.exceptions import (
+    ArchivedProjectError,
+    InvalidProjectStateError,
+)
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 
@@ -92,13 +95,23 @@ def catalog_detail(request, project_id):
 
 @login_required
 def catalog_scope(request, project_id):
+    project_service = ProjectService()
+
     try:
-        project = ProjectService().get_for_user(
+        project = project_service.get_for_user(
             project_id=project_id,
             user=request.user,
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        project_service.ensure_setup_incomplete(project)
+    except InvalidProjectStateError:
+        return redirect(
+            "project-detail",
+            project_id=project.id,
+        )
 
     try:
         project.data_source
@@ -178,13 +191,23 @@ def catalog_scope(request, project_id):
 
 @login_required
 def catalog_confirmation(request, project_id):
+    project_service = ProjectService()
+
     try:
-        project = ProjectService().get_for_user(
+        project = project_service.get_for_user(
             project_id=project_id,
             user=request.user,
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        project_service.ensure_setup_incomplete(project)
+    except InvalidProjectStateError:
+        return redirect(
+            "project-detail",
+            project_id=project.id,
+        )
 
     try:
         data_source = project.data_source
@@ -219,13 +242,23 @@ def catalog_build(request, project_id):
     if request.method != "POST":
         raise Http404
 
+    project_service = ProjectService()
+
     try:
-        project = ProjectService().get_for_user(
+        project = project_service.get_for_user(
             project_id=project_id,
             user=request.user,
         )
     except Project.DoesNotExist:
         raise Http404
+
+    try:
+        project_service.ensure_setup_incomplete(project)
+    except InvalidProjectStateError:
+        return redirect(
+            "project-detail",
+            project_id=project.id,
+        )
 
     try:
         CatalogService().build_for_project(project)

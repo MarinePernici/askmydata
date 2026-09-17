@@ -302,6 +302,10 @@ class ConversationViewTests(TestCase):
             name="Archived project",
             status=Project.Status.ARCHIVED,
         )
+        Conversation.objects.create(
+            project=project,
+            title="Existing conversation",
+        )
 
         self.client.force_login(user)
 
@@ -315,6 +319,13 @@ class ConversationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "New conversation")
         self.assertContains(response, "disabled")
+        self.assertContains(response, "Select a conversation")
+        self.assertContains(
+            response,
+            "Choose a conversation from the list to view its messages.",
+        )
+        self.assertNotContains(response, "Start a conversation")
+        self.assertNotContains(response, "No conversations")
 
     def test_user_can_view_own_conversation(self):
         user = get_user_model().objects.create_user(
@@ -780,6 +791,12 @@ class ConversationViewTests(TestCase):
             response,
             'placeholder="Ask a question about your data..."',
         )
+        self.assertContains(response, "No messages")
+        self.assertContains(
+            response,
+            "This conversation has no messages.",
+        )
+        self.assertNotContains(response, "Ask your first question")
 
     @patch("apps.conversations.views.create_question_run_service")
     def test_empty_question_does_not_run_question_service(

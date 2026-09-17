@@ -123,3 +123,13 @@ class ProjectService:
             return "catalog-scope"
 
         return "catalog-confirmation"
+
+    def ensure_setup_incomplete(self, project: Project) -> None:
+        incomplete_statuses = {
+            Project.Status.DRAFT,
+            Project.Status.CONFIGURING,
+            Project.Status.BUILDING_CATALOG,
+        }
+
+        if project.status not in incomplete_statuses:
+            raise InvalidProjectStateError("Project setup is already complete.")

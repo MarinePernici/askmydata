@@ -344,6 +344,37 @@ class ProjectServiceTests(TestCase):
         with self.assertRaises(ArchivedProjectError):
             ProjectService().ensure_writable(project)
 
+    def test_ensure_setup_incomplete_allows_incomplete_project_statuses(self):
+        allowed_statuses = [
+            Project.Status.DRAFT,
+            Project.Status.CONFIGURING,
+            Project.Status.BUILDING_CATALOG,
+        ]
+
+        for status in allowed_statuses:
+            with self.subTest(status=status):
+                project = create_test_project(
+                    status=status,
+                )
+
+                ProjectService().ensure_setup_incomplete(project)
+
+    def test_ensure_setup_incomplete_rejects_completed_project_statuses(self):
+        rejected_statuses = [
+            Project.Status.READY,
+            Project.Status.REGENERATING_CATALOG,
+            Project.Status.ARCHIVED,
+        ]
+
+        for status in rejected_statuses:
+            with self.subTest(status=status):
+                project = create_test_project(
+                    status=status,
+                )
+
+                with self.assertRaises(InvalidProjectStateError):
+                    ProjectService().ensure_setup_incomplete(project)
+
     def test_get_setup_url_name_returns_data_source_when_missing(self):
         project = create_test_project(
             status=Project.Status.DRAFT,

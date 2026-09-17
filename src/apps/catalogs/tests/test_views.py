@@ -196,6 +196,90 @@ class CatalogScopeViewTests(TestCase):
             ),
         )
 
+    @patch("apps.catalogs.views.CatalogScopeService")
+    def test_archived_project_cannot_access_catalog_scope_post(
+        self,
+        catalog_scope_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-catalog-scope",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+            data={
+                "tables": [
+                    "sales.customers",
+                    "sales.orders",
+                ],
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        catalog_scope_service_class.return_value.discover_available_tables.assert_not_called()
+        catalog_scope_service_class.return_value.save_selection.assert_not_called()
+
+    @patch("apps.catalogs.views.CatalogScopeService")
+    def test_ready_project_cannot_access_catalog_scope(
+        self,
+        catalog_scope_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-ready-catalog-scope",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Ready project",
+            status=Project.Status.READY,
+        )
+        DataSource.objects.create(
+            project=project,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        catalog_scope_service_class.return_value.discover_available_tables.assert_not_called()
+        catalog_scope_service_class.return_value.save_selection.assert_not_called()
+
     @patch(
         "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
         return_value={
@@ -331,6 +415,76 @@ class CatalogScopeViewTests(TestCase):
         catalog_service_class.return_value.build_for_project.assert_called_once_with(
             project
         )
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_archived_project_cannot_build_catalog(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-catalog-build",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        catalog_service_class.return_value.build_for_project.assert_not_called()
+
+    @patch("apps.catalogs.views.CatalogService")
+    def test_ready_project_cannot_build_catalog(
+        self,
+        catalog_service_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-ready-catalog-build",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Ready project",
+            status=Project.Status.READY,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        catalog_service_class.return_value.build_for_project.assert_not_called()
 
     @patch("apps.catalogs.views.CatalogService")
     def test_user_cannot_build_catalog_for_another_users_project(
@@ -543,6 +697,46 @@ class CatalogConfirmationViewTests(TestCase):
                 {"schema": "sales", "table": "customers"},
                 {"schema": "sales", "table": "orders"},
             ],
+        )
+
+    def test_ready_project_cannot_access_catalog_confirmation(self):
+        user = get_user_model().objects.create_user(
+            username="marine-ready-catalog-confirmation",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Ready project",
+            status=Project.Status.READY,
+        )
+
+        DataSource.objects.create(
+            project=project,
+        )
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {"schema": "sales", "table": "customers"},
+            ],
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
         )
 
     def test_catalog_confirmation_redirects_when_data_source_is_missing(self):
