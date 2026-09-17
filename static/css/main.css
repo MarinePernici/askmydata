@@ -1867,6 +1867,30 @@ a {
     overflow: hidden;
 }
 
+.conversation-thinking {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-neutral-500);
+}
+
+.conversation-thinking::after {
+    width: 1.5em;
+    overflow: hidden;
+    content: "...";
+    animation: conversation-thinking 1.2s steps(4, end) infinite;
+}
+
+@keyframes conversation-thinking {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 1.5em;
+    }
+}
+
 /* Conversation panel */
 
 .conversation-panel {

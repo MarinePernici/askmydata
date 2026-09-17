@@ -465,6 +465,22 @@ class ConversationViewTests(TestCase):
             content.index("There are 42 customers."),
         )
 
+        self.assertEqual(
+            content.count("data-conversation-last-message"),
+            1,
+        )
+
+        last_message_marker = content.index("data-conversation-last-message")
+
+        self.assertGreater(
+            last_message_marker,
+            content.index("How many customers?"),
+        )
+        self.assertLess(
+            last_message_marker,
+            content.index("There are 42 customers."),
+        )
+
     def test_user_can_rename_own_conversation(self):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -754,6 +770,34 @@ class ConversationViewTests(TestCase):
             ),
         )
         self.assertContains(response, "Ask question")
+        self.assertContains(
+            response,
+            "data-conversation-question-form",
+        )
+        self.assertContains(
+            response,
+            "data-conversation-question-input",
+        )
+        self.assertContains(
+            response,
+            "data-conversation-question-submit",
+        )
+        self.assertContains(
+            response,
+            "data-conversation-messages",
+        )
+
+        content = response.content.decode()
+
+        submit_button_start = content.index("data-conversation-question-submit")
+        submit_button_end = content.index(
+            "</button>",
+            submit_button_start,
+        )
+
+        submit_button = content[submit_button_start:submit_button_end]
+
+        self.assertIn("disabled", submit_button)
 
     def test_archived_project_displays_conversation_as_read_only(self):
         user = get_user_model().objects.create_user(

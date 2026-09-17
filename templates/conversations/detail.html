@@ -61,10 +61,14 @@
                 </form>
             </header>
 
-            <div class="conversation-messages">
+            <div
+                class="conversation-messages"
+                data-conversation-messages
+            >
                 {% for message in conversation_messages %}
                     <article
                         class="conversation-message conversation-message-{{ message.role }}"
+                        {% if forloop.last %}data-conversation-last-message{% endif %}
                     >
                         <p class="conversation-message-author">
                             {% if message.role == "user" %}
@@ -79,7 +83,7 @@
                         </div>
                     </article>
                 {% empty %}
-                    <div class="conversation-empty">
+                    <div class="conversation-empty" data-conversation-empty>
                         {% if project.is_archived %}
                             <h3>No messages</h3>
                             <p>
@@ -104,6 +108,7 @@
                     method="post"
                     action="{% url 'conversation-ask' project.id conversation.id %}"
                     class="conversation-question-form"
+                    data-conversation-question-form
                 >
                     {% csrf_token %}
 
@@ -118,11 +123,14 @@
                         placeholder="Ask a question about your data..."
                         autocomplete="off"
                         required
+                        data-conversation-question-input
                     >
 
                     <button
                         type="submit"
                         class="btn btn-primary"
+                        data-conversation-question-submit
+                        disabled
                     >
                         Ask question
                     </button>
