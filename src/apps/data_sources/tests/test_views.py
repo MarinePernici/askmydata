@@ -881,7 +881,21 @@ class DataSchemaViewTests(TestCase):
         orders = TableMetadata(
             schema="sales",
             name="orders",
-            columns=(),
+            columns=(
+                ColumnMetadata(
+                    name="id",
+                    data_type="bigint",
+                    nullable=False,
+                    default=None,
+                    is_primary_key=True,
+                ),
+                ColumnMetadata(
+                    name="customer_id",
+                    data_type="bigint",
+                    nullable=False,
+                    default=None,
+                ),
+            ),
             relationships=(relationship,),
         )
 
@@ -919,6 +933,22 @@ class DataSchemaViewTests(TestCase):
             (relationship,),
         )
         self.assertEqual(response.context["referenced_by"], ())
+        self.assertEqual(
+            response.context["foreign_key_columns"],
+            frozenset({"customer_id"}),
+        )
+        self.assertContains(
+            response,
+            (
+                '<span class="schema-column-key-badge '
+                'schema-column-key-badge-foreign">FK</span>'
+            ),
+            html=True,
+        )
+        self.assertEqual(
+            response.content.decode().count('class="schema-column-key-badge '),
+            2,
+        )
 
     @patch("apps.data_sources.views.CatalogReader")
     def test_schema_displays_primary_key_metadata(
@@ -971,11 +1001,14 @@ class DataSchemaViewTests(TestCase):
         self.assertContains(response, "id")
         self.assertContains(
             response,
-            '<span class="schema-column-key-badge">PK</span>',
+            (
+                '<span class="schema-column-key-badge '
+                'schema-column-key-badge-primary">PK</span>'
+            ),
             html=True,
         )
         self.assertEqual(
-            response.content.decode().count("schema-column-key-badge"),
+            response.content.decode().count('class="schema-column-key-badge '),
             1,
         )
 

@@ -184,6 +184,7 @@ def data_schema(request, project_id):
 
     references = ()
     referenced_by = ()
+    foreign_key_columns = frozenset()
 
     if selected_table:
         references = tuple(
@@ -204,6 +205,10 @@ def data_schema(request, project_id):
             )
         )
 
+        foreign_key_columns = frozenset(
+            relationship.source_column for relationship in references
+        )
+
     return render(
         request,
         "data_sources/schema.html",
@@ -213,5 +218,6 @@ def data_schema(request, project_id):
             "selected_table": selected_table,
             "references": references,
             "referenced_by": referenced_by,
+            "foreign_key_columns": foreign_key_columns,
         },
     )

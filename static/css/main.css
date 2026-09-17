@@ -1580,11 +1580,19 @@ a {
     align-items: center;
     padding: 2px var(--space-2);
     border-radius: var(--radius-sm);
-    background: var(--color-primary-100);
-    color: var(--color-primary-700);
     font-size: 12px;
     line-height: 16px;
     font-weight: 500;
+}
+
+.schema-column-key-badge-primary {
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+}
+
+.schema-column-key-badge-foreign {
+    background: var(--color-info-light);
+    color: var(--color-info-dark);
 }
 
 .schema-relationship-groups {
