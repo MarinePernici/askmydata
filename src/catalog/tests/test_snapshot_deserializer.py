@@ -26,6 +26,7 @@ class CatalogSnapshotDeserializerTests(SimpleTestCase):
                             data_type="integer",
                             nullable=False,
                             default=None,
+                            is_primary_key=True,
                         ),
                     ),
                     relationships=(
@@ -56,4 +57,30 @@ class CatalogSnapshotDeserializerTests(SimpleTestCase):
         self.assertEqual(
             deserialized,
             catalog,
+        )
+
+    def test_deserialize_legacy_snapshot_without_primary_key_metadata(self):
+        data = {
+            "tables": [
+                {
+                    "schema": "sales",
+                    "name": "customers",
+                    "columns": [
+                        {
+                            "name": "id",
+                            "data_type": "bigint",
+                            "nullable": False,
+                            "default": None,
+                        }
+                    ],
+                    "relationships": [],
+                    "semantic_metadata": None,
+                }
+            ]
+        }
+
+        catalog = CatalogSnapshotDeserializer().deserialize(data)
+
+        self.assertFalse(
+            catalog.tables[0].columns[0].is_primary_key,
         )

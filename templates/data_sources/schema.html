@@ -86,6 +86,10 @@
                                 <div class="schema-column">
                                     <span class="schema-column-name">
                                         {{ column.name }}
+
+                                        {% if column.is_primary_key %}
+                                            <span class="schema-column-key-badge">PK</span>
+                                        {% endif %}
                                     </span>
                                     <span class="schema-column-type">
                                         {{ column.data_type }}

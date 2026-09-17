@@ -10,6 +10,7 @@ from apps.data_sources.exceptions import DataSourceConnectionError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from catalog.types import KnowledgeCatalog, RelationshipMetadata, TableMetadata
+from connectors.types import ColumnMetadata
 
 
 class DataSourceConfigurationViewTests(TestCase):
@@ -918,6 +919,65 @@ class DataSchemaViewTests(TestCase):
             (relationship,),
         )
         self.assertEqual(response.context["referenced_by"], ())
+
+    @patch("apps.data_sources.views.CatalogReader")
+    def test_schema_displays_primary_key_metadata(
+        self,
+        catalog_reader_class,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-primary-key",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        table = TableMetadata(
+            schema="sales",
+            name="customers",
+            columns=(
+                ColumnMetadata(
+                    name="id",
+                    data_type="bigint",
+                    nullable=False,
+                    default=None,
+                    is_primary_key=True,
+                ),
+                ColumnMetadata(
+                    name="name",
+                    data_type="character varying",
+                    nullable=False,
+                    default=None,
+                ),
+            ),
+            relationships=(),
+        )
+        catalog = KnowledgeCatalog(
+            tables=(table,),
+        )
+
+        catalog_reader_class.return_value.get_current.return_value = catalog
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "data-schema",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertContains(response, "id")
+        self.assertContains(
+            response,
+            '<span class="schema-column-key-badge">PK</span>',
+            html=True,
+        )
+        self.assertEqual(
+            response.content.decode().count("schema-column-key-badge"),
+            1,
+        )
 
 
 class DataTestConnectionViewTests(TestCase):

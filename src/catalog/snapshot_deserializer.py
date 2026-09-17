@@ -25,6 +25,7 @@ class CatalogSnapshotDeserializer:
                             data_type=column["data_type"],
                             nullable=column["nullable"],
                             default=column["default"],
+                            is_primary_key=column.get("is_primary_key", False),
                         )
                         for column in table["columns"]
                     ),

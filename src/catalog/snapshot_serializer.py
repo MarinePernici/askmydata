@@ -17,6 +17,7 @@ class CatalogSnapshotSerializer:
                             "data_type": column.data_type,
                             "nullable": column.nullable,
                             "default": column.default,
+                            "is_primary_key": column.is_primary_key,
                         }
                         for column in table.columns
                     ],

@@ -1558,6 +1558,9 @@ a {
 .schema-column-name {
     color: var(--color-neutral-950);
     font-weight: var(--text-label-weight);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
 }
 
 .schema-column-type {
@@ -1570,6 +1573,18 @@ a {
     font-size: var(--text-small-size);
     line-height: var(--text-small-line-height);
     padding: var(--space-4);
+}
+
+.schema-column-key-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
 }
 
 .schema-relationship-groups {
