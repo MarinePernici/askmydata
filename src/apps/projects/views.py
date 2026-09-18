@@ -85,6 +85,58 @@ def project_create(request):
 
 
 @login_required
+def project_setup_info(request, project_id):
+    service = ProjectService()
+
+    try:
+        project = service.get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        service.ensure_setup_incomplete(project)
+    except InvalidProjectStateError:
+        return redirect(
+            "project-detail",
+            project_id=project.id,
+        )
+
+    if request.method == "POST":
+        form = ProjectForm(request.POST)
+
+        if form.is_valid():
+            service.update(
+                project=project,
+                name=form.cleaned_data["name"],
+                description=form.cleaned_data["description"],
+            )
+
+            return redirect(
+                "data-source-configure",
+                project_id=project.id,
+            )
+    else:
+        form = ProjectForm(
+            initial={
+                "name": project.name,
+                "description": project.description,
+            }
+        )
+
+    return render(
+        request,
+        "projects/project_create.html",
+        {
+            "project": project,
+            "form": form,
+        },
+    )
+
+
+@login_required
 def project_detail(request, project_id):
     try:
         project = ProjectService().get_for_user(

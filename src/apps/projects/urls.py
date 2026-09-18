@@ -7,6 +7,7 @@ from .views import (
     project_detail,
     project_list,
     project_restore,
+    project_setup_info,
     project_update,
 )
 
@@ -21,6 +22,11 @@ urlpatterns = [
         "projects/create/",
         project_create,
         name="project-create",
+    ),
+    path(
+        "projects/<uuid:project_id>/setup/project-info/",
+        project_setup_info,
+        name="project-setup-info",
     ),
     path(
         "projects/<uuid:project_id>/",

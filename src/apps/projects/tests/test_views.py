@@ -120,6 +120,126 @@ class ProjectListViewTests(TestCase):
         )
         self.assertFalse(Project.objects.filter(name="New project").exists())
 
+    def test_user_can_access_project_setup_info_for_incomplete_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Setup project",
+            description="Setup description",
+            status=Project.Status.CONFIGURING,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "project-setup-info",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Setup project")
+        self.assertContains(response, "Setup description")
+
+    def test_user_can_update_project_info_during_setup(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Old name",
+            description="Old description",
+            status=Project.Status.CONFIGURING,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "project-setup-info",
+                kwargs={"project_id": project.id},
+            ),
+            {
+                "name": "New name",
+                "description": "New description",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+        project.refresh_from_db()
+
+        self.assertEqual(project.name, "New name")
+        self.assertEqual(project.description, "New description")
+        self.assertEqual(Project.objects.filter(owner=user).count(), 1)
+
+    def test_ready_project_cannot_access_project_setup_info(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Ready project",
+            status=Project.Status.READY,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "project-setup-info",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "project-detail",
+                kwargs={"project_id": project.id},
+            ),
+            fetch_redirect_response=False,
+        )
+
+    def test_user_cannot_access_another_users_project_setup_info(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+            status=Project.Status.CONFIGURING,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "project-setup-info",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_user_cannot_access_another_users_project(self):
         user = get_user_model().objects.create_user(
             username="marine",

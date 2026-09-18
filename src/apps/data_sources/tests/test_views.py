@@ -66,7 +66,7 @@ class DataSourceConfigurationViewTests(TestCase):
         self.assertContains(
             response,
             reverse(
-                "project-update",
+                "project-setup-info",
                 kwargs={"project_id": project.id},
             ),
         )
