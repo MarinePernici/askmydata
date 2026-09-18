@@ -12,6 +12,30 @@
         {% include "conversations/_conversation_panel.html" %}
 
         <main class="conversation-main conversation-main-empty">
+            <header class="conversation-detail-header conversation-empty-header">
+                <button
+                    type="button"
+                    class="btn btn-secondary conversation-panel-toggle"
+                    aria-expanded="false"
+                    data-conversation-panel-toggle
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M4 6h16" />
+                        <path d="M4 12h16" />
+                        <path d="M4 18h16" />
+                    </svg>
+                    Conversations
+                </button>
+            </header>
+
             <div class="conversation-welcome">
                 {% if project.is_archived %}
                     {% if conversations %}
@@ -30,6 +54,33 @@
                     <p>
                         Ask questions about your data using natural language.
                     </p>
+
+                    <form
+                        method="post"
+                        action="{% url 'conversation-create' project.id %}"
+                        class="conversation-welcome-action"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary btn-with-icon"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M12 5v14" />
+                                <path d="M5 12h14" />
+                            </svg>
+                            New conversation
+                        </button>
+                    </form>
                 {% endif %}
             </div>
         </main>

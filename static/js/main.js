@@ -1,3 +1,36 @@
+const sidebar = document.querySelector("[data-sidebar]");
+const sidebarOpen = document.querySelector("[data-sidebar-open]");
+const sidebarClose = document.querySelector("[data-sidebar-close]");
+const sidebarOverlay = document.querySelector("[data-sidebar-overlay]");
+
+if (sidebar && sidebarOpen && sidebarClose && sidebarOverlay) {
+    const openSidebar = () => {
+        sidebar.classList.add("sidebar-open");
+        sidebarOverlay.hidden = false;
+        sidebarOpen.setAttribute("aria-expanded", "true");
+        sidebarClose.focus();
+    };
+
+    const closeSidebar = () => {
+        sidebar.classList.remove("sidebar-open");
+        sidebarOverlay.hidden = true;
+        sidebarOpen.setAttribute("aria-expanded", "false");
+        sidebarOpen.focus();
+    };
+
+    sidebarOpen.addEventListener("click", openSidebar);
+    sidebarClose.addEventListener("click", closeSidebar);
+    sidebarOverlay.addEventListener("click", closeSidebar);
+
+    document.addEventListener("keydown", (event) => {
+        if (
+            event.key === "Escape" &&
+            sidebar.classList.contains("sidebar-open")
+        ) {
+            closeSidebar();
+        }
+    });
+}
 const projectSwitcherToggle = document.querySelector(
     "[data-project-switcher-toggle]",
 );
@@ -153,5 +186,41 @@ if (conversationLastMessage) {
         conversationLastMessage.scrollIntoView({
             block: "end",
         });
+    });
+}
+const conversationPanel = document.querySelector(
+    "[data-conversation-panel]",
+);
+const conversationPanelToggle = document.querySelector(
+    "[data-conversation-panel-toggle]",
+);
+
+if (conversationPanel && conversationPanelToggle) {
+    const closeConversationPanel = () => {
+        conversationPanel.classList.remove("conversation-panel-open");
+        conversationPanelToggle.setAttribute("aria-expanded", "false");
+    };
+
+    conversationPanelToggle.addEventListener("click", () => {
+        const isOpen = conversationPanel.classList.toggle(
+            "conversation-panel-open",
+        );
+
+        conversationPanelToggle.setAttribute(
+            "aria-expanded",
+            String(isOpen),
+        );
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (
+            event.key === "Escape" &&
+            conversationPanel.classList.contains(
+                "conversation-panel-open",
+            )
+        ) {
+            closeConversationPanel();
+            conversationPanelToggle.focus();
+        }
     });
 }

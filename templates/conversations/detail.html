@@ -28,6 +28,28 @@
 
         <main class="conversation-main">
             <header class="conversation-detail-header">
+                <button
+                    type="button"
+                    class="btn btn-secondary conversation-panel-toggle"
+                    aria-expanded="false"
+                    data-conversation-panel-toggle
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M4 6h16" />
+                        <path d="M4 12h16" />
+                        <path d="M4 18h16" />
+                    </svg>
+                    Conversations
+                </button>
+
                 <form
                     method="post"
                     action="{% url 'conversation-rename' project.id conversation.id %}"
