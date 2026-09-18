@@ -2226,6 +2226,80 @@ a {
     justify-content: flex-end;
 }
 
+/* Authentication */
+
+.auth-page {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-neutral-50);
+}
+
+.auth-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--space-8) var(--space-4);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 440px;
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    color: var(--color-neutral-900);
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-brand-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.auth-card {
+    padding: var(--space-8);
+}
+
+.auth-header {
+    margin-bottom: var(--space-6);
+    text-align: center;
+}
+
+.auth-title {
+    margin: 0;
+    color: var(--color-neutral-900);
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 600;
+}
+
+.auth-description {
+    margin: var(--space-2) 0 0;
+    color: var(--color-neutral-500);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.auth-submit {
+    width: 100%;
+}
+
 /* Responsive */
 
 @media (max-width: 1024px) {
@@ -2555,5 +2629,14 @@ a {
     .settings-actions .btn,
     .settings-danger-action form .btn {
         width: 100%;
+    }
+
+    .auth-layout {
+        align-items: flex-start;
+        padding-top: var(--space-12);
+    }
+
+    .auth-card {
+        padding: var(--space-6);
     }
 }

@@ -146,3 +146,4 @@ MAILERS = {
 # Authentication
 
 LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "project-list"
