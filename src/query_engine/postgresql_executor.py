@@ -1,6 +1,10 @@
 import psycopg
 
 from connectors.postgresql import PostgreSQLConnectionConfig
+from query_engine.exceptions import (
+    DataSourcePermissionError,
+    QueryTimeoutError,
+)
 from query_engine.query_executor import QueryExecutor
 from query_engine.types import QueryExecutionResult
 
@@ -25,22 +29,35 @@ class PostgreSQLQueryExecutor(QueryExecutor):
         self._timeout_ms = timeout_ms
 
     def execute(self, sql: str) -> QueryExecutionResult:
-        with psycopg.connect(
-            host=self._config.host,
-            port=self._config.port,
-            dbname=self._config.database,
-            user=self._config.user,
-            password=self._config.password,
-        ) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT set_config('statement_timeout', %s, true)",
-                    (str(self._timeout_ms),),
-                )
-                cursor.execute(sql)
+        try:
+            with psycopg.connect(
+                host=self._config.host,
+                port=self._config.port,
+                dbname=self._config.database,
+                user=self._config.user,
+                password=self._config.password,
+            ) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET TRANSACTION READ ONLY")
+                    cursor.execute(
+                        "SELECT set_config('statement_timeout', %s, true)",
+                        (str(self._timeout_ms),),
+                    )
+                    cursor.execute(sql)
 
-                columns = tuple(column.name for column in cursor.description or ())
-                rows = tuple(cursor.fetchmany(self._max_rows))
+                    columns = tuple(
+                        description.name for description in cursor.description
+                    )
+                    rows = tuple(cursor.fetchmany(self._max_rows))
+
+        except psycopg.errors.InsufficientPrivilege as exc:
+            raise DataSourcePermissionError(
+                "The database user does not have the required permissions."
+            ) from exc
+        except psycopg.errors.QueryCanceled as exc:
+            raise QueryTimeoutError(
+                "The query exceeded the configured execution timeout."
+            ) from exc
 
         return QueryExecutionResult(
             columns=columns,

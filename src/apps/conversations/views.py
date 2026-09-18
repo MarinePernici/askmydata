@@ -7,6 +7,10 @@ from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from config.services import create_question_run_service
+from query_engine.exceptions import (
+    DataSourcePermissionError,
+    QueryTimeoutError,
+)
 
 from .models import Conversation
 from .services import ConversationService
@@ -212,6 +216,19 @@ def conversation_ask(
             project=project,
             conversation=conversation,
             question=question,
+        )
+    except DataSourcePermissionError:
+        messages.error(
+            request,
+            (
+                "The configured database user no longer has the required "
+                "permissions. Check the data source permissions."
+            ),
+        )
+    except QueryTimeoutError:
+        messages.error(
+            request,
+            "The query took too long to execute. Try a more specific question.",
         )
     except Exception:
         messages.error(

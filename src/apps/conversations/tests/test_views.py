@@ -11,6 +11,10 @@ from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
 from apps.projects.models import Project
 from catalog.types import KnowledgeCatalog
+from query_engine.exceptions import (
+    DataSourcePermissionError,
+    QueryTimeoutError,
+)
 from query_engine.types import (
     AnswerGenerationResult,
     QueryExecutionResult,
@@ -1010,6 +1014,102 @@ class ConversationViewTests(TestCase):
         self.assertNotContains(
             response,
             "Sensitive internal details",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_permission_error_displays_safe_message(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = DataSourcePermissionError(
+            "permission denied for table customers"
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+            follow=True,
+        )
+
+        self.assertContains(
+            response,
+            "The configured database user no longer has the required permissions.",
+        )
+        self.assertNotContains(
+            response,
+            "permission denied for table customers",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_timeout_error_displays_safe_message(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = QueryTimeoutError(
+            "canceling statement due to statement timeout"
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+            follow=True,
+        )
+
+        self.assertContains(
+            response,
+            "The query took too long to execute. Try a more specific question.",
+        )
+        self.assertNotContains(
+            response,
+            "canceling statement due to statement timeout",
         )
 
     @patch("apps.conversations.views.create_question_run_service")

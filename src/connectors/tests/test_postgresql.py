@@ -155,6 +155,11 @@ class PostgreSQLConnectorTests(unittest.TestCase):
             ],
         )
 
+    def test_readonly_user_has_read_only_permissions(self):
+        connector = PostgreSQLConnector(self.config)
+
+        self.assertTrue(connector.has_read_only_permissions())
+
     def test_readonly_user_cannot_modify_source_data(self):
         with psycopg.connect(
             host=self.config.host,
@@ -171,3 +176,16 @@ class PostgreSQLConnectorTests(unittest.TestCase):
                         VALUES ('Unauthorized', 'unauthorized@example.com')
                         """
                     )
+
+    def test_detects_user_with_write_permissions(self):
+        writable_config = PostgreSQLConnectionConfig(
+            host=self.config.host,
+            port=self.config.port,
+            database=self.config.database,
+            user=os.environ["TEST_WRITABLE_DB_USER"],
+            password=os.environ["TEST_WRITABLE_DB_PASSWORD"],
+        )
+
+        connector = PostgreSQLConnector(writable_config)
+
+        self.assertFalse(connector.has_read_only_permissions())

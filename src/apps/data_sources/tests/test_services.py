@@ -15,6 +15,20 @@ class SuccessfulConnector:
     def test_connection(self):
         return True
 
+    def has_read_only_permissions(self):
+        return True
+
+
+class WritableConnector:
+    def __init__(self, config):
+        self.config = config
+
+    def test_connection(self):
+        return True
+
+    def has_read_only_permissions(self):
+        return False
+
 
 class FailingConnector:
     def __init__(self, config):
@@ -333,3 +347,22 @@ class DataSourceServiceTests(TestCase):
             project.status,
             Project.Status.READY,
         )
+
+    def test_configure_and_test_rejects_writable_database_user(self):
+        project = create_test_project(name="Test project")
+
+        service = DataSourceService(
+            connector_class=WritableConnector,
+        )
+
+        with self.assertRaises(DataSourceConnectionError):
+            service.configure_and_test(
+                project=project,
+                host="localhost",
+                port=5432,
+                database="sales",
+                username="writable",
+                password="secret",
+            )
+
+        self.assertFalse(DataSource.objects.filter(project=project).exists())

@@ -189,3 +189,55 @@ class PostgreSQLConnector(Connector):
                     )
                     for row in cursor.fetchall()
                 ]
+
+    def has_read_only_permissions(self) -> bool:
+        """Return whether the configured user has no table write privileges."""
+        with self._connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_type = 'BASE TABLE'
+                        AND table_schema NOT IN (
+                            'pg_catalog',
+                            'information_schema'
+                        )
+                        AND (
+                            has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'INSERT'
+                            )
+                            OR has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'UPDATE'
+                            )
+                            OR has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'DELETE'
+                            )
+                            OR has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'TRUNCATE'
+                            )
+                        )
+                    )
+                    """
+                )
+
+                has_write_permissions = cursor.fetchone()[0]
+
+        return not has_write_permissions

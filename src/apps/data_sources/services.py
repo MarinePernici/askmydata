@@ -108,6 +108,11 @@ class DataSourceService:
         if not connector.test_connection():
             raise DataSourceConnectionError("Unable to connect to the data source.")
 
+        if not connector.has_read_only_permissions():
+            raise DataSourceConnectionError(
+                "The database user must have read-only permissions."
+            )
+
         data_source = self.configure(
             project=project,
             host=host,
