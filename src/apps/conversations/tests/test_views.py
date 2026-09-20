@@ -4,13 +4,17 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.data_sources.models import DataSource
-from apps.runs.models import QuestionRun
-from apps.runs.services import QuestionRunService
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
+from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from apps.runs.models import QuestionRun
+from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
+from query_engine.exceptions import (
+    DataSourcePermissionError,
+    QueryTimeoutError,
+)
 from query_engine.types import (
     AnswerGenerationResult,
     QueryExecutionResult,
@@ -29,7 +33,7 @@ class HTTPFakeGenerator:
 
 
 class HTTPFakeValidator:
-    def validate(self, sql):
+    def validate(self, sql, catalog=None):
         return SQLValidationResult(is_valid=True)
 
 
@@ -186,6 +190,16 @@ class ConversationViewTests(TestCase):
             conversation.title,
             "Sales analysis",
         )
+        self.assertEqual(
+            response.url,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
 
     def test_user_cannot_create_conversation_for_another_users_project(self):
         user = get_user_model().objects.create_user(
@@ -222,6 +236,37 @@ class ConversationViewTests(TestCase):
             ).exists()
         )
 
+    def test_archived_project_cannot_create_conversation(self):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-create",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-create",
+                kwargs={"project_id": project.id},
+            ),
+            data={"title": "New conversation"},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "conversation-list",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertFalse(Conversation.objects.filter(project=project).exists())
+
     def test_conversation_list_displays_create_action(self):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -250,6 +295,41 @@ class ConversationViewTests(TestCase):
                 kwargs={"project_id": project.id},
             ),
         )
+
+    def test_archived_project_disables_create_conversation_action(self):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-conversation-list",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        Conversation.objects.create(
+            project=project,
+            title="Existing conversation",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "conversation-list",
+                kwargs={"project_id": project.id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "New conversation")
+        self.assertContains(response, "disabled")
+        self.assertContains(response, "Select a conversation")
+        self.assertContains(
+            response,
+            "Choose a conversation from the list to view its messages.",
+        )
+        self.assertNotContains(response, "Start a conversation")
+        self.assertNotContains(response, "No conversations")
 
     def test_user_can_view_own_conversation(self):
         user = get_user_model().objects.create_user(
@@ -389,6 +469,179 @@ class ConversationViewTests(TestCase):
             content.index("There are 42 customers."),
         )
 
+        self.assertEqual(
+            content.count("data-conversation-last-message"),
+            1,
+        )
+
+        last_message_marker = content.index("data-conversation-last-message")
+
+        self.assertGreater(
+            last_message_marker,
+            content.index("How many customers?"),
+        )
+        self.assertLess(
+            last_message_marker,
+            content.index("There are 42 customers."),
+        )
+
+    def test_user_can_rename_own_conversation(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Old title",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            {
+                "title": "New title",
+            },
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            conversation.title,
+            "New title",
+        )
+        self.assertRedirects(
+            response,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
+
+    def test_user_cannot_rename_conversation_from_another_users_project(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="other-user",
+            password="test-password",
+        )
+        other_project = Project.objects.create(
+            owner=other_user,
+            name="Other project",
+        )
+        conversation = Conversation.objects.create(
+            project=other_project,
+            title="Private conversation",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": other_project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            {
+                "title": "Changed title",
+            },
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            conversation.title,
+            "Private conversation",
+        )
+
+    def test_rename_conversation_rejects_get_request(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_archived_project_cannot_rename_conversation(self):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-rename",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Original title",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-rename",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"title": "Changed title"},
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
+        self.assertEqual(conversation.title, "Original title")
+
     @patch("apps.conversations.views.create_question_run_service")
     def test_user_can_ask_question_in_own_conversation(
         self,
@@ -520,7 +773,81 @@ class ConversationViewTests(TestCase):
                 },
             ),
         )
-        self.assertContains(response, "Ask question")
+        self.assertContains(
+            response,
+            'aria-label="Ask question"',
+        )
+        self.assertContains(
+            response,
+            "data-conversation-question-form",
+        )
+        self.assertContains(
+            response,
+            "data-conversation-question-input",
+        )
+        self.assertContains(
+            response,
+            "data-conversation-question-submit",
+        )
+        self.assertContains(
+            response,
+            "data-conversation-messages",
+        )
+
+        content = response.content.decode()
+
+        submit_button_start = content.index("data-conversation-question-submit")
+        submit_button_end = content.index(
+            "</button>",
+            submit_button_start,
+        )
+
+        submit_button = content[submit_button_start:submit_button_end]
+
+        self.assertIn("disabled", submit_button)
+
+    def test_archived_project_displays_conversation_as_read_only(self):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-conversation-detail",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "This project is archived and read-only.",
+        )
+        self.assertNotContains(
+            response,
+            'placeholder="Ask a question about your data..."',
+        )
+        self.assertContains(response, "No messages")
+        self.assertContains(
+            response,
+            "This conversation has no messages.",
+        )
+        self.assertNotContains(response, "Ask your first question")
 
     @patch("apps.conversations.views.create_question_run_service")
     def test_empty_question_does_not_run_question_service(
@@ -690,6 +1017,102 @@ class ConversationViewTests(TestCase):
         )
 
     @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_permission_error_displays_safe_message(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = DataSourcePermissionError(
+            "permission denied for table customers"
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+            follow=True,
+        )
+
+        self.assertContains(
+            response,
+            "The configured database user no longer has the required permissions.",
+        )
+        self.assertNotContains(
+            response,
+            "permission denied for table customers",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_timeout_error_displays_safe_message(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = QueryTimeoutError(
+            "canceling statement due to statement timeout"
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+            follow=True,
+        )
+
+        self.assertContains(
+            response,
+            "The query took too long to execute. Try a more specific question.",
+        )
+        self.assertNotContains(
+            response,
+            "canceling statement due to statement timeout",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
     def test_question_cannot_be_asked_when_project_is_not_ready(
         self,
         create_question_run_service,
@@ -731,6 +1154,51 @@ class ConversationViewTests(TestCase):
         )
         create_question_run_service.assert_not_called()
 
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_cannot_be_asked_when_project_is_archived(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-archived-question",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="Archived project",
+            status=Project.Status.ARCHIVED,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+        )
+
+        create_question_run_service.assert_not_called()
+
     def test_conversation_detail_hides_ask_form_when_project_is_not_ready(self):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -761,8 +1229,18 @@ class ConversationViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'name="question"')
-        self.assertNotContains(response, "Ask question")
+        self.assertNotContains(
+            response,
+            "data-conversation-question-form",
+        )
+        self.assertNotContains(
+            response,
+            "data-conversation-question-input",
+        )
+        self.assertNotContains(
+            response,
+            "data-conversation-question-submit",
+        )
 
     def test_user_cannot_view_conversation_through_another_own_project(self):
         user = get_user_model().objects.create_user(

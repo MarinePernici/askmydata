@@ -1,0 +1,210 @@
+{% load static %}
+
+<a href="{% url 'project-list' %}" class="sidebar-brand">
+    <img
+        src="{% static 'images/askmydata-logo.png' %}"
+        alt=""
+        class="sidebar-logo"
+    >
+
+    <span class="sidebar-brand-name">
+        AskMyData
+    </span>
+</a>
+
+<nav class="sidebar-nav" aria-label="Main navigation">
+    <a
+        href="{% url 'project-list' %}"
+        class="nav-item{% if request.resolver_match.url_name == 'project-list' or request.resolver_match.url_name == 'project-create' %} nav-item-active{% endif %}"
+    >
+        <span class="nav-item-icon" aria-hidden="true">
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <rect width="7" height="7" x="3" y="3" rx="1" />
+                <rect width="7" height="7" x="14" y="3" rx="1" />
+                <rect width="7" height="7" x="14" y="14" rx="1" />
+                <rect width="7" height="7" x="3" y="14" rx="1" />
+            </svg>
+        </span>
+
+        <span>Projects</span>
+    </a>
+</nav>
+
+{% if project and not creation_mode %}
+    <div class="sidebar-project">
+        <div class="sidebar-section-label">
+            Current project
+        </div>
+
+        <div class="project-switcher">
+            <button
+                type="button"
+                class="project-selector"
+                aria-expanded="false"
+                aria-haspopup="true"
+                data-project-switcher-toggle
+            >
+                <span class="project-selector-content">
+                    <span class="project-selector-name">
+                        {{ project.name }}
+                    </span>
+
+                    {% if project.is_archived %}
+                        <span class="project-selector-status">
+                            Archived
+                        </span>
+                    {% endif %}
+                </span>
+
+                <svg
+                    class="project-selector-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </button>
+
+            <div
+                class="project-switcher-menu"
+                data-project-switcher-menu
+                hidden
+            >
+                {% for sidebar_project in sidebar_projects %}
+                    <a
+                        href="{% url 'project-detail' sidebar_project.id %}"
+                        class="project-switcher-option{% if sidebar_project.id == project.id %} project-switcher-option-active{% endif %}"
+                    >
+                        <span class="project-switcher-option-name">
+                            {{ sidebar_project.name }}
+                        </span>
+
+                        {% if sidebar_project.is_archived %}
+                            <span class="project-selector-status">
+                                Archived
+                            </span>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Project navigation">
+            <a
+                href="{% url 'data-overview' project.id %}"
+                class="nav-item{% if request.resolver_match.url_name == 'data-overview' %} nav-item-active{% endif %}"
+            >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
+                        <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
+                    </svg>
+                </span>
+                <span>Data</span>
+            </a>
+
+            <a
+                href="{% url 'catalog-detail' project.id %}"
+                class="nav-item{% if request.resolver_match.url_name == 'catalog-detail' %} nav-item-active{% endif %}"
+            >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M12 7v14" />
+                        <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+                    </svg>
+                </span>
+                <span>Catalog</span>
+            </a>
+
+            <a
+                href="{% url 'conversation-list' project.id %}"
+                class="nav-item{% if request.resolver_match.url_name == 'conversation-list' or request.resolver_match.url_name == 'conversation-create' or request.resolver_match.url_name == 'conversation-detail' or request.resolver_match.url_name == 'conversation-ask' %} nav-item-active{% endif %}"
+            >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                    </svg>
+                </span>
+                <span>Conversations</span>
+            </a>
+
+            <a
+                href="{% url 'project-update' project.id %}"
+                class="nav-item{% if request.resolver_match.url_name == 'project-update' %} nav-item-active{% endif %}"
+            >
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+{% endif %}
+
+{% if request.user.is_authenticated %}
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            {{ request.user }}
+        </div>
+
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+
+            <button type="submit" class="nav-item">
+                <span class="nav-item-icon" aria-hidden="true">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M10 17l5-5-5-5" />
+                        <path d="M15 12H3" />
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    </svg>
+                </span>
+                <span>Log out</span>
+            </button>
+        </form>
+    </div>
+{% endif %}

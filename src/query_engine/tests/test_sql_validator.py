@@ -1,9 +1,28 @@
 import unittest
 
+from catalog.types import KnowledgeCatalog, TableMetadata
 from query_engine.sql_validator import SQLValidator
 
 
 class SQLValidatorTests(unittest.TestCase):
+    def make_catalog(self):
+        return KnowledgeCatalog(
+            tables=(
+                TableMetadata(
+                    schema="sales",
+                    name="orders",
+                    columns=(),
+                    relationships=(),
+                ),
+                TableMetadata(
+                    schema="sales",
+                    name="customers",
+                    columns=(),
+                    relationships=(),
+                ),
+            )
+        )
+
     def test_validator_can_be_created(self):
         validator = SQLValidator()
 
@@ -95,3 +114,59 @@ class SQLValidatorTests(unittest.TestCase):
 
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.error)
+
+    def test_accepts_table_in_catalog(self):
+        validator = SQLValidator()
+
+        result = validator.validate(
+            "SELECT id FROM sales.orders;",
+            catalog=self.make_catalog(),
+        )
+
+        self.assertTrue(result.is_valid)
+
+    def test_rejects_table_outside_catalog(self):
+        validator = SQLValidator()
+
+        result = validator.validate(
+            "SELECT * FROM private.secret;",
+            catalog=self.make_catalog(),
+        )
+
+        self.assertFalse(result.is_valid)
+        self.assertEqual(
+            result.error,
+            "SQL query references a table outside the catalog scope.",
+        )
+
+    def test_rejects_out_of_scope_table_in_join(self):
+        validator = SQLValidator()
+
+        result = validator.validate(
+            """
+            SELECT orders.id
+            FROM sales.orders
+            JOIN private.secret
+                ON private.secret.id = orders.id;
+            """,
+            catalog=self.make_catalog(),
+        )
+
+        self.assertFalse(result.is_valid)
+
+    def test_accepts_cte_using_catalog_table(self):
+        validator = SQLValidator()
+
+        result = validator.validate(
+            """
+            WITH recent_orders AS (
+                SELECT id
+                FROM sales.orders
+            )
+            SELECT *
+            FROM recent_orders;
+            """,
+            catalog=self.make_catalog(),
+        )
+
+        self.assertTrue(result.is_valid)

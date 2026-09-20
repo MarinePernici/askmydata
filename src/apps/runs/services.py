@@ -1,3 +1,5 @@
+import logging
+
 from django.utils import timezone
 
 from apps.conversations.models import Conversation, Message
@@ -7,6 +9,8 @@ from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import ClarificationResult, QueryRunResult
+
+logger = logging.getLogger(__name__)
 
 
 class QuestionRunService:
@@ -48,6 +52,11 @@ class QuestionRunService:
             conversation=conversation,
             role=Message.Role.USER,
             content=question,
+        )
+
+        self._conversation_service.set_title_from_question(
+            conversation=conversation,
+            question=question,
         )
 
         question_run = QuestionRun.objects.create(
@@ -119,6 +128,12 @@ class QuestionRunService:
                     "error_message",
                 ]
             )
+
+            logger.exception(
+                "Unexpected failure while processing question run %s.",
+                question_run.id,
+            )
+
             raise
 
         assistant_message = self._conversation_service.add_message(

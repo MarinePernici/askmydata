@@ -4,6 +4,7 @@ import unittest
 import environ
 
 from catalog.builder import CatalogBuilder
+from catalog.types import CatalogScope, CatalogTableSelection
 from connectors.postgresql import (
     PostgreSQLConnectionConfig,
     PostgreSQLConnector,
@@ -11,12 +12,12 @@ from connectors.postgresql import (
 from llm.base import LLMProvider
 from llm.types import LLMMessage, LLMResponse
 from query_engine.answer_generator import AnswerGenerator
+from query_engine.exceptions import SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.postgresql_executor import PostgreSQLQueryExecutor
 from query_engine.result_validator import ResultValidator
 from query_engine.sql_generator import SQLGenerator
 from query_engine.sql_validator import SQLValidator
-
 
 ROOT_DIR = environ.Path(__file__) - 4
 environ.Env.read_env(ROOT_DIR(".env"))
@@ -46,6 +47,35 @@ class FakeLLMProvider(LLMProvider):
             content="The number of orders was successfully retrieved.",
             model="fake-model",
         )
+
+
+class OutOfScopeLLMProvider(LLMProvider):
+    def __init__(self) -> None:
+        self.call_count = 0
+
+    def generate(
+        self,
+        messages: list[LLMMessage],
+    ) -> LLMResponse:
+        self.call_count += 1
+
+        return LLMResponse(
+            content=(
+                '{"sql": "SELECT COUNT(*) AS order_count '
+                'FROM sales.orders;", '
+                '"explanation": "Counts all orders."}'
+            ),
+            model="fake-model",
+        )
+
+
+class RecordingExecutor:
+    def __init__(self) -> None:
+        self.called = False
+
+    def execute(self, sql):
+        self.called = True
+        raise AssertionError("Out-of-scope SQL must not be executed.")
 
 
 class QueryPipelineIntegrationTests(unittest.TestCase):
@@ -99,6 +129,41 @@ class QueryPipelineIntegrationTests(unittest.TestCase):
         )
 
         self.assertEqual(provider.call_count, 2)
+
+    def test_pipeline_rejects_query_outside_catalog_scope(self):
+        connector = PostgreSQLConnector(self.config)
+
+        catalog = CatalogBuilder(connector).build(
+            scope=CatalogScope(
+                tables=(
+                    CatalogTableSelection(
+                        schema="sales",
+                        table="customers",
+                    ),
+                )
+            )
+        )
+
+        provider = OutOfScopeLLMProvider()
+
+        executor = RecordingExecutor()
+
+        orchestrator = QueryOrchestrator(
+            generator=SQLGenerator(provider),
+            validator=SQLValidator(),
+            executor=executor,
+            result_validator=ResultValidator(),
+            answer_generator=AnswerGenerator(provider),
+        )
+
+        with self.assertRaises(SQLValidationError):
+            orchestrator.run(
+                question="How many orders are there?",
+                catalog=catalog,
+            )
+
+        self.assertEqual(provider.call_count, 1)
+        self.assertFalse(executor.called)
 
 
 if __name__ == "__main__":

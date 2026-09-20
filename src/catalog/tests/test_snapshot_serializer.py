@@ -18,6 +18,7 @@ class CatalogSnapshotSerializerTests(unittest.TestCase):
                             data_type="bigint",
                             nullable=False,
                             default=None,
+                            is_primary_key=True,
                         ),
                     ),
                     relationships=(),
@@ -42,6 +43,7 @@ class CatalogSnapshotSerializerTests(unittest.TestCase):
                                 "data_type": "bigint",
                                 "nullable": False,
                                 "default": None,
+                                "is_primary_key": True,
                             }
                         ],
                         "relationships": [],

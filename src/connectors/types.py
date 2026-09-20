@@ -9,6 +9,7 @@ class ColumnMetadata:
     data_type: str
     nullable: bool
     default: str | None
+    is_primary_key: bool = False
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,100 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}AskMyData{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body>
+    <div class="app-shell">
+        <div
+            class="sidebar-overlay"
+            data-sidebar-overlay
+            hidden
+        ></div>
+
+        <aside
+            class="sidebar"
+            data-sidebar
+        >
+            <div class="sidebar-mobile-header">
+                <span class="sidebar-mobile-title">Menu</span>
+
+                <button
+                    type="button"
+                    class="sidebar-close"
+                    aria-label="Close navigation"
+                    data-sidebar-close
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {% block sidebar %}
+                {% include "components/sidebar.html" %}
+            {% endblock %}
+        </aside>
+
+        <div class="app-content">
+            <header class="mobile-header">
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    aria-label="Open navigation"
+                    aria-expanded="false"
+                    data-sidebar-open
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M4 6h16" />
+                        <path d="M4 12h16" />
+                        <path d="M4 18h16" />
+                    </svg>
+                </button>
+
+                <a href="{% url 'project-list' %}" class="mobile-brand">
+                    <img
+                        src="{% static 'images/askmydata-logo.png' %}"
+                        alt=""
+                        class="mobile-brand-logo"
+                    >
+                    <span>AskMyData</span>
+                </a>
+            </header>
+
+            <main class="main-content">
+                <div class="page-container">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

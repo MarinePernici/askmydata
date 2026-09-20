@@ -81,6 +81,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.projects.context_processors.sidebar_projects",
             ],
         },
     },
@@ -130,6 +131,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 
 # Email
@@ -144,3 +146,4 @@ MAILERS = {
 # Authentication
 
 LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "project-list"

@@ -39,6 +39,32 @@ class CatalogScopeServiceTests(TestCase):
             },
         )
 
+    def test_excludes_schemas_without_available_tables(self):
+        project = create_test_project()
+
+        class ConnectorWithEmptySchema:
+            def discover_schemas(self):
+                return ["public", "sales"]
+
+            def discover_tables(self, schema):
+                return {
+                    "public": [],
+                    "sales": ["customers", "orders"],
+                }[schema]
+
+        service = CatalogScopeService(
+            connector_factory=lambda project: ConnectorWithEmptySchema(),
+        )
+
+        result = service.discover_available_tables(project)
+
+        self.assertEqual(
+            result,
+            {
+                "sales": ["customers", "orders"],
+            },
+        )
+
     @patch("apps.catalogs.scope_service.PostgreSQLConnector")
     def test_builds_connector_from_project_data_source(self, connector_class):
         project = create_test_project()

@@ -41,3 +41,7 @@ class Project(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def is_archived(self) -> bool:
+        return self.status == self.Status.ARCHIVED

@@ -42,8 +42,16 @@ class DataSource(models.Model):
         default=ConnectionStatus.NOT_TESTED,
     )
 
+    last_connection_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_connection_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
     host = models.CharField(
         max_length=255,

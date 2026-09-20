@@ -85,14 +85,33 @@ class PostgreSQLConnector(Connector):
                 cursor.execute(
                     """
                     SELECT
-                        column_name,
-                        data_type,
-                        is_nullable,
-                        column_default
-                    FROM information_schema.columns
-                    WHERE table_schema = %s
-                    AND table_name = %s
-                    ORDER BY ordinal_position
+                        c.column_name,
+                        c.data_type,
+                        c.is_nullable,
+                        c.column_default,
+                        CASE WHEN pk.attname IS NOT NULL THEN TRUE ELSE FALSE END
+                    FROM information_schema.columns AS c
+                    LEFT JOIN (
+                        SELECT
+                            ns.nspname AS table_schema,
+                            tbl.relname AS table_name,
+                            att.attname
+                        FROM pg_catalog.pg_constraint AS con
+                        JOIN pg_catalog.pg_class AS tbl
+                            ON tbl.oid = con.conrelid
+                        JOIN pg_catalog.pg_namespace AS ns
+                            ON ns.oid = tbl.relnamespace
+                        JOIN pg_catalog.pg_attribute AS att
+                            ON att.attrelid = tbl.oid
+                            AND att.attnum = ANY(con.conkey)
+                        WHERE con.contype = 'p'
+                    ) AS pk
+                        ON c.table_schema = pk.table_schema
+                        AND c.table_name = pk.table_name
+                        AND c.column_name = pk.attname
+                    WHERE c.table_schema = %s
+                    AND c.table_name = %s
+                    ORDER BY c.ordinal_position
                     """,
                     (schema, table),
                 )
@@ -103,6 +122,7 @@ class PostgreSQLConnector(Connector):
                         data_type=row[1],
                         nullable=row[2] == "YES",
                         default=row[3],
+                        is_primary_key=row[4],
                     )
                     for row in cursor.fetchall()
                 ]
@@ -169,3 +189,55 @@ class PostgreSQLConnector(Connector):
                     )
                     for row in cursor.fetchall()
                 ]
+
+    def has_read_only_permissions(self) -> bool:
+        """Return whether the configured user has no table write privileges."""
+        with self._connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_type = 'BASE TABLE'
+                        AND table_schema NOT IN (
+                            'pg_catalog',
+                            'information_schema'
+                        )
+                        AND (
+                            has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'INSERT'
+                            )
+                            OR has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'UPDATE'
+                            )
+                            OR has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'DELETE'
+                            )
+                            OR has_table_privilege(
+                                current_user,
+                                quote_ident(table_schema)
+                                || '.'
+                                || quote_ident(table_name),
+                                'TRUNCATE'
+                            )
+                        )
+                    )
+                    """
+                )
+
+                has_write_permissions = cursor.fetchone()[0]
+
+        return not has_write_permissions

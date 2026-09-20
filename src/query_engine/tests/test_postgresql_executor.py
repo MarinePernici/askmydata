@@ -1,11 +1,16 @@
 import os
 import unittest
-import psycopg
+from unittest.mock import patch
+
 import environ
+import psycopg
 
 from connectors.postgresql import PostgreSQLConnectionConfig
+from query_engine.exceptions import (
+    DataSourcePermissionError,
+    QueryTimeoutError,
+)
 from query_engine.postgresql_executor import PostgreSQLQueryExecutor
-
 
 ROOT_DIR = environ.Path(__file__) - 4
 environ.Env.read_env(ROOT_DIR(".env"))
@@ -84,8 +89,78 @@ class PostgreSQLQueryExecutorTests(unittest.TestCase):
             timeout_ms=100,
         )
 
-        with self.assertRaises(psycopg.errors.QueryCanceled):
+        with self.assertRaises(QueryTimeoutError):
             executor.execute("SELECT pg_sleep(1);")
+
+    def test_executes_queries_in_read_only_transaction(self):
+        executor = PostgreSQLQueryExecutor(self.config)
+
+        result = executor.execute(
+            "SELECT current_setting('transaction_read_only') AS read_only;"
+        )
+
+        self.assertEqual(result.rows, (("on",),))
+
+    def test_read_only_transaction_blocks_write_with_writable_user(self):
+        writable_config = PostgreSQLConnectionConfig(
+            host=self.config.host,
+            port=self.config.port,
+            database=self.config.database,
+            user=os.environ["TEST_WRITABLE_DB_USER"],
+            password=os.environ["TEST_WRITABLE_DB_PASSWORD"],
+        )
+
+        executor = PostgreSQLQueryExecutor(writable_config)
+
+        with self.assertRaises(psycopg.errors.ReadOnlySqlTransaction):
+            executor.execute(
+                """
+                INSERT INTO sales.customers (name, email)
+                VALUES ('Unauthorized', 'unauthorized@example.com')
+                """
+            )
+
+    def test_translates_permission_error(self):
+        executor = PostgreSQLQueryExecutor(self.config)
+
+        with (
+            patch(
+                "query_engine.postgresql_executor.psycopg.connect",
+                side_effect=psycopg.errors.InsufficientPrivilege(
+                    "permission denied for table customers"
+                ),
+            ),
+            self.assertRaises(DataSourcePermissionError),
+        ):
+            executor.execute("SELECT * FROM sales.customers")
+
+    def test_translates_query_timeout_error(self):
+        executor = PostgreSQLQueryExecutor(self.config)
+
+        with (
+            patch(
+                "query_engine.postgresql_executor.psycopg.connect",
+                side_effect=psycopg.errors.QueryCanceled(
+                    "canceling statement due to statement timeout"
+                ),
+            ),
+            self.assertRaises(QueryTimeoutError),
+        ):
+            executor.execute("SELECT * FROM sales.customers")
+
+    def test_translates_real_permission_error(self):
+        noselect_config = PostgreSQLConnectionConfig(
+            host=self.config.host,
+            port=self.config.port,
+            database=self.config.database,
+            user=os.environ["TEST_NOSELECT_DB_USER"],
+            password=os.environ["TEST_NOSELECT_DB_PASSWORD"],
+        )
+
+        executor = PostgreSQLQueryExecutor(noselect_config)
+
+        with self.assertRaises(DataSourcePermissionError):
+            executor.execute("SELECT * FROM sales.customers")
 
 
 if __name__ == "__main__":

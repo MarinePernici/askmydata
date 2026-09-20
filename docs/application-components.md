@@ -336,7 +336,7 @@ This capability may initially live inside the Projects module or as a dedicated 
 * verify required permissions;
 * encrypt connection configuration;
 * update connection status;
-* disable credentials when a project is archived.
+* prevent use of source credentials while a project is archived.
 
 ### Domain Concepts
 
@@ -349,7 +349,6 @@ Examples:
 * `ConfigureDataSource`
 * `TestDataSourceConnection`
 * `ValidateReadOnlyPermissions`
-* `DisableDataSource`
 * `GetDataSourceStatus`
 
 ### Interfaces Exposed
@@ -754,7 +753,6 @@ Validates generated SQL before execution.
 * reject prohibited statements;
 * verify referenced schemas and tables;
 * enforce catalog boundaries;
-* enforce query result limits;
 * reject multiple statements when unsupported.
 
 ### Validation Layers
@@ -764,8 +762,9 @@ The initial implementation should combine:
 1. structural SQL parsing;
 2. explicit allowlists and denylists;
 3. Catalog Scope verification;
-4. read-only database permissions;
-5. execution limits.
+4. read-only database permissions.
+
+Execution limits, including query timeouts and maximum result row counts, are enforced by the Query Executor.
 
 Prompt instructions alone are never considered a sufficient security control.
 
@@ -927,7 +926,7 @@ Implements the Connector abstraction for PostgreSQL.
 ### Security Requirements
 
 * use a dedicated read-only database account;
-* apply connection and statement timeouts;
+* support connection timeout configuration when introduced;
 * avoid exposing connection strings;
 * close connections safely;
 * never execute unvalidated statements.
@@ -946,7 +945,7 @@ Provides a provider-independent interface for model inference.
 * return structured responses;
 * expose provider metadata when available;
 * expose provider errors;
-* apply configured timeouts and retries.
+* support provider-specific reliability configuration when introduced.
 
 Provider metadata may include token usage, model information and latency. Its persistence and monitoring are handled by the Observability component when enabled.
 
@@ -1245,6 +1244,7 @@ Catalog construction and regeneration should:
 * update project status;
 
 External schema discovery cannot be part of one long database transaction.
+During regeneration, the existing ready catalog remains available until the new catalog has been built successfully. If regeneration fails, the previous catalog is preserved and the project returns to the ready state.
 
 ### Question Processing
 

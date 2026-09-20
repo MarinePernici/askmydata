@@ -2,6 +2,8 @@ from django.test import TestCase
 
 from apps.catalogs.models import (
     KnowledgeCatalog as KnowledgeCatalogModel,
+)
+from apps.catalogs.models import (
     SchemaSnapshot,
 )
 from apps.catalogs.readers import CatalogReader
@@ -42,7 +44,7 @@ class RecordingGenerator:
 
 
 class FakeValidator:
-    def validate(self, sql):
+    def validate(self, sql, catalog=None):
         return SQLValidationResult(
             is_valid=True,
         )

@@ -5,6 +5,7 @@ from .views import (
     conversation_create,
     conversation_detail,
     conversation_list,
+    conversation_rename,
 )
 
 urlpatterns = [
@@ -27,5 +28,10 @@ urlpatterns = [
         "projects/<uuid:project_id>/conversations/<uuid:conversation_id>/ask/",
         conversation_ask,
         name="conversation-ask",
+    ),
+    path(
+        "projects/<uuid:project_id>/conversations/<uuid:conversation_id>/rename/",
+        conversation_rename,
+        name="conversation-rename",
     ),
 ]

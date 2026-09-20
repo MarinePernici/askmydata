@@ -178,6 +178,109 @@ class ConversationServiceTests(TestCase):
             Conversation.Status.ACTIVE,
         )
 
+    def test_set_title_from_question_sets_title_when_conversation_has_no_title(self):
+        conversation = self.service.create_conversation(
+            project=self.project,
+        )
+
+        self.service.set_title_from_question(
+            conversation=conversation,
+            question="How many customers do we have?",
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            conversation.title,
+            "How many customers do we have?",
+        )
+
+    def test_set_title_from_question_preserves_existing_title(self):
+        conversation = self.service.create_conversation(
+            project=self.project,
+            title="Sales analysis",
+        )
+
+        self.service.set_title_from_question(
+            conversation=conversation,
+            question="How many customers do we have?",
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            conversation.title,
+            "Sales analysis",
+        )
+
+    def test_set_title_from_question_truncates_long_question(self):
+        conversation = self.service.create_conversation(
+            project=self.project,
+        )
+
+        question = "A" * 100
+
+        self.service.set_title_from_question(
+            conversation=conversation,
+            question=question,
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            len(conversation.title),
+            80,
+        )
+        self.assertTrue(
+            conversation.title.endswith("…"),
+        )
+
+    def test_add_message_updates_conversation_updated_at(self):
+        conversation = self.service.create_conversation(
+            project=self.project,
+            title="Sales analysis",
+        )
+
+        previous_updated_at = conversation.updated_at
+
+        self.service.add_message(
+            conversation=conversation,
+            role=Message.Role.USER,
+            content="How many customers do we have?",
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertGreater(
+            conversation.updated_at,
+            previous_updated_at,
+        )
+
+    def test_add_message_moves_conversation_to_most_recent(self):
+        older = self.service.create_conversation(
+            project=self.project,
+            title="Older",
+        )
+        newer = self.service.create_conversation(
+            project=self.project,
+            title="Newer",
+        )
+
+        self.service.add_message(
+            conversation=older,
+            role=Message.Role.USER,
+            content="New activity",
+        )
+
+        conversations = self.service.list_conversations(
+            project=self.project,
+        )
+
+        self.assertLess(
+            list(conversations).index(older),
+            list(conversations).index(newer),
+        )
+
     def test_list_conversations_returns_project_conversations_most_recent_first(self):
         older = Conversation.objects.create(
             project=self.project,

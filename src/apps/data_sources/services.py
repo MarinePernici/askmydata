@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from apps.catalogs.services import CatalogService
 from apps.data_sources.exceptions import DataSourceConnectionError
 from apps.data_sources.models import DataSource
@@ -35,10 +37,12 @@ class DataSourceService:
             if is_connected
             else DataSource.ConnectionStatus.FAILED
         )
+        data_source.last_connection_at = timezone.now()
 
         data_source.save(
             update_fields=[
                 "connection_status",
+                "last_connection_at",
                 "updated_at",
             ]
         )
@@ -104,6 +108,11 @@ class DataSourceService:
         if not connector.test_connection():
             raise DataSourceConnectionError("Unable to connect to the data source.")
 
+        if not connector.has_read_only_permissions():
+            raise DataSourceConnectionError(
+                "The database user must have read-only permissions."
+            )
+
         data_source = self.configure(
             project=project,
             host=host,
@@ -114,9 +123,12 @@ class DataSourceService:
         )
 
         data_source.connection_status = DataSource.ConnectionStatus.CONNECTED
+        data_source.last_connection_at = timezone.now()
+
         data_source.save(
             update_fields=[
                 "connection_status",
+                "last_connection_at",
                 "updated_at",
             ]
         )

@@ -207,7 +207,7 @@ A Project groups all resources required to explore one structured data source.
 - regenerating_catalog
 - archived
 
-Failures during configuration, initial catalog generation or catalog regeneration are recorded separately and are not lifecycle states.
+Failures during configuration, initial catalog generation or catalog regeneration do not introduce additional permanent project lifecycle states.
 
 ### Relationships
 
@@ -241,7 +241,7 @@ Ready
   v
 Archived
 ```
-A project may be archived from any non-archived persistent state when no incompatible operation is in progress.
+A project may be archived only from the `ready` state. Projects that have not completed setup may be deleted, while a project in the `regenerating_catalog` state cannot be archived until the operation completes.
 
 
 ### Business Rules
@@ -251,7 +251,8 @@ A project may be archived from any non-archived persistent state when no incompa
 - Only ready projects may answer questions.
 - Archived projects cannot execute new questions.
 - Project history is preserved after archival.
-- A project is never physically deleted during the MVP.
+- Projects that have not completed setup may be physically deleted.
+- Ready projects are preserved and may be archived instead of deleted.
 
 ### Release
 

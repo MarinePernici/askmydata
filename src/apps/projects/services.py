@@ -1,10 +1,41 @@
+from django.core.exceptions import ObjectDoesNotExist
+
+from apps.projects.exceptions import (
+    ArchivedProjectError,
+    InvalidProjectStateError,
+)
 from apps.projects.models import Project
 
 
 class ProjectService:
     def archive(self, project: Project) -> None:
+        if project.is_archived:
+            return
+
+        if project.status != Project.Status.READY:
+            raise InvalidProjectStateError("Only ready projects can be archived.")
+
         project.status = Project.Status.ARCHIVED
         project.save(update_fields=["status"])
+
+    def restore(self, project: Project) -> None:
+        if not project.is_archived:
+            raise InvalidProjectStateError("Only archived projects can be restored.")
+
+        project.status = Project.Status.READY
+        project.save(update_fields=["status"])
+
+    def delete_incomplete(self, project: Project) -> None:
+        incomplete_statuses = {
+            Project.Status.DRAFT,
+            Project.Status.CONFIGURING,
+            Project.Status.BUILDING_CATALOG,
+        }
+
+        if project.status not in incomplete_statuses:
+            raise InvalidProjectStateError("Only incomplete projects can be deleted.")
+
+        project.delete()
 
     def mark_configuring(self, project: Project) -> None:
         project.status = Project.Status.CONFIGURING
@@ -64,3 +95,41 @@ class ProjectService:
         return Project.objects.filter(
             owner=user,
         )
+
+    def ensure_writable(self, project: Project) -> None:
+        if project.is_archived:
+            raise ArchivedProjectError("Archived projects are read-only.")
+
+    def get_setup_url_name(self, project: Project) -> str:
+        incomplete_statuses = {
+            Project.Status.DRAFT,
+            Project.Status.CONFIGURING,
+            Project.Status.BUILDING_CATALOG,
+        }
+
+        if project.status not in incomplete_statuses:
+            raise InvalidProjectStateError(
+                "Project setup can only be resumed for incomplete projects."
+            )
+
+        try:
+            project.data_source
+        except ObjectDoesNotExist:
+            return "data-source-configure"
+
+        try:
+            project.catalog_scope
+        except ObjectDoesNotExist:
+            return "catalog-scope"
+
+        return "catalog-confirmation"
+
+    def ensure_setup_incomplete(self, project: Project) -> None:
+        incomplete_statuses = {
+            Project.Status.DRAFT,
+            Project.Status.CONFIGURING,
+            Project.Status.BUILDING_CATALOG,
+        }
+
+        if project.status not in incomplete_statuses:
+            raise InvalidProjectStateError("Project setup is already complete.")

@@ -3,9 +3,14 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from config.services import create_question_run_service
+from query_engine.exceptions import (
+    DataSourcePermissionError,
+    QueryTimeoutError,
+)
 
 from .models import Conversation
 from .services import ConversationService
@@ -46,14 +51,23 @@ def conversation_create(request, project_id):
     except Project.DoesNotExist:
         raise Http404
 
-    ConversationService().create_conversation(
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "conversation-list",
+            project_id=project.id,
+        )
+
+    conversation = ConversationService().create_conversation(
         project=project,
         title=request.POST.get("title", "").strip(),
     )
 
     return redirect(
-        "conversation-list",
+        "conversation-detail",
         project_id=project.id,
+        conversation_id=conversation.id,
     )
 
 
@@ -81,6 +95,8 @@ def conversation_detail(
 
     conversation_messages = conversation.messages.order_by("sequence_number")
 
+    conversations = ConversationService().list_conversations(project)
+
     return render(
         request,
         "conversations/detail.html",
@@ -88,7 +104,53 @@ def conversation_detail(
             "project": project,
             "conversation": conversation,
             "conversation_messages": conversation_messages,
+            "conversations": conversations,
         },
+    )
+
+
+@login_required
+def conversation_rename(request, project_id, conversation_id):
+    if request.method != "POST":
+        raise Http404
+
+    try:
+        project = ProjectService().get_for_user(
+            project_id=project_id,
+            user=request.user,
+        )
+    except Project.DoesNotExist:
+        raise Http404
+
+    try:
+        conversation = ConversationService().get_conversation(
+            project=project,
+            conversation_id=conversation_id,
+        )
+    except Conversation.DoesNotExist:
+        raise Http404
+
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "conversation-detail",
+            project_id=project.id,
+            conversation_id=conversation.id,
+        )
+
+    title = request.POST.get("title", "").strip()
+
+    if title:
+        ConversationService().rename_conversation(
+            conversation=conversation,
+            title=title,
+        )
+
+    return redirect(
+        "conversation-detail",
+        project_id=project.id,
+        conversation_id=conversation.id,
     )
 
 
@@ -116,6 +178,15 @@ def conversation_ask(
         )
     except Conversation.DoesNotExist:
         raise Http404
+
+    try:
+        ProjectService().ensure_writable(project)
+    except ArchivedProjectError:
+        return redirect(
+            "conversation-detail",
+            project_id=project.id,
+            conversation_id=conversation.id,
+        )
 
     question = request.POST.get("question", "").strip()
 
@@ -145,6 +216,19 @@ def conversation_ask(
             project=project,
             conversation=conversation,
             question=question,
+        )
+    except DataSourcePermissionError:
+        messages.error(
+            request,
+            (
+                "The configured database user no longer has the required "
+                "permissions. Check the data source permissions."
+            ),
+        )
+    except QueryTimeoutError:
+        messages.error(
+            request,
+            "The query took too long to execute. Try a more specific question.",
         )
     except Exception:
         messages.error(

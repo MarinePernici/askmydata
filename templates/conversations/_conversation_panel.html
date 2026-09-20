@@ -1,0 +1,55 @@
+<div
+    class="conversation-panel"
+    data-conversation-panel
+>
+    <form
+        method="post"
+        action="{% url 'conversation-create' project.id %}"
+    >
+        {% csrf_token %}
+        <button
+            type="submit"
+            class="btn btn-secondary btn-with-icon conversation-new-button"
+            {% if project.is_archived %}disabled{% endif %}
+        >
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M5 12h14" />
+                <path d="M12 5v14" />
+            </svg>
+            <span>New conversation</span>
+        </button>
+    </form>
+
+    {% if conversations %}
+        <div class="conversation-panel-group">
+            <p class="conversation-panel-label">
+                Conversations
+            </p>
+
+            <nav class="conversation-panel-list">
+                {% for item in conversations %}
+                    <a
+                        href="{% url 'conversation-detail' project.id item.id %}"
+                        class="conversation-panel-item{% if conversation and conversation.id == item.id %} conversation-panel-item-active{% endif %}"
+                    >
+                        <span>
+                            {% if item.title %}
+                                {{ item.title }}
+                            {% else %}
+                                Untitled conversation
+                            {% endif %}
+                        </span>
+                    </a>
+                {% endfor %}
+            </nav>
+        </div>
+    {% endif %}
+</div>

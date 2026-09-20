@@ -792,7 +792,7 @@ Ready
 Archived
 ```
 
-A project may be archived from any non-archived persistent state when no incompatible operation is in progress.
+A project may be archived only from the Ready state. Projects that have not completed setup may be deleted, while a project undergoing catalog regeneration cannot be archived until the operation completes.
 
 ### Draft
 
@@ -814,7 +814,7 @@ The project can process natural language questions.
 ### Archived
 The project is no longer active and cannot execute new queries.
 
-Failures during configuration, initial catalog generation or catalog regeneration are recorded separately and do not constitute permanent lifecycle states.
+Failures during configuration, initial catalog generation or catalog regeneration are handled without introducing additional permanent project lifecycle states.
 
 ---
 

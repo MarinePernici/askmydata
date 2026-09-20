@@ -1,27 +1,180 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Configure data source</title>
-</head>
-<body>
-    <nav>
-        <a href="{% url 'project-list' %}">
-            Projects
-        </a>
+{% extends "base.html" %}
 
-        <a href="{% url 'project-detail' project.id %}">
-            {{ project.name }}
-        </a>
-    </nav>
-    <h1>Configure data source</h1>
-    <p>{{ project.name }}</p>
+{% block title %}Configure data source · AskMyData{% endblock %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% block content %}
+    <header class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Create project</h1>
+            <p class="page-header-description">
+                Connect a PostgreSQL database to your project.
+            </p>
+        </div>
+    </header>
 
-        <button type="submit">Test and save</button>
-    </form>
-</body>
-</html>
+    <div class="wizard">
+        <div class="wizard-steps" aria-label="Project creation progress">
+            <div class="wizard-step wizard-step-complete">
+                <div class="wizard-step-indicator">1</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Project info</span>
+                </div>
+            </div>
+
+            <div class="wizard-step wizard-step-active">
+                <div class="wizard-step-indicator">2</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data source</span>
+                </div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator">3</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Data selection</span>
+                </div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator">4</div>
+                <div class="wizard-step-content">
+                    <span class="wizard-step-title">Confirmation</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="card wizard-card">
+            <div class="section-header">
+                <div class="section-header-content">
+                    <h2 class="section-header-title">Data source</h2>
+                    <p class="section-header-description">
+                        Enter the connection details for your PostgreSQL database.
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" class="wizard-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label for="{{ form.host.id_for_label }}" class="form-label">
+                        Host
+                    </label>
+
+                    <input
+                        type="text"
+                        name="{{ form.host.html_name }}"
+                        id="{{ form.host.id_for_label }}"
+                        value="{{ form.host.value|default_if_none:'' }}"
+                        class="form-input"
+                        required
+                        {% if form.host.errors %}aria-invalid="true"{% endif %}
+                    >
+
+                    {% for error in form.host.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.port.id_for_label }}" class="form-label">
+                        Port
+                    </label>
+
+                    <input
+                        type="number"
+                        name="{{ form.port.html_name }}"
+                        id="{{ form.port.id_for_label }}"
+                        value="{{ form.port.value|default_if_none:'5432' }}"
+                        min="1"
+                        max="65535"
+                        class="form-input"
+                        required
+                        {% if form.port.errors %}aria-invalid="true"{% endif %}
+                    >
+
+                    {% for error in form.port.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.database.id_for_label }}" class="form-label">
+                        Database
+                    </label>
+
+                    <input
+                        type="text"
+                        name="{{ form.database.html_name }}"
+                        id="{{ form.database.id_for_label }}"
+                        value="{{ form.database.value|default_if_none:'' }}"
+                        class="form-input"
+                        required
+                        {% if form.database.errors %}aria-invalid="true"{% endif %}
+                    >
+
+                    {% for error in form.database.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        name="{{ form.username.html_name }}"
+                        id="{{ form.username.id_for_label }}"
+                        value="{{ form.username.value|default_if_none:'' }}"
+                        class="form-input"
+                        required
+                        {% if form.username.errors %}aria-invalid="true"{% endif %}
+                    >
+
+                    {% for error in form.username.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="{{ form.password.html_name }}"
+                        id="{{ form.password.id_for_label }}"
+                        class="form-input"
+                        required
+                        {% if form.password.errors %}aria-invalid="true"{% endif %}
+                    >
+
+                    {% for error in form.password.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="wizard-actions">
+                    <a href="{% url 'project-setup-info' project.id %}" class="btn btn-secondary">
+                        Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        Test and continue
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}
