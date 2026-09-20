@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -23,6 +25,8 @@ from .scope_service import (
     InvalidCatalogScopeSelectionError,
 )
 from .services import CatalogService
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -273,6 +277,10 @@ def catalog_build(request, project_id):
             project_id=project.id,
         )
     except Exception:
+        logger.exception(
+            "Unexpected catalog build failure for project %s.",
+            project.id,
+        )
         messages.error(
             request,
             "Unable to build the catalog.",
@@ -319,6 +327,15 @@ def catalog_regenerate(request, project_id):
         return redirect(
             "catalog-detail",
             project_id=project.id,
+        )
+    except Exception:
+        logger.exception(
+            "Unexpected catalog regeneration failure for project %s.",
+            project.id,
+        )
+        messages.error(
+            request,
+            "Unable to regenerate the catalog.",
         )
 
     return redirect(

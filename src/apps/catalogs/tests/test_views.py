@@ -14,6 +14,8 @@ from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from catalog.types import (
     KnowledgeCatalog as DomainKnowledgeCatalog,
+)
+from catalog.types import (
     SemanticMetadata,
     TableMetadata,
 )
@@ -1260,3 +1262,31 @@ class CatalogRegenerateViewTests(TestCase):
         )
 
         catalog_service_class.return_value.build_for_project.assert_not_called()
+
+    def test_regenerate_catalog_displays_generic_error_on_unexpected_failure(
+        self,
+        catalog_service_class,
+    ):
+        catalog_service_class.return_value.build_for_project.side_effect = RuntimeError(
+            "database connection details"
+        )
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(response["Location"])
+
+        self.assertContains(
+            response,
+            "Unable to regenerate the catalog.",
+        )
+        self.assertNotContains(
+            response,
+            "database connection details",
+        )

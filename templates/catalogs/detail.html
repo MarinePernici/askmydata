@@ -16,6 +16,13 @@
             </p>
         </div>
     </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-error">
+                <p>{{ message }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
 
     <div class="catalog-status-row">
         <div class="catalog-status">
