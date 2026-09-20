@@ -1,8 +1,9 @@
 import os
 import unittest
-import psycopg
-import environ
 from unittest.mock import patch
+
+import environ
+import psycopg
 
 from connectors.postgresql import PostgreSQLConnectionConfig
 from query_engine.exceptions import (
@@ -10,7 +11,6 @@ from query_engine.exceptions import (
     QueryTimeoutError,
 )
 from query_engine.postgresql_executor import PostgreSQLQueryExecutor
-
 
 ROOT_DIR = environ.Path(__file__) - 4
 environ.Env.read_env(ROOT_DIR(".env"))
@@ -128,9 +128,8 @@ class PostgreSQLQueryExecutorTests(unittest.TestCase):
             side_effect=psycopg.errors.InsufficientPrivilege(
                 "permission denied for table customers"
             ),
-        ):
-            with self.assertRaises(DataSourcePermissionError):
-                executor.execute("SELECT * FROM sales.customers")
+        ), self.assertRaises(DataSourcePermissionError):
+            executor.execute("SELECT * FROM sales.customers")
 
     def test_translates_query_timeout_error(self):
         executor = PostgreSQLQueryExecutor(self.config)
@@ -140,9 +139,22 @@ class PostgreSQLQueryExecutorTests(unittest.TestCase):
             side_effect=psycopg.errors.QueryCanceled(
                 "canceling statement due to statement timeout"
             ),
-        ):
-            with self.assertRaises(QueryTimeoutError):
-                executor.execute("SELECT * FROM sales.customers")
+        ), self.assertRaises(QueryTimeoutError):
+            executor.execute("SELECT * FROM sales.customers")
+
+    def test_translates_real_permission_error(self):
+        noselect_config = PostgreSQLConnectionConfig(
+            host=self.config.host,
+            port=self.config.port,
+            database=self.config.database,
+            user=os.environ["TEST_NOSELECT_DB_USER"],
+            password=os.environ["TEST_NOSELECT_DB_PASSWORD"],
+        )
+
+        executor = PostgreSQLQueryExecutor(noselect_config)
+
+        with self.assertRaises(DataSourcePermissionError):
+            executor.execute("SELECT * FROM sales.customers")
 
 
 if __name__ == "__main__":

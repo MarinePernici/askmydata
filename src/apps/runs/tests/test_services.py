@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 
 from apps.conversations.models import Conversation, Message
@@ -730,4 +732,33 @@ class QuestionRunServiceTests(TestCase):
         self.assertEqual(
             conversation.messages.count(),
             0,
+        )
+
+    @patch("apps.runs.services.logger")
+    def test_unexpected_run_failure_is_logged(self, logger):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FailingGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="Return one.",
+            )
+
+        question_run = QuestionRun.objects.get()
+
+        logger.exception.assert_called_once_with(
+            "Unexpected failure while processing question run %s.",
+            question_run.id,
         )
