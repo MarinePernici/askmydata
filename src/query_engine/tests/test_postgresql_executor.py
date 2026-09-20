@@ -123,23 +123,29 @@ class PostgreSQLQueryExecutorTests(unittest.TestCase):
     def test_translates_permission_error(self):
         executor = PostgreSQLQueryExecutor(self.config)
 
-        with patch(
-            "query_engine.postgresql_executor.psycopg.connect",
-            side_effect=psycopg.errors.InsufficientPrivilege(
-                "permission denied for table customers"
+        with (
+            patch(
+                "query_engine.postgresql_executor.psycopg.connect",
+                side_effect=psycopg.errors.InsufficientPrivilege(
+                    "permission denied for table customers"
+                ),
             ),
-        ), self.assertRaises(DataSourcePermissionError):
+            self.assertRaises(DataSourcePermissionError),
+        ):
             executor.execute("SELECT * FROM sales.customers")
 
     def test_translates_query_timeout_error(self):
         executor = PostgreSQLQueryExecutor(self.config)
 
-        with patch(
-            "query_engine.postgresql_executor.psycopg.connect",
-            side_effect=psycopg.errors.QueryCanceled(
-                "canceling statement due to statement timeout"
+        with (
+            patch(
+                "query_engine.postgresql_executor.psycopg.connect",
+                side_effect=psycopg.errors.QueryCanceled(
+                    "canceling statement due to statement timeout"
+                ),
             ),
-        ), self.assertRaises(QueryTimeoutError):
+            self.assertRaises(QueryTimeoutError),
+        ):
             executor.execute("SELECT * FROM sales.customers")
 
     def test_translates_real_permission_error(self):
