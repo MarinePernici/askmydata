@@ -23,7 +23,7 @@ class FakeGenerator:
 
 
 class FakeValidator:
-    def validate(self, sql):
+    def validate(self, sql, catalog=None):
         return SQLValidationResult(
             is_valid=True,
             error=None,
@@ -65,8 +65,20 @@ class RecordingExecutor:
         )
 
 
+class RecordingValidator:
+    def __init__(self):
+        self.catalog = None
+
+    def validate(self, sql, catalog=None):
+        self.catalog = catalog
+        return SQLValidationResult(
+            is_valid=True,
+            error=None,
+        )
+
+
 class RejectingValidator:
-    def validate(self, sql):
+    def validate(self, sql, catalog=None):
         return SQLValidationResult(
             is_valid=False,
             error="Only SELECT queries are allowed.",
@@ -397,6 +409,25 @@ class QueryOrchestratorTests(unittest.TestCase):
             tracer.events[0]["status"],
             "completed",
         )
+
+    def test_catalog_is_forwarded_to_sql_validator(self):
+        validator = RecordingValidator()
+        catalog = KnowledgeCatalog(tables=())
+
+        orchestrator = QueryOrchestrator(
+            generator=FakeGenerator(),
+            validator=validator,
+            executor=FakeExecutor(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+        )
+
+        orchestrator.run(
+            question="Return one.",
+            catalog=catalog,
+        )
+
+        self.assertIs(validator.catalog, catalog)
 
 
 if __name__ == "__main__":

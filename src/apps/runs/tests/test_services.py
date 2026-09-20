@@ -31,7 +31,7 @@ class FakeGenerator:
 
 
 class FakeValidator:
-    def validate(self, sql):
+    def validate(self, sql, catalog=None):
         return SQLValidationResult(is_valid=True)
 
 

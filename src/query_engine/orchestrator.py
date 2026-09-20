@@ -11,7 +11,6 @@ from query_engine.types import (
     QueryRunResult,
 )
 
-
 T = TypeVar("T")
 
 
@@ -54,7 +53,10 @@ class QueryOrchestrator:
 
         validation_result = self._run_traced_step(
             step="sql_validation",
-            operation=lambda: self._validator.validate(generation_result.sql),
+            operation=lambda: self._validator.validate(
+                generation_result.sql,
+                catalog=catalog,
+            ),
         )
 
         if not validation_result.is_valid:

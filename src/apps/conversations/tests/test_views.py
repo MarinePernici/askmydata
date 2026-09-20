@@ -4,12 +4,12 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.data_sources.models import DataSource
-from apps.runs.models import QuestionRun
-from apps.runs.services import QuestionRunService
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
+from apps.data_sources.models import DataSource
 from apps.projects.models import Project
+from apps.runs.models import QuestionRun
+from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import (
     DataSourcePermissionError,
@@ -33,7 +33,7 @@ class HTTPFakeGenerator:
 
 
 class HTTPFakeValidator:
-    def validate(self, sql):
+    def validate(self, sql, catalog=None):
         return SQLValidationResult(is_valid=True)
 
 
