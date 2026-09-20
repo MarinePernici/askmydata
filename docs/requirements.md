@@ -503,6 +503,24 @@ These attributes will be progressively completed during the implementation phase
 
 # 9. Traceability Matrix
 
-| Requirement | Use Case | Tests | ADR | Status |
-|-------------|----------|-------|-----|--------|
-| To be completed during implementation. |
+| Requirement | Use Case | Verification | ADR | Status |
+|-------------|----------|--------------|-----|--------|
+| FR-AUTH-001–002 | UC-01 | Authentication tests | ADR-0001 | Implemented |
+| FR-PROJ-001–003 | UC-02, UC-09, UC-10 | Project service and view tests | ADR-0001 | Implemented |
+| FR-DATA-001–006 | UC-02, UC-12 | Data source, PostgreSQL connector and schema tests | ADR-0002 | Implemented |
+| FR-KCAT-001–004 | UC-02, UC-03, UC-08 | Catalog service and view tests | ADR-0003 | Implemented |
+| FR-AI-001–008 | UC-04, UC-05 | Query engine and pipeline integration tests | ADR-0003, ADR-0004 | Implemented |
+| FR-CONV-001–003 | UC-04, UC-06, UC-07 | Conversation and question-run tests | ADR-0001 | Implemented |
+| FR-ADMIN-001 | UC-11 | — | — | Production-ready scope |
+| NFR-SEC-001–006 | UC-02, UC-04, UC-10 | Security, connector, SQL validation and pipeline tests | ADR-0002, ADR-0004 | Implemented |
+| NFR-REL-001–004 | UC-04, UC-05, UC-08 | Failure-handling and execution-trace tests | ADR-0001, ADR-0004 | Implemented |
+| NFR-PERF-001–002 | UC-04 | Query executor and integration tests | ADR-0004 | Implemented |
+| NFR-USA-001 | UC-01–UC-12 | Responsive UI verification | — | Implemented |
+| NFR-MAIN-001–002 | UC-01–UC-12 | Architecture review and automated tests | ADR-0001 | Implemented |
+| ENG-001 | — | Ruff formatting verification | — | Implemented |
+| ENG-002–003 | — | — | — | Production-ready scope |
+| ENG-004–005 | — | Automated and pipeline integration test suites | — | Implemented |
+| ENG-006 | — | Docker Compose validation | — | Implemented |
+| ENG-007–010 | — | — | — | Production-ready scope |
+| ENG-011 | — | ADR review | ADR-0001–ADR-0004 | Implemented |
+| ENG-012 | — | Documentation-to-implementation audit | ADR-0001–ADR-0004 | Implemented |
