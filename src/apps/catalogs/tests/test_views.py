@@ -381,10 +381,10 @@ class CatalogScopeViewTests(TestCase):
             "checked",
         )
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_user_can_build_catalog_for_own_project(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -414,14 +414,14 @@ class CatalogScopeViewTests(TestCase):
             ),
         )
 
-        catalog_service_class.return_value.build_for_project.assert_called_once_with(
+        create_catalog_service_mock.return_value.build_for_project.assert_called_once_with(
             project
         )
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_archived_project_cannot_build_catalog(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine-archived-catalog-build",
@@ -451,12 +451,12 @@ class CatalogScopeViewTests(TestCase):
             fetch_redirect_response=False,
         )
 
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_ready_project_cannot_build_catalog(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine-ready-catalog-build",
@@ -486,12 +486,12 @@ class CatalogScopeViewTests(TestCase):
             fetch_redirect_response=False,
         )
 
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_user_cannot_build_catalog_for_another_users_project(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -516,12 +516,12 @@ class CatalogScopeViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_catalog_build_rejects_get(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -542,12 +542,12 @@ class CatalogScopeViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_catalog_build_displays_error_when_scope_is_not_configured(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -558,7 +558,7 @@ class CatalogScopeViewTests(TestCase):
             name="My project",
         )
 
-        catalog_service_class.return_value.build_for_project.side_effect = (
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
             CatalogScopeNotConfiguredError("Project has no catalog scope.")
         )
 
@@ -580,10 +580,10 @@ class CatalogScopeViewTests(TestCase):
             "Project has no catalog scope.",
         )
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_catalog_build_displays_error_when_data_source_is_not_configured(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -594,7 +594,7 @@ class CatalogScopeViewTests(TestCase):
             name="My project",
         )
 
-        catalog_service_class.return_value.build_for_project.side_effect = (
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
             DataSourceNotConfiguredError("Project has no data source.")
         )
 
@@ -616,10 +616,10 @@ class CatalogScopeViewTests(TestCase):
             "Project has no data source.",
         )
 
-    @patch("apps.catalogs.views.CatalogService")
+    @patch("apps.catalogs.views.create_catalog_service")
     def test_catalog_build_displays_generic_error_on_unexpected_failure(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -630,8 +630,8 @@ class CatalogScopeViewTests(TestCase):
             name="My project",
         )
 
-        catalog_service_class.return_value.build_for_project.side_effect = RuntimeError(
-            "database connection details"
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
+            RuntimeError("database connection details")
         )
 
         self.client.force_login(user)
@@ -1142,7 +1142,7 @@ class CatalogDetailViewTests(TestCase):
         self.assertContains(response, "disabled")
 
 
-@patch("apps.catalogs.views.CatalogService")
+@patch("apps.catalogs.views.create_catalog_service")
 class CatalogRegenerateViewTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -1158,7 +1158,7 @@ class CatalogRegenerateViewTests(TestCase):
 
     def test_regenerate_catalog_calls_service_and_redirects_to_catalog(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         response = self.client.post(
             reverse(
@@ -1175,13 +1175,13 @@ class CatalogRegenerateViewTests(TestCase):
             ),
         )
 
-        catalog_service_class.return_value.build_for_project.assert_called_once_with(
+        create_catalog_service_mock.return_value.build_for_project.assert_called_once_with(
             self.project
         )
 
     def test_regenerate_catalog_rejects_get(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         response = self.client.get(
             reverse(
@@ -1191,11 +1191,11 @@ class CatalogRegenerateViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
     def test_regenerate_catalog_returns_404_for_another_users_project(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         other_user = get_user_model().objects.create_user(
             username="other-catalog-user",
@@ -1214,13 +1214,13 @@ class CatalogRegenerateViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
     def test_regenerate_catalog_redirects_to_catalog_when_configuration_is_missing(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
-        catalog_service_class.return_value.build_for_project.side_effect = (
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
             DataSourceNotConfiguredError("Data source is not configured.")
         )
 
@@ -1241,7 +1241,7 @@ class CatalogRegenerateViewTests(TestCase):
 
     def test_archived_project_cannot_regenerate_catalog(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
         self.project.status = Project.Status.ARCHIVED
         self.project.save(update_fields=["status"])
@@ -1261,14 +1261,14 @@ class CatalogRegenerateViewTests(TestCase):
             ),
         )
 
-        catalog_service_class.return_value.build_for_project.assert_not_called()
+        create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
     def test_regenerate_catalog_displays_generic_error_on_unexpected_failure(
         self,
-        catalog_service_class,
+        create_catalog_service_mock,
     ):
-        catalog_service_class.return_value.build_for_project.side_effect = RuntimeError(
-            "database connection details"
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
+            RuntimeError("database connection details")
         )
 
         response = self.client.post(

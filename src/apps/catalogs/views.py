@@ -12,6 +12,7 @@ from apps.projects.exceptions import (
 )
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
+from config.services import create_catalog_service
 
 from .exceptions import (
     CatalogNotReadyError,
@@ -24,7 +25,6 @@ from .scope_service import (
     CatalogScopeService,
     InvalidCatalogScopeSelectionError,
 )
-from .services import CatalogService
 
 logger = logging.getLogger(__name__)
 
@@ -265,7 +265,7 @@ def catalog_build(request, project_id):
         )
 
     try:
-        CatalogService().build_for_project(project)
+        create_catalog_service().build_for_project(project)
     except (
         CatalogScopeNotConfiguredError,
         DataSourceNotConfiguredError,
@@ -319,7 +319,7 @@ def catalog_regenerate(request, project_id):
         )
 
     try:
-        CatalogService().build_for_project(project)
+        create_catalog_service().build_for_project(project)
     except (
         DataSourceNotConfiguredError,
         CatalogScopeNotConfiguredError,
