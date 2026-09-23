@@ -11,6 +11,7 @@ from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
+from query_engine.exceptions import SQLValidationError
 from query_engine.types import (
     AnswerGenerationResult,
     ClarificationResult,
@@ -33,6 +34,14 @@ class FakeGenerator:
 class FakeValidator:
     def validate(self, sql, catalog=None):
         return SQLValidationResult(is_valid=True)
+
+
+class FailingValidator:
+    def validate(self, sql, catalog=None):
+        return SQLValidationResult(
+            is_valid=False,
+            error="SQL query references a table outside the catalog scope.",
+        )
 
 
 class FakeExecutor:
@@ -467,6 +476,67 @@ class QuestionRunServiceTests(TestCase):
         )
         self.assertIsNone(
             question_run.assistant_message,
+        )
+
+    def test_sql_validation_failure_creates_safe_assistant_message(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FailingValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(SQLValidationError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="What is the total amount of all payments?",
+            )
+
+        messages = list(conversation.messages.order_by("sequence_number"))
+
+        self.assertEqual(len(messages), 2)
+
+        self.assertEqual(messages[0].role, Message.Role.USER)
+        self.assertEqual(
+            messages[0].content,
+            "What is the total amount of all payments?",
+        )
+
+        self.assertEqual(messages[1].role, Message.Role.ASSISTANT)
+        self.assertEqual(
+            messages[1].content,
+            "I can't answer this question with the data available "
+            "in this project.",
+        )
+        self.assertNotIn(
+            "outside the catalog scope",
+            messages[1].content,
+        )
+
+        question_run = QuestionRun.objects.get()
+
+        self.assertEqual(
+            question_run.status,
+            QuestionRun.Status.FAILED,
+        )
+        self.assertEqual(
+            question_run.error_code,
+            "SQLValidationError",
+        )
+        self.assertEqual(
+            question_run.error_message,
+            "SQL query references a table outside the catalog scope.",
+        )
+        self.assertEqual(
+            question_run.assistant_message,
+            messages[1],
         )
 
     def test_run_appends_messages_after_highest_sequence_number(self):

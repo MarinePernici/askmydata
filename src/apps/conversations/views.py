@@ -10,6 +10,7 @@ from config.services import create_question_run_service
 from query_engine.exceptions import (
     DataSourcePermissionError,
     QueryTimeoutError,
+    SQLValidationError,
 )
 
 from .models import Conversation
@@ -230,6 +231,8 @@ def conversation_ask(
             request,
             "The query took too long to execute. Try a more specific question.",
         )
+    except SQLValidationError:
+        pass
     except Exception:
         messages.error(
             request,

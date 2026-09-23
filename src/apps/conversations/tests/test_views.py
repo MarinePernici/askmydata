@@ -14,6 +14,7 @@ from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import (
     DataSourcePermissionError,
     QueryTimeoutError,
+    SQLValidationError,
 )
 from query_engine.types import (
     AnswerGenerationResult,
@@ -1110,6 +1111,56 @@ class ConversationViewTests(TestCase):
         self.assertNotContains(
             response,
             "canceling statement due to statement timeout",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_sql_validation_error_redirects_without_flash_message(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-sql-validation-error",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = SQLValidationError(
+            "SQL query references a table outside the catalog scope."
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "What is the total amount of all payments?"},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            "SQL query references a table outside the catalog scope.",
+        )
+        self.assertNotContains(
+            response,
+            "I can't answer this question with the data available in this project.",
         )
 
     @patch("apps.conversations.views.create_question_run_service")

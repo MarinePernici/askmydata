@@ -666,9 +666,23 @@ workflow: an out-of-scope table reference was rejected before query execution.
 The scenario therefore passes for the behavior it is intended to validate:
 Catalog Scope enforcement.
 
-However, the failed pipeline did not provide any user-facing feedback. This is
-a separate error-handling defect tracked as BENCH-BUG-005 and does not change
-the successful Catalog Scope enforcement result.
+A user-facing error-handling defect was initially observed: the failed pipeline
+did not provide persistent feedback explaining why the question could not be
+answered. This defect was tracked as BENCH-BUG-005.
+
+After the fix, the scenario was rerun against the real application. When the
+generated SQL referenced `public.payment`, SQL validation again rejected the
+query before execution. AskMyData then displayed the following persistent
+assistant message:
+
+> I can't answer this question with the data available in this project.
+
+The message remained part of the conversation after a page reload, while the
+QuestionRun remained failed and the technical validation error was not exposed
+to the user.
+
+BENCH-BUG-005 is therefore resolved. Catalog Scope enforcement remains
+successful.
 
 ### 4.5 Unsupported and Semantically Unavailable Questions
 
@@ -938,17 +952,14 @@ through execution trace metadata.
 
 **Related requirements:** NFR-REL-001, NFR-REL-003
 
-**Observation**
+**Initial observation**
 
-When a generated SQL query references a table outside the project's Catalog
-Scope, the SQL validator correctly rejects the query and the QuestionRun is
+When a generated SQL query referenced a table outside the project's Catalog
+Scope, the SQL validator correctly rejected the query and the QuestionRun was
 marked as failed.
 
-In the user interface, the thinking indicator stops but no assistant message
-or error message is displayed.
-
-The user therefore receives no indication of why the question could not be
-answered.
+However, the user interface initially provided no persistent assistant response
+explaining why the question could not be answered.
 
 **Expected behavior**
 
@@ -956,13 +967,39 @@ A failed query pipeline should terminate gracefully and provide a safe,
 informative user-facing message without exposing technical implementation
 details.
 
-For example:
+The rejected SQL must remain unexecuted.
+
+**Resolution**
+
+SQL validation failures are now handled as controlled query failures.
+
+When a `SQLValidationError` occurs:
+
+- the QuestionRun remains `FAILED`;
+- the technical error code and message remain recorded on the QuestionRun;
+- the rejected SQL is not executed;
+- the technical validation detail is not exposed to the user;
+- AskMyData creates a persistent assistant message:
 
 > I can't answer this question with the data available in this project.
 
-The rejected SQL must remain unexecuted.
+Unexpected pipeline failures retain their existing behavior and are not
+converted into this controlled response.
 
-**Status:** Confirmed
+**Validation**
+
+The fix was validated with:
+
+- dedicated QuestionRun service coverage;
+- conversation view coverage;
+- the full Docker test suite (371 tests passing);
+- a manual rerun of BENCH-QA-011 against the limited-scope Pagila project.
+
+During the manual rerun, an out-of-scope generated query was rejected by SQL
+validation and the safe AskMyData response was displayed in the conversation.
+The response remained visible after reloading the page.
+
+**Status:** Resolved
 
 #### BENCH-BUG-006 — Unsupported business metric is silently substituted
 

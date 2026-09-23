@@ -7,6 +7,7 @@ from apps.projects.models import Project
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
+from query_engine.exceptions import SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import ClarificationResult, QueryRunResult
 
@@ -114,6 +115,33 @@ class QuestionRunService:
                 )
 
                 return result
+
+        except SQLValidationError as exc:
+            assistant_message = self._conversation_service.add_message(
+                conversation=conversation,
+                role=Message.Role.ASSISTANT,
+                content=(
+                    "I can't answer this question with the data available "
+                    "in this project."
+                ),
+            )
+
+            question_run.assistant_message = assistant_message
+            question_run.status = QuestionRun.Status.FAILED
+            question_run.completed_at = timezone.now()
+            question_run.error_code = exc.__class__.__name__
+            question_run.error_message = str(exc)
+            question_run.save(
+                update_fields=[
+                    "assistant_message",
+                    "status",
+                    "completed_at",
+                    "error_code",
+                    "error_message",
+                ]
+            )
+
+            raise
 
         except Exception as exc:
             question_run.status = QuestionRun.Status.FAILED
