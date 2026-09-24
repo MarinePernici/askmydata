@@ -360,23 +360,63 @@ Not applicable.
 > 9. customer_id 236 — MARCIA DEAN — total_spent 175.58 — payment_count 42 — last_payment_date 2022-07-23 16:27:34.362035 (Europe/Paris)
 > 10. customer_id 181 — ANA BRADLEY — total_spent 174.66 — payment_count 34 — last_payment_date 2022-07-26 21:51:28.229227 (Europe/Paris)
 
-**Outcome**
+**Initial outcome**
 
 Fail.
 
-**Observations**
+**Initial observations**
 
 AskMyData did not request clarification for the ambiguous term "best".
 
-Instead, it implicitly interpreted "best customers" as the customers with the
-highest total spending and executed a query using that criterion.
+Instead, it implicitly interpreted "best" as highest total spending and returned
+the top 10 customers ranked by `total_spent`.
 
-The question does not provide enough information to determine whether "best"
-means highest total spending, highest number of rentals, or another business
-criterion.
+This interpretation was plausible, but it was selected without user
+confirmation even though other reasonable interpretations exist, such as
+highest number of rentals or another business criterion.
 
 The expected FR-AI-008 / UC-05 behavior is to request clarification before
 executing the query.
+
+**Retest after fix**
+
+The scenario was rerun in a new conversation.
+
+For the original question:
+
+> Which customers are the best?
+
+AskMyData responded:
+
+> By “best” do you mean customers with the highest total payments (most
+> spending), the most rentals (most frequent renters), or the most recent
+> activity? And how many top customers should I return?
+
+No arbitrary business criterion was selected.
+
+The user then answered:
+
+> Highest total payments, top 5
+
+AskMyData returned:
+
+> Top 5 customers by total payments:
+>
+> 1. customer_id 526 — KARL SEAL — KARL.SEAL@sakilacustomer.org — total_payments: 221.55
+> 2. customer_id 148 — ELEANOR HUNT — ELEANOR.HUNT@sakilacustomer.org — total_payments: 216.54
+> 3. customer_id 144 — CLARA SHAW — CLARA.SHAW@sakilacustomer.org — total_payments: 195.58
+> 4. customer_id 137 — RHONDA KENNEDY — RHONDA.KENNEDY@sakilacustomer.org — total_payments: 194.61
+> 5. customer_id 178 — MARION SNYDER — MARION.SNYDER@sakilacustomer.org — total_payments: 194.61
+
+The ranking and all five payment totals exactly matched the PostgreSQL reference
+result.
+
+The clarification response also preserved the plural intent of the original
+question instead of silently reducing the result to a single customer.
+
+**Outcome after fix**
+
+Pass.
 
 ### BENCH-QA-007 — Conversation context
 
@@ -859,7 +899,7 @@ Semantic metadata was successfully generated and persisted.
 
 **Related requirements:** FR-AI-008, UC-05
 
-**Observation**
+**Initial observation**
 
 When asked:
 
@@ -874,10 +914,45 @@ When a question contains an ambiguous business criterion that cannot be
 resolved from the Knowledge Catalog or conversation context, AskMyData should
 request clarification before generating and executing SQL.
 
-For this question, the application should ask the user to define what "best"
-means, for example highest total spending or highest number of rentals.
+The application should not invent a business interpretation when different
+reasonable interpretations would materially change the query.
 
-**Status:** Confirmed
+Explicit constraints from the question and conversation history, including
+singular/plural intent, requested counts, filters, date ranges, and ordering,
+should also be preserved.
+
+**Resolution**
+
+The SQL generation prompt now explicitly instructs the model to:
+
+- request clarification when different reasonable interpretations would
+  materially change the query;
+- avoid clarification when the intended query can be determined
+  unambiguously from the available context;
+- preserve explicit constraints from the question and conversation history;
+- return multiple ranked results when the user requests plural results without
+  silently reducing the request to a single result.
+
+The SQL generation prompt now explicitly describes the two supported response
+paths: either a SQL generation result or a clarification request.
+
+**Validation**
+
+The SQLGenerator test suite contains dedicated coverage for the clarification
+instructions and preservation of question constraints.
+
+The real Pagila scenario was rerun in a new conversation. AskMyData requested
+clarification for both the meaning of "best" and the desired number of
+customers.
+
+After the user answered:
+
+> Highest total payments, top 5
+
+AskMyData returned five customers ranked by total payments. The ranking and all
+five totals exactly matched the PostgreSQL reference result.
+
+**Status:** Resolved
 
 #### BENCH-BUG-003 — Follow-up query returns duplicated aggregate values
 

@@ -52,13 +52,29 @@ class SQLGenerator:
                     "- Generate read-only SQL only.\n"
                     "- Do not generate INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, "
                     "TRUNCATE, or other data-modifying statements.\n"
-                    "- Return exactly one SQL query.\n"
-                    "- Use schema-qualified table names.\n\n"
+                    "- Use schema-qualified table names.\n"
+                    "- If the question is ambiguous and different reasonable interpretations "
+                    "would materially change the query, do not choose an interpretation "
+                    "yourself.\n"
+                    "- Ask one concise clarification question instead.\n"
+                    "- Do not ask for clarification when the intended query can be determined "
+                    "unambiguously from the question, catalog, and conversation history.\n"
+                    "- Preserve explicit constraints from the user's question and conversation "
+                    "history, including singular/plural intent, requested counts, filters, "
+                    "date ranges, and ordering.\n"
+                    "- When the user asks for multiple ranked results without specifying a "
+                    "count, choose a reasonable result limit rather than returning only one "
+                    "result.\n\n"
                     f"Catalog:\n{catalog_context}\n\n"
                     f"Conversation history:\n{history_context}\n\n"
-                    "Return a JSON object with exactly these fields:\n"
+                    "Return exactly one JSON object.\n\n"
+                    "If the question can be answered unambiguously, return exactly "
+                    "these fields:\n"
                     '- "sql": the PostgreSQL query\n'
-                    '- "explanation": a short explanation of the query'
+                    '- "explanation": a short explanation of the query\n\n'
+                    "If clarification is required, return exactly this field:\n"
+                    '- "clarification": one concise question asking for the missing '
+                    "information"
                 ),
             ),
             LLMMessage(

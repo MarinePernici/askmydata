@@ -279,3 +279,47 @@ class SQLGeneratorTests(unittest.TestCase):
                 question="How many recent orders are there?",
                 catalog=KnowledgeCatalog(tables=()),
             )
+
+    def test_generate_instructs_model_to_clarify_ambiguous_questions(self):
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        generator.generate(
+            question="Which customers are the best?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        system_message = provider.messages[0]
+
+        self.assertIn(
+            "different reasonable interpretations",
+            system_message.content,
+        )
+        self.assertIn(
+            '"clarification"',
+            system_message.content,
+        )
+
+    def test_generate_instructs_model_to_preserve_question_constraints(self):
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        generator.generate(
+            question="Which customers have the highest total payments?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        system_message = provider.messages[0]
+
+        self.assertIn(
+            "Preserve explicit constraints",
+            system_message.content,
+        )
+        self.assertIn(
+            "singular/plural intent",
+            system_message.content,
+        )
+        self.assertIn(
+            "multiple ranked results",
+            system_message.content,
+        )
