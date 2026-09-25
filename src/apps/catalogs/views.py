@@ -118,7 +118,7 @@ def catalog_scope(request, project_id):
         )
 
     try:
-        project.data_source
+        _ = project.data_source
     except DataSource.DoesNotExist:
         return render(
             request,

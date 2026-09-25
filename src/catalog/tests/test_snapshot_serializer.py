@@ -1,7 +1,7 @@
 import unittest
 
 from catalog.snapshot_serializer import CatalogSnapshotSerializer
-from catalog.types import KnowledgeCatalog, TableMetadata, SemanticMetadata
+from catalog.types import KnowledgeCatalog, SemanticMetadata, TableMetadata
 from connectors.types import ColumnMetadata, RelationshipMetadata
 
 

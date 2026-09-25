@@ -1,5 +1,5 @@
-from django.test import SimpleTestCase
 from cryptography.fernet import Fernet
+from django.test import SimpleTestCase
 
 from apps.data_sources.encryption import CredentialCipher
 

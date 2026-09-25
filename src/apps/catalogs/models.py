@@ -2,11 +2,13 @@ import uuid
 
 from django.db import models
 
+from apps.projects.models import Project
 from catalog.types import (
     CatalogScope as DomainCatalogScope,
+)
+from catalog.types import (
     CatalogTableSelection,
 )
-from apps.projects.models import Project
 
 
 class CatalogScope(models.Model):
@@ -110,7 +112,7 @@ class SchemaSnapshot(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = [  # noqa: RUF012
             models.UniqueConstraint(
                 fields=["catalog", "version"],
                 name="unique_catalog_snapshot_version",

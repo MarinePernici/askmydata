@@ -113,12 +113,12 @@ class ProjectService:
             )
 
         try:
-            project.data_source
+            _ = project.data_source
         except ObjectDoesNotExist:
             return "data-source-configure"
 
         try:
-            project.catalog_scope
+            _ = project.catalog_scope
         except ObjectDoesNotExist:
             return "catalog-scope"
 

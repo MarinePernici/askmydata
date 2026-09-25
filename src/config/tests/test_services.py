@@ -2,13 +2,11 @@ from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase, override_settings
 
-from apps.catalogs.readers import CatalogReader
 from config.services import (
     create_catalog_service,
     create_llm_provider,
     create_question_run_service,
 )
-from apps.conversations.services import ConversationService
 from query_engine.postgresql_executor import PostgreSQLQueryExecutor
 
 

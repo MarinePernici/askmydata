@@ -1,6 +1,6 @@
 import unittest
 
-from query_engine.tracer import QueryTracer, NullQueryTracer
+from query_engine.tracer import NullQueryTracer, QueryTracer
 
 
 class QueryTracerTests(unittest.TestCase):

@@ -1,6 +1,8 @@
 from apps.catalogs.exceptions import CatalogNotReadyError
 from apps.catalogs.models import (
     KnowledgeCatalog as KnowledgeCatalogModel,
+)
+from apps.catalogs.models import (
     SchemaSnapshot,
 )
 from apps.projects.models import Project

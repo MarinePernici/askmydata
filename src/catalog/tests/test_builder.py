@@ -1,6 +1,7 @@
-import environ
 import os
 import unittest
+
+import environ
 
 from catalog.builder import CatalogBuilder
 from catalog.types import (
@@ -15,7 +16,6 @@ from connectors.postgresql import (
     PostgreSQLConnector,
 )
 from connectors.types import ColumnMetadata, RelationshipMetadata
-
 
 ROOT_DIR = environ.Path(__file__) - 4
 environ.Env.read_env(ROOT_DIR(".env"))

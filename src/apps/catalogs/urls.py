@@ -4,10 +4,9 @@ from .views import (
     catalog_build,
     catalog_confirmation,
     catalog_detail,
-    catalog_scope,
     catalog_regenerate,
+    catalog_scope,
 )
-
 
 urlpatterns = [
     path(

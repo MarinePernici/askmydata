@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from apps.conversations.models import Conversation, Message
 from apps.projects.tests.factories import create_test_project
-from apps.runs.models import QuestionRun, ExecutionTrace
+from apps.runs.models import ExecutionTrace, QuestionRun
 
 
 class QuestionRunModelTests(TestCase):

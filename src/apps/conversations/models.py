@@ -76,7 +76,7 @@ class Message(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = [  # noqa: RUF012
             models.UniqueConstraint(
                 fields=[
                     "conversation",
@@ -85,6 +85,6 @@ class Message(models.Model):
                 name="unique_message_sequence_per_conversation",
             )
         ]
-        ordering = [
+        ordering = [  # noqa: RUF012
             "sequence_number",
         ]

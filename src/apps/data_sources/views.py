@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
 
-from apps.catalogs.models import CatalogScope
 from apps.catalogs.exceptions import CatalogNotReadyError
+from apps.catalogs.models import CatalogScope
 from apps.catalogs.readers import CatalogReader
 from apps.projects.exceptions import (
     ArchivedProjectError,

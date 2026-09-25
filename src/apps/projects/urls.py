@@ -11,7 +11,6 @@ from .views import (
     project_update,
 )
 
-
 urlpatterns = [
     path(
         "projects/",

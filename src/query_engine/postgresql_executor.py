@@ -30,25 +30,25 @@ class PostgreSQLQueryExecutor(QueryExecutor):
 
     def execute(self, sql: str) -> QueryExecutionResult:
         try:
-            with psycopg.connect(
-                host=self._config.host,
-                port=self._config.port,
-                dbname=self._config.database,
-                user=self._config.user,
-                password=self._config.password,
-            ) as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute("SET TRANSACTION READ ONLY")
-                    cursor.execute(
-                        "SELECT set_config('statement_timeout', %s, true)",
-                        (str(self._timeout_ms),),
-                    )
-                    cursor.execute(sql)
+            with (
+                psycopg.connect(
+                    host=self._config.host,
+                    port=self._config.port,
+                    dbname=self._config.database,
+                    user=self._config.user,
+                    password=self._config.password,
+                ) as connection,
+                connection.cursor() as cursor,
+            ):
+                cursor.execute("SET TRANSACTION READ ONLY")
+                cursor.execute(
+                    "SELECT set_config('statement_timeout', %s, true)",
+                    (str(self._timeout_ms),),
+                )
+                cursor.execute(sql)
 
-                    columns = tuple(
-                        description.name for description in cursor.description
-                    )
-                    rows = tuple(cursor.fetchmany(self._max_rows))
+                columns = tuple(description.name for description in cursor.description)
+                rows = tuple(cursor.fetchmany(self._max_rows))
 
         except psycopg.errors.InsufficientPrivilege as exc:
             raise DataSourcePermissionError(

@@ -3,11 +3,12 @@ from django.test import TestCase
 from apps.catalogs.exceptions import CatalogNotReadyError
 from apps.catalogs.models import (
     KnowledgeCatalog as KnowledgeCatalogModel,
+)
+from apps.catalogs.models import (
     SchemaSnapshot,
 )
 from apps.catalogs.readers import CatalogReader
 from apps.projects.tests.factories import create_test_project
-
 from catalog.snapshot_serializer import CatalogSnapshotSerializer
 from catalog.types import (
     KnowledgeCatalog,

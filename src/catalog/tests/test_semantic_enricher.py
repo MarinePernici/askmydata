@@ -2,7 +2,7 @@ import unittest
 
 from catalog.exceptions import SemanticEnrichmentError
 from catalog.semantic_enricher import SemanticEnricher
-from catalog.types import KnowledgeCatalog, TableMetadata, ColumnMetadata
+from catalog.types import ColumnMetadata, KnowledgeCatalog, TableMetadata
 from connectors.types import RelationshipMetadata
 from llm.types import LLMResponse
 

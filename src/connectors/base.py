@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from connectors.types import ColumnMetadata, RelationshipMetadata
 
 

@@ -7,7 +7,6 @@ from .views import (
     data_test_connection,
 )
 
-
 urlpatterns = [
     path(
         "projects/<uuid:project_id>/data/",

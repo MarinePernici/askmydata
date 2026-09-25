@@ -1,4 +1,5 @@
 from dataclasses import replace
+
 from django.test import TestCase
 
 from apps.catalogs.exceptions import (
@@ -11,7 +12,6 @@ from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.projects.tests.factories import create_test_project
-
 from catalog.exceptions import SemanticEnrichmentError
 from catalog.types import SemanticMetadata
 from connectors.types import ColumnMetadata

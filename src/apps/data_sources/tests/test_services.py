@@ -1,9 +1,9 @@
 from django.test import TestCase
 
+from apps.catalogs.models import KnowledgeCatalog, SchemaSnapshot
 from apps.data_sources.exceptions import DataSourceConnectionError
 from apps.data_sources.models import DataSource
 from apps.data_sources.services import DataSourceService
-from apps.catalogs.models import KnowledgeCatalog, SchemaSnapshot
 from apps.projects.models import Project
 from apps.projects.tests.factories import create_test_project
 
