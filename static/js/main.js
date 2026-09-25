@@ -280,3 +280,51 @@ if (
 
     updateTableSelectionControls();
 }
+
+const projectCreateForm = document.querySelector(
+    "[data-project-create-form]",
+);
+const projectCreateSubmit = document.querySelector(
+    "[data-project-create-submit]",
+);
+const projectCreationProgress = document.querySelector(
+    "[data-project-creation-progress]",
+);
+const projectCreateActions = document.querySelector(
+    "[data-project-create-actions]",
+);
+
+if (
+    projectCreateForm &&
+    projectCreateSubmit &&
+    projectCreateActions &&
+    projectCreationProgress
+) {
+    projectCreateForm.addEventListener("submit", () => {
+            projectCreateSubmit.disabled = true;
+            projectCreateActions.hidden = true;
+            projectCreationProgress.hidden = false;
+    });
+}
+
+const catalogRegenerateForm = document.querySelector(
+    "[data-catalog-regenerate-form]",
+);
+const catalogRegenerateSubmit = document.querySelector(
+    "[data-catalog-regenerate-submit]",
+);
+const catalogRegenerationProgress = document.querySelector(
+    "[data-catalog-regeneration-progress]",
+);
+
+if (
+    catalogRegenerateForm &&
+    catalogRegenerateSubmit &&
+    catalogRegenerationProgress
+) {
+    catalogRegenerateForm.addEventListener("submit", () => {
+        catalogRegenerateSubmit.disabled = true;
+        catalogRegenerateForm.hidden = true;
+        catalogRegenerationProgress.hidden = false;
+    });
+}

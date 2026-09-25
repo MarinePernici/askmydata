@@ -658,7 +658,16 @@ class CatalogScopeViewTests(TestCase):
 
 
 class CatalogConfirmationViewTests(TestCase):
-    def test_user_can_access_catalog_confirmation_for_own_project(self):
+    @patch(
+        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
+        return_value={
+            "sales": ["customers", "orders", "payments"],
+        },
+    )
+    def test_user_can_access_catalog_confirmation_for_own_project(
+        self,
+        discover_available_tables,
+    ):
         user = get_user_model().objects.create_user(
             username="marine",
             password="test-password",
@@ -700,6 +709,11 @@ class CatalogConfirmationViewTests(TestCase):
                 {"schema": "sales", "table": "orders"},
             ],
         )
+        self.assertEqual(
+            response.context["available_tables_count"],
+            3,
+        )
+        discover_available_tables.assert_called_once_with(project)
 
     def test_ready_project_cannot_access_catalog_confirmation(self):
         user = get_user_model().objects.create_user(

@@ -129,10 +129,11 @@
                 </section>
             </div>
 
-            <div class="wizard-actions">
+            <div class="wizard-actions" data-project-create-actions>
                 <a
                     href="{% url 'catalog-scope' project.id %}"
                     class="btn btn-secondary"
+                    data-project-create-back
                 >
                     Back
                 </a>
@@ -140,13 +141,33 @@
                 <form
                     method="post"
                     action="{% url 'catalog-build' project.id %}"
+                    data-project-create-form
                 >
                     {% csrf_token %}
 
-                    <button type="submit" class="btn btn-primary">
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        data-project-create-submit
+                    >
                         Create project
                     </button>
                 </form>
+            </div>
+
+            <div
+                class="operation-progress"
+                data-project-creation-progress
+                hidden
+                role="status"
+                aria-live="polite"
+            >
+                <span class="operation-progress-title">
+                    Creating project
+                </span>
+                <span class="operation-progress-description">
+                    Generating your Knowledge Catalog. This may take a moment.
+                </span>
             </div>
         </section>
     </div>

@@ -1408,13 +1408,23 @@ distinct:
 
 Selecting a realistic database containing 22 tables requires selecting every table individually.
 
-**Expected improvement**
+**Resolution**
 
-Provide a schema-level Select all / Deselect all mechanism.
+The table selection interface now provides a bulk selection control that allows
+all available tables to be selected or deselected at once.
 
-When only some tables are selected, the schema-level control should indicate a partial selection state.
+The interface also displays the current selection count relative to the total
+number of available tables and disables continuation when no table is selected.
 
-**Status:** Identified
+Empty table selections are also rejected by the backend service, so the
+requirement is enforced independently of the client-side interface.
+
+**Validation**
+
+The behavior was validated manually in the project creation workflow and with
+automated Catalog Scope service coverage.
+
+**Status:** Resolved
 
 #### BENCH-UX-002 — No progress feedback during catalog generation
 
@@ -1429,18 +1439,25 @@ After submitting the catalog generation or regeneration request, the interface
 provides no visual feedback indicating that processing is in progress. The page
 therefore appears unresponsive while the request is being processed.
 
-**Expected improvement**
+**Resolution**
 
-Provide immediate visual feedback after submission, such as:
+Catalog regeneration now provides immediate processing feedback after
+submission.
 
-- disabling the generation/regeneration button;
-- displaying a loading indicator;
-- displaying a message indicating that the catalog is being generated.
+While regeneration is in progress:
 
-The interface should also prevent accidental duplicate submissions while the
-request is in progress.
+- the regeneration action is hidden to prevent duplicate submissions;
+- a loading indicator is displayed;
+- the interface indicates that the Knowledge Catalog is being regenerated.
 
-**Status:** Identified
+The existing synchronous catalog-generation workflow is preserved; no
+background job or artificial progress percentage was introduced.
+
+**Validation**
+
+The behavior was validated manually through the catalog regeneration workflow.
+
+**Status:** Resolved
 
 #### BENCH-UX-003 — No progress feedback during project creation
 
@@ -1459,17 +1476,27 @@ unresponsive.
 This also allows the user to click "Create project" multiple times while the
 first request is still being processed.
 
-**Expected improvement**
+**Resolution**
 
-Provide immediate visual feedback after submission:
+After project creation is submitted, the project creation actions are replaced
+with a processing state.
 
-- disable the "Create project" button;
-- display a loading indicator;
-- change the button label or display a message indicating that the project is
-  being created;
-- prevent duplicate submissions while processing is in progress.
+While creation is in progress:
 
-**Status:** Identified
+- the creation actions are no longer available;
+- a loading indicator is displayed;
+- the interface indicates that the project and Knowledge Catalog are being
+  created.
+
+This prevents accidental duplicate submissions while providing immediate
+feedback during the synchronous creation workflow.
+
+**Validation**
+
+The behavior was validated manually through the complete project creation
+workflow.
+
+**Status:** Resolved
 
 #### BENCH-UX-004 — Selected table count missing from project confirmation
 
@@ -1480,15 +1507,31 @@ Provide immediate visual feedback after submission:
 The final project creation confirmation does not show how many available
 tables were selected.
 
-**Expected improvement**
+**Resolution**
 
-Display the number of selected tables relative to the number of available
-tables, for example:
+The final project confirmation now displays the number of selected tables
+relative to the total number of tables currently available from the data
+source.
 
-- `15 / 15 tables selected`;
-- `4 / 15 tables selected`.
+For example:
 
-**Status:** Identified
+- `15 tables selected out of 15 available tables`;
+- `14 tables selected out of 15 available tables`.
+
+This allows users to detect a potentially omitted table before starting project
+and catalog creation.
+
+The number of available tables is obtained from table discovery when the
+confirmation page is displayed rather than inferred from the selected Catalog
+Scope.
+
+**Validation**
+
+Automated view coverage verifies the available-table count used by the
+confirmation page. The rendered behavior was also validated manually during
+project creation.
+
+**Status:** Resolved
 
 ---
 
@@ -1547,19 +1590,24 @@ answerable questions proceed through the SQL pipeline, resolvable ambiguities
 request clarification, and questions requiring unavailable information are
 rejected without SQL validation or execution.
 
-Four usability issues remain identified:
+Four usability issues were also identified and resolved during the benchmark:
 
-- no bulk table selection during project setup;
-- no progress feedback during catalog generation;
-- no progress feedback during project creation;
-- no selected-table count on the final project creation confirmation.
+- BENCH-UX-001 added bulk table selection, a live selection count, and protection
+  against empty selections;
+- BENCH-UX-002 added immediate processing feedback and duplicate-submission
+  protection during catalog regeneration;
+- BENCH-UX-003 added immediate processing feedback and duplicate-submission
+  protection during project creation;
+- BENCH-UX-004 added the selected-versus-available table count to the final
+  project confirmation.
 
-The benchmark therefore validates the AskMyData query workflow at MVP level
-across the tested realistic analytical scenarios. The functional defects
-identified during the benchmark have either been resolved or, in the case of
-BENCH-BUG-003, are no longer reproducible after the SQL-generation
-improvements.
+The benchmark therefore validates the AskMyData MVP workflow across the tested
+realistic analytical and project-setup scenarios.
 
-The remaining identified benchmark findings are usability improvements. They do
-not prevent MVP-level functional validation and remain separate from the
-production-readiness work intentionally deferred beyond the MVP.
+All functional defects identified during the benchmark have either been
+resolved or, in the case of BENCH-BUG-003, are no longer reproducible after the
+SQL-generation improvements. All four usability findings identified during the
+benchmark have also been resolved and validated.
+
+Production-readiness work remains intentionally separate from this benchmark
+and outside the MVP scope.
