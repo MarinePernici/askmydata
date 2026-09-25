@@ -9,7 +9,11 @@ from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
 from query_engine.exceptions import SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
-from query_engine.types import ClarificationResult, QueryRunResult
+from query_engine.types import (
+    CannotAnswerResult,
+    ClarificationResult,
+    QueryRunResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +42,7 @@ class QuestionRunService:
         project: Project,
         conversation: Conversation,
         question: str,
-    ) -> QueryRunResult:
+    ) -> QueryRunResult | ClarificationResult | CannotAnswerResult:
         if project.status != Project.Status.READY:
             raise ProjectNotReadyError("Project is not ready.")
 
@@ -104,6 +108,31 @@ class QuestionRunService:
 
                 question_run.assistant_message = assistant_message
                 question_run.status = QuestionRun.Status.NEEDS_CLARIFICATION
+                question_run.completed_at = timezone.now()
+
+                question_run.save(
+                    update_fields=[
+                        "assistant_message",
+                        "status",
+                        "completed_at",
+                    ]
+                )
+
+                return result
+
+            if isinstance(result, CannotAnswerResult):
+                assistant_message = self._conversation_service.add_message(
+                    conversation=conversation,
+                    role=Message.Role.ASSISTANT,
+                    content=(
+                        "I can't answer this question using the data available "
+                        "in this project. Please ask a question related to the "
+                        "project's data."
+                    ),
+                )
+
+                question_run.assistant_message = assistant_message
+                question_run.status = QuestionRun.Status.REJECTED
                 question_run.completed_at = timezone.now()
 
                 question_run.save(

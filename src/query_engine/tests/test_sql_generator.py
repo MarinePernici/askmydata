@@ -6,7 +6,11 @@ from llm.base import LLMProvider
 from llm.types import LLMMessage, LLMResponse
 from query_engine.exceptions import SQLGenerationError
 from query_engine.sql_generator import SQLGenerator
-from query_engine.types import ClarificationResult, ConversationMessage
+from query_engine.types import (
+    CannotAnswerResult,
+    ClarificationResult,
+    ConversationMessage,
+)
 
 
 class FakeLLMProvider(LLMProvider):
@@ -68,6 +72,17 @@ class EmptyClarificationProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content='{"clarification": "   "}',
+            model="fake-model",
+        )
+
+
+class CannotAnswerProvider(LLMProvider):
+    def generate(
+        self,
+        messages: list[LLMMessage],
+    ) -> LLMResponse:
+        return LLMResponse(
+            content='{"cannot_answer": true}',
             model="fake-model",
         )
 
@@ -268,6 +283,44 @@ class SQLGeneratorTests(unittest.TestCase):
             ClarificationResult(
                 question="Which date range should I use?",
             ),
+        )
+
+    def test_generate_returns_cannot_answer_when_question_is_out_of_scope(self):
+        provider = CannotAnswerProvider()
+        generator = SQLGenerator(provider)
+
+        result = generator.generate(
+            question="What is the capital of Italy?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(
+            result,
+            CannotAnswerResult(),
+        )
+
+    def test_generate_instructs_model_to_reject_unanswerable_questions(self):
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        generator.generate(
+            question="What is the capital of Italy?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        system_message = provider.messages[0]
+
+        self.assertIn(
+            "not represented in or derivable from the catalog",
+            system_message.content,
+        )
+        self.assertIn(
+            "do not use external knowledge",
+            system_message.content,
+        )
+        self.assertIn(
+            '"cannot_answer"',
+            system_message.content,
         )
 
     def test_generate_rejects_empty_clarification(self):

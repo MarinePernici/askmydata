@@ -6,6 +6,7 @@ from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import ResultValidationError, SQLValidationError
 from query_engine.tracer import NullQueryTracer, QueryTracer
 from query_engine.types import (
+    CannotAnswerResult,
     ClarificationResult,
     ConversationMessage,
     QueryRunResult,
@@ -38,7 +39,7 @@ class QueryOrchestrator:
         question: str,
         catalog: KnowledgeCatalog,
         history: tuple[ConversationMessage, ...] = (),
-    ) -> QueryRunResult | ClarificationResult:
+    ) -> QueryRunResult | ClarificationResult | CannotAnswerResult:
         generation_result = self._run_traced_step(
             step="sql_generation",
             operation=lambda: self._generator.generate(
@@ -49,6 +50,9 @@ class QueryOrchestrator:
         )
 
         if isinstance(generation_result, ClarificationResult):
+            return generation_result
+
+        if isinstance(generation_result, CannotAnswerResult):
             return generation_result
 
         validation_result = self._run_traced_step(

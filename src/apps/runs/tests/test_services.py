@@ -14,6 +14,7 @@ from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import SQLValidationError
 from query_engine.types import (
     AnswerGenerationResult,
+    CannotAnswerResult,
     ClarificationResult,
     ConversationMessage,
     QueryExecutionResult,
@@ -116,6 +117,16 @@ class ClarificationGenerator:
         return ClarificationResult(
             question="Which date range should I use?",
         )
+
+
+class CannotAnswerGenerator:
+    def generate(
+        self,
+        question,
+        catalog,
+        history=(),
+    ):
+        return CannotAnswerResult()
 
 
 class QuestionRunServiceTests(TestCase):
@@ -512,8 +523,7 @@ class QuestionRunServiceTests(TestCase):
         self.assertEqual(messages[1].role, Message.Role.ASSISTANT)
         self.assertEqual(
             messages[1].content,
-            "I can't answer this question with the data available "
-            "in this project.",
+            "I can't answer this question with the data available in this project.",
         )
         self.assertNotIn(
             "outside the catalog scope",
@@ -770,6 +780,53 @@ class QuestionRunServiceTests(TestCase):
                 ),
             ),
         )
+
+    def test_unanswerable_question_is_rejected_with_safe_message(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=CannotAnswerGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        result = service.run(
+            project=project,
+            conversation=conversation,
+            question="What is the capital of Italy?",
+        )
+
+        run = QuestionRun.objects.get()
+
+        self.assertEqual(
+            result,
+            CannotAnswerResult(),
+        )
+        self.assertEqual(
+            run.status,
+            QuestionRun.Status.REJECTED,
+        )
+        self.assertIsNotNone(run.assistant_message)
+        self.assertEqual(
+            run.assistant_message.content,
+            (
+                "I can't answer this question using the data available "
+                "in this project. Please ask a question related to the "
+                "project's data."
+            ),
+        )
+        self.assertEqual(
+            run.assistant_message.role,
+            Message.Role.ASSISTANT,
+        )
+        self.assertEqual(run.error_code, "")
+        self.assertEqual(run.error_message, "")
+        self.assertIsNone(run.row_count)
 
     def test_run_rejects_project_that_is_not_ready(self):
         project = self.create_project_with_data_source()

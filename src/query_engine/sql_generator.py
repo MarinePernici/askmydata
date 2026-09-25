@@ -6,6 +6,7 @@ from llm.types import LLMMessage
 from query_engine.catalog_serializer import CatalogSerializer
 from query_engine.exceptions import SQLGenerationError
 from query_engine.types import (
+    CannotAnswerResult,
     ClarificationResult,
     ConversationMessage,
     SQLGenerationResult,
@@ -37,7 +38,7 @@ class SQLGenerator:
         question: str,
         catalog: KnowledgeCatalog,
         history: tuple[ConversationMessage, ...] = (),
-    ) -> SQLGenerationResult | ClarificationResult:
+    ) -> SQLGenerationResult | ClarificationResult | CannotAnswerResult:
         catalog_context = self._serializer.serialize(catalog)
         history_context = self._serialize_history(history)
 
@@ -71,6 +72,12 @@ class SQLGenerator:
                     "metric. If its calculation is not defined by the catalog or conversation "
                     "history, ask the user to provide the definition without giving formula "
                     "examples.\n"
+                    "- If the question requires information that is not represented in or "
+                    "derivable from the catalog, the user's question, or the conversation "
+                    "history, do not use external knowledge, make assumptions, or force the "
+                    "question into available tables or columns.\n"
+                    "- In that case, return cannot_answer instead of generating SQL or asking "
+                    "for clarification.\n"
                     "- Preserve explicit constraints from the user's question and conversation "
                     "history, including singular/plural intent, requested counts, filters, "
                     "date ranges, and ordering.\n"
@@ -86,7 +93,10 @@ class SQLGenerator:
                     '- "explanation": a short explanation of the query\n\n'
                     "If clarification is required, return exactly this field:\n"
                     '- "clarification": one concise question asking for the missing '
-                    "information"
+                    "information.\n\n"
+                    "If the question cannot be answered from the available project data, "
+                    "return exactly this field:\n"
+                    '- "cannot_answer": true'
                 ),
             ),
             LLMMessage(
@@ -115,6 +125,9 @@ class SQLGenerator:
             return ClarificationResult(
                 question=clarification.strip(),
             )
+
+        if payload.get("cannot_answer") is True:
+            return CannotAnswerResult()
 
         try:
             sql = payload["sql"]

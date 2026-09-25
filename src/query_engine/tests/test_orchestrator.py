@@ -5,6 +5,7 @@ from query_engine.exceptions import ResultValidationError, SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import (
     AnswerGenerationResult,
+    CannotAnswerResult,
     ClarificationResult,
     ConversationMessage,
     QueryExecutionResult,
@@ -160,6 +161,16 @@ class ClarificationGenerator:
         return ClarificationResult(
             question="Which date range should I use?",
         )
+
+
+class CannotAnswerGenerator:
+    def generate(
+        self,
+        question,
+        catalog,
+        history=(),
+    ):
+        return CannotAnswerResult()
 
 
 class QueryOrchestratorTests(unittest.TestCase):
@@ -401,6 +412,56 @@ class QueryOrchestratorTests(unittest.TestCase):
 
         self.assertEqual(len(tracer.events), 1)
 
+        self.assertEqual(
+            tracer.events[0]["step"],
+            "sql_generation",
+        )
+        self.assertEqual(
+            tracer.events[0]["status"],
+            "completed",
+        )
+
+    def test_run_returns_cannot_answer_without_executing_query(self):
+        executor = RecordingExecutor()
+
+        orchestrator = QueryOrchestrator(
+            generator=CannotAnswerGenerator(),
+            validator=FakeValidator(),
+            executor=executor,
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+        )
+
+        result = orchestrator.run(
+            question="What is the capital of Italy?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(
+            result,
+            CannotAnswerResult(),
+        )
+
+        self.assertFalse(executor.called)
+
+    def test_cannot_answer_traces_only_sql_generation(self):
+        tracer = RecordingTracer()
+
+        orchestrator = QueryOrchestrator(
+            generator=CannotAnswerGenerator(),
+            validator=FakeValidator(),
+            executor=FakeExecutor(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            tracer=tracer,
+        )
+
+        orchestrator.run(
+            question="What is the capital of Italy?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        self.assertEqual(len(tracer.events), 1)
         self.assertEqual(
             tracer.events[0]["step"],
             "sql_generation",

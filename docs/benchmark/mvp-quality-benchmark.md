@@ -911,6 +911,71 @@ AskMyData correctly followed the many-to-many relationship between `actor`
 and films through `film_actor`, performed the aggregation, and returned the
 correct Top 5 ordering and film counts.
 
+#### BENCH-QA-014 — Question unrelated to project data
+
+**Question**
+
+> What is the capital of Italy?
+
+**Expected behavior**
+
+AskMyData should recognize that the requested information is not represented in
+or derivable from the project's Knowledge Catalog.
+
+The application should not use external LLM knowledge, make unsupported
+assumptions, or force the question into available tables and columns.
+
+No SQL query should be validated or executed.
+
+AskMyData should explain that the question cannot be answered using the data
+available in the current project.
+
+**Reference SQL**
+
+Not applicable.
+
+**Reference result**
+
+Not applicable.
+
+**Initial AskMyData response**
+
+> The schema has no 'capital' marker—should I return all cities for country =
+> 'Italy', or should I assume the capital is 'Rome' and query that city
+> specifically?
+
+**Initial outcome:** Fail
+
+**Initial observations**
+
+AskMyData correctly identified that the schema did not contain information
+identifying a capital and did not execute a SQL query.
+
+However, it attempted to force the question into the available `country` and
+`city` data and proposed using external knowledge by assuming that Rome was the
+capital of Italy.
+
+The QuestionRun ended with `needs_clarification` and contained only a completed
+`sql_generation` execution trace. SQL validation and execution were not
+reached.
+
+**Retest after BENCH-BUG-007 resolution**
+
+AskMyData responded:
+
+> I can't answer this question using the data available in this project.
+> Please ask a question related to the project's data.
+
+The corresponding QuestionRun had:
+
+- status `REJECTED`;
+- no error code or error message;
+- no row count;
+- a single completed `sql_generation` execution trace;
+- no SQL validation or query execution trace.
+
+**Final outcome:** Pass
+
 ---
 
 ## 5. Issues Discovered
@@ -1237,6 +1302,102 @@ catalog-field meaning was proposed.
 
 **Status:** Resolved
 
+#### BENCH-BUG-007 — Out-of-domain questions trigger unsupported schema interpretations
+
+**Area:** Natural-language query pipeline / semantic interpretation
+
+**Related requirements:** FR-AI-002, FR-AI-003, FR-AI-008
+
+**Initial observation**
+
+When asked a question requiring information that was not represented in or
+derivable from the Knowledge Catalog, AskMyData attempted to reinterpret the
+question using available schema concepts.
+
+For:
+
+> What is the capital of Italy?
+
+the application proposed either returning Italian cities or assuming that Rome
+was the capital and querying that city.
+
+Although no SQL query was executed, this behavior could introduce external LLM
+knowledge or unsupported assumptions into a data-grounded workflow.
+
+**Expected behavior**
+
+AskMyData must distinguish between:
+
+- a question that can be answered from the project data;
+- an ambiguity or missing business definition that the user can clarify;
+- a question requiring information that is not available or derivable from the
+  project data.
+
+For the third case, AskMyData must not use external knowledge, invent
+relationships, make assumptions, or force the question into available schema
+concepts.
+
+The question should be rejected as unanswerable from the current project data
+without proceeding to SQL validation or execution.
+
+**Resolution**
+
+A third SQL-generation outcome, `CannotAnswerResult`, was introduced alongside
+`SQLGenerationResult` and `ClarificationResult`.
+
+The SQL generation prompt now explicitly instructs the model to return a
+`cannot_answer` result when the requested information is not represented in or
+derivable from the catalog, question, or conversation history.
+
+The query orchestrator propagates this result immediately without proceeding to
+SQL validation or execution.
+
+The QuestionRun service handles this outcome as a normal functional rejection:
+
+- the QuestionRun status is set to `REJECTED`;
+- no technical error code or error message is recorded;
+- a fixed application-controlled assistant message is persisted;
+- SQL validation and query execution are not performed.
+
+This behavior remains distinct from `NEEDS_CLARIFICATION`, which is used when
+the question can potentially be answered after the user resolves an ambiguity
+or supplies a missing business definition.
+
+**Validation**
+
+Dedicated automated coverage was added for:
+
+- parsing the `cannot_answer` SQL-generation response;
+- instructions preventing the use of external knowledge and unsupported schema
+  interpretations;
+- propagation through the query orchestrator without SQL execution;
+- persistence of the `REJECTED` QuestionRun and safe assistant message.
+
+The targeted SQL generator, orchestrator, QuestionRun service, and integration
+test suites passed with 45 tests.
+
+A real-data Pagila retest confirmed that:
+
+> What is the capital of Italy?
+
+produced:
+
+> I can't answer this question using the data available in this project.
+> Please ask a question related to the project's data.
+
+The QuestionRun was `REJECTED`, contained no technical error and no row count,
+and contained only a completed `sql_generation` trace.
+
+Regression checks also confirmed that genuine clarification cases remain
+distinct:
+
+- an ambiguous request for the "best" customers still requests a ranking
+  criterion;
+- an undefined "profit" metric still requests the missing business definition
+  rather than being rejected.
+
+**Status:** Resolved
+
 ### 5.2 Usability Issues
 
 #### BENCH-UX-001 — Bulk table selection
@@ -1334,35 +1495,71 @@ tables, for example:
 ## 6. Benchmark Summary
 
 The benchmark evaluated the AskMyData MVP against a realistic Pagila
-PostgreSQL database containing 22 tables and 129 discovered columns.
+PostgreSQL database.
 
-Thirteen query scenarios and one catalog-generation scenario were evaluated.
+The initial benchmark project exposed 22 relations and 129 discovered columns.
+During the benchmark, BENCH-BUG-004 revealed that seven of these relations were
+physical PostgreSQL payment partitions that should not have been exposed as
+independent business tables. After correcting PostgreSQL table discovery, new
+Pagila projects expose the expected 15 logical tables while retaining the
+partitioned `payment` parent table.
+
+Fourteen query scenarios and one catalog-generation scenario were evaluated.
 
 The benchmark confirmed successful behavior for:
 
-- catalog discovery and semantic enrichment after BENCH-BUG-001 resolution;
+- catalog discovery and semantic enrichment;
 - simple counts and aggregations;
 - temporal filtering;
 - multi-table joins;
 - Top-N aggregations;
 - many-to-many relationship traversal;
 - average calculations;
-- simple conversational follow-ups;
-- Catalog Scope enforcement.
+- conversational follow-ups and clarification;
+- Catalog Scope enforcement;
+- safe handling of SQL validation failures;
+- unsupported business metrics;
+- questions that cannot be answered from the project's available data.
 
-The benchmark also identified several functional defects:
+Seven functional defects were identified during the benchmark.
 
-- ambiguous business criteria may be interpreted without clarification;
-- a complex contextual query returned duplicated aggregate values;
-- a filtered multi-table aggregation returned an incorrect result;
-- SQL validation failures can terminate without user-facing feedback;
-- unavailable business metrics may be silently substituted with different
-  available metrics.
+Six were resolved with dedicated fixes:
 
-Three usability issues were also identified around bulk table selection and
-progress feedback for long-running operations.
+- BENCH-BUG-001 restored semantic enrichment in the real catalog-generation
+  flow;
+- BENCH-BUG-002 improved clarification of ambiguous analytical questions;
+- BENCH-BUG-004 excluded physical PostgreSQL partitions from table discovery,
+  resolving the incorrect filtered aggregation;
+- BENCH-BUG-005 added persistent, safe user-facing feedback for SQL validation
+  failures;
+- BENCH-BUG-006 prevented unsupported business metrics from being silently
+  substituted or invented;
+- BENCH-BUG-007 introduced an explicit rejection path for questions that cannot
+  be answered from the project's available data.
 
-The benchmark therefore confirms that the core MVP query pipeline works across
-a range of realistic analytical questions, while also identifying semantic
-reliability and error-handling issues that should be addressed before the MVP
-is considered fully validated.
+BENCH-BUG-003, which initially produced duplicated aggregate values in a
+contextual follow-up, could not be reproduced after the SQL-generation
+improvements. Three independent retests returned the correct result. Its
+original root cause remains unconfirmed and no dedicated code fix was applied.
+
+Regression testing confirmed that the semantic outcomes remain distinct:
+answerable questions proceed through the SQL pipeline, resolvable ambiguities
+request clarification, and questions requiring unavailable information are
+rejected without SQL validation or execution.
+
+Four usability issues remain identified:
+
+- no bulk table selection during project setup;
+- no progress feedback during catalog generation;
+- no progress feedback during project creation;
+- no selected-table count on the final project creation confirmation.
+
+The benchmark therefore validates the AskMyData query workflow at MVP level
+across the tested realistic analytical scenarios. The functional defects
+identified during the benchmark have either been resolved or, in the case of
+BENCH-BUG-003, are no longer reproducible after the SQL-generation
+improvements.
+
+The remaining identified benchmark findings are usability improvements. They do
+not prevent MVP-level functional validation and remain separate from the
+production-readiness work intentionally deferred beyond the MVP.

@@ -59,3 +59,8 @@ class ConversationMessage:
 @dataclass(frozen=True)
 class ClarificationResult:
     question: str
+
+
+@dataclass(frozen=True)
+class CannotAnswerResult:
+    """The question cannot be answered from the available project data."""
