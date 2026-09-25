@@ -463,29 +463,49 @@ GROUP BY c.customer_id, c.first_name, c.last_name;
 > ELEANOR HUNT (customer_id 148) made the most payments: 92 payments totaling
 > 433.08; last payment on 2022-07-27 09:38:02.694609 (Europe/Paris).
 
-**Outcome**
+**Initial outcome**
 
 Fail.
 
-**Observations**
+**Initial observations**
 
 AskMyData successfully resolved the conversational reference "them" and
 identified ELEANOR HUNT (customer 148) as the correct customer.
 
-However, the quantitative values returned for that customer are incorrect:
+However, the quantitative values returned for that customer were incorrect:
 
 - payment count: `92` instead of `46`;
 - total spent: `433.08` instead of `216.54`;
 - last payment date: correct.
 
-Both incorrect aggregate values are exactly twice their reference values. This
-suggests that rows may have been duplicated during query generation, for
-example through an unnecessary join, but the generated SQL is not currently
-available to confirm the cause.
+Both incorrect aggregate values were exactly twice their reference values. This
+suggested that rows may have been duplicated during query generation, for
+example through an unnecessary join, but the generated SQL was not available
+to confirm the cause.
 
-Conversation context resolution itself appears successful. The failure is
-therefore related to the quantitative result of the generated query rather
-than to resolving the conversational reference.
+Conversation context resolution itself appeared successful. The failure was
+specific to the generated aggregate result.
+
+**Retest after SQL generation improvements**
+
+The complete conversational scenario was rerun three times independently in
+new conversations:
+
+1. Ask which customers are the best.
+2. Clarify the criterion as highest total payments, top 5.
+3. Ask which one of those customers made the most payments.
+
+All three runs correctly identified ELEANOR HUNT (customer 148) with `46`
+payments.
+
+Where the total payment amount was included, AskMyData returned `216.54`,
+matching the PostgreSQL reference result.
+
+The original doubled aggregate values could no longer be reproduced.
+
+**Outcome after retest**
+
+Pass.
 
 #### BENCH-QA-008 — Filtered multi-table aggregation
 
@@ -545,6 +565,29 @@ Additional checks of common date-boundary variants also did not reproduce
 
 The generated SQL is not currently persisted or available through execution
 trace metadata, so the exact cause cannot yet be determined.
+
+### Retest after PostgreSQL partition discovery fix
+
+A new Pagila project was created after the fix.
+
+The table selection step exposed 15 logical tables. PostgreSQL child
+partitions (`payment_p2022_01` through `payment_p2022_07`) were no longer
+available for selection, while the parent `payment` table remained available.
+
+AskMyData first requested clarification about whether May 2022 should be
+defined using `payment_date` or `rental_date`.
+
+Clarification provided:
+
+> Payments made in May 2022 (payment_date).
+
+AskMyData answer:
+
+> Total revenue for payments in May 2022: 888.04.
+
+Reference result: `888.04`
+
+**Outcome after fix:** Pass
 
 #### BENCH-QA-009 — Average spending per customer
 
@@ -987,7 +1030,7 @@ five totals exactly matched the PostgreSQL reference result.
 
 **Related requirements:** FR-CONV-002, FR-AI-003, FR-AI-005, FR-AI-007, UC-06
 
-**Observation**
+**Initial observation**
 
 After AskMyData returned a list of customers containing ELEANOR HUNT with
 46 payments and 216.54 total spent, the following contextual question was asked:
@@ -999,23 +1042,32 @@ AskMyData correctly identified ELEANOR HUNT (customer 148), but returned
 
 Direct PostgreSQL verification returned 46 payments and 216.54 total spent.
 
-The incorrect payment count and total spent are both exactly twice the
+The incorrect payment count and total spent were both exactly twice the
 reference values.
-
-**Expected behavior**
-
-AskMyData should preserve conversation context while producing aggregate values
-that match the underlying PostgreSQL data.
 
 **Suspected cause**
 
-The exact duplication of multiple aggregate values suggests that the generated
-query may duplicate payment rows, potentially through an unnecessary join.
+The exact duplication of multiple aggregate values suggested that the generated
+query may have duplicated payment rows, potentially through an unnecessary
+join.
 
-The generated SQL is not currently persisted or exposed, so the root cause has
-not yet been confirmed.
+The generated SQL was not persisted or exposed, so the original root cause
+could not be confirmed.
 
-**Status:** Confirmed — root cause not yet identified
+**Retest**
+
+After the SQL generation prompt improvements introduced while resolving
+BENCH-BUG-002 and BENCH-BUG-006, the complete conversational scenario was
+retested three times independently.
+
+All three runs correctly identified ELEANOR HUNT with `46` payments. Where the
+total payment amount was returned, it was `216.54`.
+
+The original doubled aggregate values were not reproduced.
+
+No additional code change was introduced specifically for BENCH-BUG-003.
+
+**Status:** No longer reproducible after SQL generation improvements
 
 #### BENCH-BUG-004 — Complex filtered aggregation returns incorrect result
 
@@ -1043,10 +1095,30 @@ PostgreSQL data and the selected interpretation of the question.
 
 **Root cause**
 
-Not yet identified. The generated SQL is not currently persisted or exposed
-through execution trace metadata.
+`PostgreSQLConnector.discover_tables()` used `information_schema.tables`
+with `table_type = 'BASE TABLE'`. PostgreSQL child partitions were therefore
+exposed as independently selectable tables.
 
-**Status:** Confirmed — root cause not yet identified
+The original Pagila catalog contained both the logical `public.payment`
+table and its monthly child partitions. For QA-008, the SQL generator selected
+`public.payment_p2022_05`, producing `878.07` instead of the reference result
+`888.04`.
+
+**Resolution**
+
+PostgreSQL table discovery now uses `pg_catalog.pg_class` and excludes
+relations where `relispartition` is true. Ordinary tables and partitioned
+parent tables remain discoverable.
+
+A newly created Pagila project exposed 15 logical tables instead of the
+previous 22 relations. The seven `payment_p2022_*` child partitions were no
+longer selectable, while `public.payment` remained available.
+
+QA-008 was rerun against the new project. After clarification that May 2022
+referred to `payment_date`, AskMyData returned `888.04`, matching the reference
+query.
+
+**Status:** Resolved
 
 #### BENCH-BUG-005 — SQL validation failure produces no user-facing feedback
 
@@ -1235,6 +1307,25 @@ Provide immediate visual feedback after submission:
 - change the button label or display a message indicating that the project is
   being created;
 - prevent duplicate submissions while processing is in progress.
+
+**Status:** Identified
+
+#### BENCH-UX-004 — Selected table count missing from project confirmation
+
+**Area:** Project creation / Confirmation
+
+**Observation**
+
+The final project creation confirmation does not show how many available
+tables were selected.
+
+**Expected improvement**
+
+Display the number of selected tables relative to the number of available
+tables, for example:
+
+- `15 / 15 tables selected`;
+- `4 / 15 tables selected`.
 
 **Status:** Identified
 

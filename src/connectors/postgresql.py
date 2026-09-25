@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 import psycopg
 
 from connectors.base import Connector
@@ -31,10 +32,9 @@ class PostgreSQLConnector(Connector):
     def test_connection(self) -> bool:
         """Check whether the PostgreSQL data source can be reached."""
         try:
-            with self._connect() as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT 1")
-                    cursor.fetchone()
+            with self._connect() as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
 
             return True
         except psycopg.Error:
@@ -42,10 +42,9 @@ class PostgreSQLConnector(Connector):
 
     def discover_schemas(self) -> list[str]:
         """Return the user-accessible schemas in the PostgreSQL data source."""
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
+        with self._connect() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
                     SELECT schema_name
                     FROM information_schema.schemata
                     WHERE schema_name NOT IN ('pg_catalog', 'information_schema')
@@ -53,26 +52,28 @@ class PostgreSQLConnector(Connector):
                     AND schema_name NOT LIKE 'pg_temp_%%'
                     ORDER BY schema_name
                     """
-                )
+            )
 
-                return [row[0] for row in cursor.fetchall()]
+            return [row[0] for row in cursor.fetchall()]
 
     def discover_tables(self, schema: str) -> list[str]:
         """Return the tables available in the given PostgreSQL schema."""
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT table_name
-                    FROM information_schema.tables
-                    WHERE table_schema = %s
-                    AND table_type = 'BASE TABLE'
-                    ORDER BY table_name
+        with self._connect() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT cls.relname
+                    FROM pg_catalog.pg_class AS cls
+                    JOIN pg_catalog.pg_namespace AS ns
+                        ON ns.oid = cls.relnamespace
+                    WHERE ns.nspname = %s
+                    AND cls.relkind IN ('r', 'p')
+                    AND NOT cls.relispartition
+                    ORDER BY cls.relname
                     """,
-                    (schema,),
-                )
+                (schema,),
+            )
 
-                return [row[0] for row in cursor.fetchall()]
+            return [row[0] for row in cursor.fetchall()]
 
     def discover_columns(
         self,
@@ -80,10 +81,9 @@ class PostgreSQLConnector(Connector):
         table: str,
     ) -> list[ColumnMetadata]:
         """Return metadata for the columns of the given PostgreSQL table."""
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
+        with self._connect() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
                     SELECT
                         c.column_name,
                         c.data_type,
@@ -113,19 +113,19 @@ class PostgreSQLConnector(Connector):
                     AND c.table_name = %s
                     ORDER BY c.ordinal_position
                     """,
-                    (schema, table),
-                )
+                (schema, table),
+            )
 
-                return [
-                    ColumnMetadata(
-                        name=row[0],
-                        data_type=row[1],
-                        nullable=row[2] == "YES",
-                        default=row[3],
-                        is_primary_key=row[4],
-                    )
-                    for row in cursor.fetchall()
-                ]
+            return [
+                ColumnMetadata(
+                    name=row[0],
+                    data_type=row[1],
+                    nullable=row[2] == "YES",
+                    default=row[3],
+                    is_primary_key=row[4],
+                )
+                for row in cursor.fetchall()
+            ]
 
     def discover_relationships(
         self,
@@ -133,10 +133,9 @@ class PostgreSQLConnector(Connector):
         table: str,
     ) -> list[RelationshipMetadata]:
         """Return foreign-key relationships involving the given PostgreSQL table."""
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
+        with self._connect() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
                     SELECT
                         source_ns.nspname AS source_schema,
                         source_table.relname AS source_table,
@@ -175,27 +174,26 @@ class PostgreSQLConnector(Connector):
                         source_table.relname,
                         source_column.attname
                     """,
-                    (schema, table, schema, table),
-                )
+                (schema, table, schema, table),
+            )
 
-                return [
-                    RelationshipMetadata(
-                        source_schema=row[0],
-                        source_table=row[1],
-                        source_column=row[2],
-                        target_schema=row[3],
-                        target_table=row[4],
-                        target_column=row[5],
-                    )
-                    for row in cursor.fetchall()
-                ]
+            return [
+                RelationshipMetadata(
+                    source_schema=row[0],
+                    source_table=row[1],
+                    source_column=row[2],
+                    target_schema=row[3],
+                    target_table=row[4],
+                    target_column=row[5],
+                )
+                for row in cursor.fetchall()
+            ]
 
     def has_read_only_permissions(self) -> bool:
         """Return whether the configured user has no table write privileges."""
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
+        with self._connect() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
                     SELECT EXISTS (
                         SELECT 1
                         FROM information_schema.tables
@@ -236,8 +234,8 @@ class PostgreSQLConnector(Connector):
                         )
                     )
                     """
-                )
+            )
 
-                has_write_permissions = cursor.fetchone()[0]
+            has_write_permissions = cursor.fetchone()[0]
 
         return not has_write_permissions

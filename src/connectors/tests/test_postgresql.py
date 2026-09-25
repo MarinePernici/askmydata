@@ -1,15 +1,15 @@
 import os
 import unittest
-import psycopg
+from unittest.mock import MagicMock, patch
 
 import environ
+import psycopg
 
 from connectors.postgresql import (
     PostgreSQLConnectionConfig,
     PostgreSQLConnector,
 )
 from connectors.types import ColumnMetadata, RelationshipMetadata
-
 
 ROOT_DIR = environ.Path(__file__) - 4
 environ.Env.read_env(ROOT_DIR(".env"))
@@ -58,6 +58,28 @@ class PostgreSQLConnectorTests(unittest.TestCase):
         tables = connector.discover_tables("sales")
 
         self.assertEqual(tables, ["customers", "orders"])
+
+    def test_discover_tables_excludes_partition_children(self):
+        connector = PostgreSQLConnector(self.config)
+
+        connection = MagicMock()
+        cursor = MagicMock()
+        connection.__enter__.return_value = connection
+        connection.cursor.return_value.__enter__.return_value = cursor
+        cursor.fetchall.return_value = [
+            ("orders",),
+            ("payment",),
+        ]
+
+        with patch.object(connector, "_connect", return_value=connection):
+            tables = connector.discover_tables("public")
+
+        self.assertEqual(tables, ["orders", "payment"])
+
+        query = cursor.execute.call_args.args[0]
+
+        self.assertIn("pg_catalog.pg_class", query)
+        self.assertIn("relispartition", query)
 
     def test_discover_columns_returns_column_metadata(self):
         connector = PostgreSQLConnector(self.config)
@@ -161,21 +183,23 @@ class PostgreSQLConnectorTests(unittest.TestCase):
         self.assertTrue(connector.has_read_only_permissions())
 
     def test_readonly_user_cannot_modify_source_data(self):
-        with psycopg.connect(
-            host=self.config.host,
-            port=self.config.port,
-            dbname=self.config.database,
-            user=self.config.user,
-            password=self.config.password,
-        ) as connection:
-            with connection.cursor() as cursor:
-                with self.assertRaises(psycopg.errors.InsufficientPrivilege):
-                    cursor.execute(
-                        """
-                        INSERT INTO sales.customers (name, email)
-                        VALUES ('Unauthorized', 'unauthorized@example.com')
-                        """
-                    )
+        with (
+            psycopg.connect(
+                host=self.config.host,
+                port=self.config.port,
+                dbname=self.config.database,
+                user=self.config.user,
+                password=self.config.password,
+            ) as connection,
+            connection.cursor() as cursor,
+            self.assertRaises(psycopg.errors.InsufficientPrivilege),
+        ):
+            cursor.execute(
+                """
+                INSERT INTO sales.customers (name, email)
+                VALUES ('Unauthorized', 'unauthorized@example.com')
+                """
+            )
 
     def test_detects_user_with_write_permissions(self):
         writable_config = PostgreSQLConnectionConfig(
