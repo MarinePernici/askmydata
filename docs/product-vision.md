@@ -81,6 +81,22 @@ This narrower scope allows the project to validate the core concepts before exte
 
 ---
 
+# Public Demo
+
+The first public deployment of AskMyData will provide a controlled demonstration environment designed to expose the real application workflow without allowing arbitrary external database connections.
+
+Users will be able to create their own projects and follow the standard project creation workflow. During data source configuration, they will choose from a predefined set of approximately four to five demonstration PostgreSQL databases, each accompanied by a short description.
+
+The standard PostgreSQL connection fields will remain visible to illustrate how a real data source is configured. In demo mode, these fields will be populated automatically and displayed as read-only. Actual credentials and secrets will remain exclusively server-side.
+
+After selecting a demonstration database, users will continue through the normal Catalog Scope workflow and choose which tables to include in their project. Knowledge Catalog generation, conversations and the AI query pipeline will use the same application workflow as a regular project.
+
+The public demo backend will only permit connections to explicitly configured demonstration data sources. Arbitrary external PostgreSQL connections will not be available in the first public deployment.
+
+Support for user-provided PostgreSQL data sources remains part of the long-term product vision. Enabling this capability in a public production environment will require additional security, privacy and data-protection work.
+
+---
+
 # Core Principles
 
 The following principles guide every architectural and functional decision.
