@@ -238,6 +238,14 @@ The system shall request clarification when a question is ambiguous.
 
 ---
 
+### FR-AI-009
+
+The system shall generate natural language answers in the language used by the user for the current question.
+
+**Release:** Production-ready Portfolio
+
+---
+
 ## 5.6 Conversations
 
 ### FR-CONV-001
@@ -264,11 +272,63 @@ The system shall allow users to access the persistent conversation history of ea
 
 ---
 
-## 5.7 Administration
+## 5.7 User Preferences
+
+### FR-USER-001
+
+The system shall allow users to use the application interface in French or English.
+
+**Release:** Production-ready Portfolio
+
+---
+
+## 5.8 Administration
 
 ### FR-ADMIN-001
 
 The system shall provide an administration interface for application management.
+
+**Release:** Production-ready Portfolio
+
+---
+
+### FR-ADMIN-002
+
+The system shall allow administrators to create, review and revoke invitations granting access to the public demonstration platform.
+
+**Release:** Production-ready Portfolio
+
+---
+
+### FR-ADMIN-003
+
+The system shall allow a person holding a valid invitation to create an individual user account.
+
+**Release:** Production-ready Portfolio
+
+---
+
+## 5.9 Public Demo
+
+### FR-DEMO-001
+
+The public demonstration shall allow users to select a data source from a predefined set of demonstration PostgreSQL databases.
+
+**Release:** Production-ready Portfolio
+
+---
+
+### FR-DEMO-002
+
+The public demonstration shall prevent users from configuring arbitrary external database connections.
+
+**Release:** Production-ready Portfolio
+
+---
+
+### FR-DEMO-003
+
+After selecting a demonstration data source, users shall continue through the standard project initialization workflow, including Catalog Scope selection and Knowledge Catalog generation.
 
 **Release:** Production-ready Portfolio
 
@@ -386,6 +446,16 @@ Business logic shall remain independent from infrastructure components.
 
 ---
 
+## Resource Protection
+
+### NFR-RES-001
+
+The public demonstration shall enforce configurable usage limits to prevent abusive or excessive consumption of application and AI resources.
+
+**Release:** Production-ready Portfolio
+
+---
+
 # 7. Engineering Requirements
 
 ## Code Quality
@@ -456,7 +526,7 @@ The default branch shall remain deployable.
 
 ### ENG-009
 
-The application shall produce structured logs.
+The application shall produce structured logs and provide traceability across critical application and AI query pipeline operations.
 
 **Release:** Production-ready Portfolio
 
@@ -481,6 +551,14 @@ Major architectural decisions shall be documented using Architecture Decision Re
 Documentation shall remain synchronized with the implementation.
 
 **Release:** MVP
+
+---
+
+### ENG-013
+
+The application shall expose operational metrics for critical application and AI query pipeline operations.
+
+**Release:** Production-ready Portfolio
 
 ---
 
@@ -510,11 +588,15 @@ These attributes will be progressively completed during the implementation phase
 | FR-DATA-001–006 | UC-02, UC-12 | Data source, PostgreSQL connector and schema tests | ADR-0002 | Implemented |
 | FR-KCAT-001–004 | UC-02, UC-03, UC-08 | Catalog service and view tests | ADR-0003 | Implemented |
 | FR-AI-001–008 | UC-04, UC-05 | Query engine and pipeline integration tests | ADR-0003, ADR-0004 | Implemented |
+| FR-AI-009 | UC-04 | — | — | Production-ready scope |
 | FR-CONV-001–003 | UC-04, UC-06, UC-07 | Conversation and question-run tests | ADR-0001 | Implemented |
-| FR-ADMIN-001 | UC-11 | — | — | Production-ready scope |
+| FR-USER-001 | — | — | — | Production-ready scope |
+| FR-ADMIN-001–003 | UC-11 | — | — | Production-ready scope |
+| FR-DEMO-001–003 | UC-02 | — | — | Production-ready scope |
 | NFR-SEC-001–006 | UC-02, UC-04, UC-10 | Security, connector, SQL validation and pipeline tests | ADR-0002, ADR-0004 | Implemented |
 | NFR-REL-001–004 | UC-04, UC-05, UC-08 | Failure-handling and execution-trace tests | ADR-0001, ADR-0004 | Implemented |
 | NFR-PERF-001–002 | UC-04 | Query executor and integration tests | ADR-0004 | Implemented |
+| NFR-RES-001 | UC-04 | — | — | Production-ready scope |
 | NFR-USA-001 | UC-01–UC-12 | Responsive UI verification | — | Implemented |
 | NFR-MAIN-001–002 | UC-01–UC-12 | Architecture review and automated tests | ADR-0001 | Implemented |
 | ENG-001 | — | Ruff formatting verification | — | Implemented |
@@ -524,3 +606,4 @@ These attributes will be progressively completed during the implementation phase
 | ENG-007–010 | — | — | — | Production-ready scope |
 | ENG-011 | — | ADR review | ADR-0001–ADR-0004 | Implemented |
 | ENG-012 | — | Documentation-to-implementation audit | ADR-0001–ADR-0004 | Implemented |
+| ENG-013 | — | — | — | Production-ready scope |

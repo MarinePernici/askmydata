@@ -18,9 +18,6 @@ package "Identity and Access" {
 
   class UserPreferences {
     language
-    response_language
-    timezone
-    theme
   }
 
   class Invitation {

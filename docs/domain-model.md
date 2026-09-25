@@ -114,18 +114,21 @@ MVP
 
 ### Definition
 
-Represents optional user interface preferences.
+Stores user-level application preferences.
 
-### Main Attributes
-
-- language
-- response_language
-- timezone
-- theme
+| Attribute | Description |
+|---|---|
+| language | Preferred application interface language (`fr` or `en`) |
 
 ### Relationships
 
 One User owns at most one UserPreferences.
+
+### Business Rules
+
+- The interface language may be French or English.
+- The language of AI-generated answers is determined from the language of each question and is not stored as a user preference.
+- Additional preferences such as timezone and theme are deferred beyond the current portfolio roadmap.
 
 ### Release
 
@@ -164,7 +167,10 @@ Invitations are intended for the public demonstration platform.
 - Invitations are single-use.
 - Expired invitations cannot be accepted.
 - Tokens are stored as hashes.
-- Public registration may be disabled.
+- Public registration is disabled in the Public Demo v1.
+- Invitations are created and managed by administrators.
+- AskMyData generates an invitation link but does not send invitation messages in the Public Demo v1.
+- Invitation links are transmitted manually by the administrator outside AskMyData.
 
 ### Release
 
@@ -1012,10 +1018,14 @@ They may be introduced in future releases without changing the core architecture
 
 ## Platform
 
+The following platform concepts remain outside the current portfolio roadmap:
+
 - billing;
-- quotas;
-- usage limits;
-- API keys management.
+- commercial subscription plans and quotas;
+- API key management;
+- advanced usage accounting.
+
+The Public Demo v1 introduces only minimal configurable usage limits required to protect application and AI resources. The persistence and enforcement mechanism for these limits is intentionally deferred to implementation design.
 
 ---
 

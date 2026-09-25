@@ -204,6 +204,13 @@ Create a new data exploration project connected to a PostgreSQL database and ini
 3. The user is informed that the Knowledge Catalog could not be generated.
 4. The user may retry the generation after correcting the underlying issue.
 
+#### Public demonstration data source
+
+1. In the public demonstration, the user selects a PostgreSQL data source from the predefined demonstration data sources.
+2. The application uses the server-side connection configuration associated with the selected demonstration data source.
+3. Arbitrary external database connection parameters cannot be configured by the user.
+4. The application continues with connection validation, schema discovery and the standard project initialization workflow.
+
 ### Success Result
 
 A fully initialized project is available for AI-assisted data exploration.
@@ -224,6 +231,9 @@ The project contains:
 - `FR-DATA-003`
 - `FR-DATA-004`
 - `FR-DATA-005`
+- `FR-DEMO-001`
+- `FR-DEMO-002`
+- `FR-DEMO-003`
 - `FR-KCAT-001`
 - `FR-KCAT-002`
 - `FR-KCAT-003`
@@ -311,7 +321,7 @@ Obtain a reliable answer from structured data using natural language.
 7. The application validates the generated SQL.
 8. The application executes the validated query.
 9. The application validates the returned result.
-10. The application generates a natural language answer.
+10. The application generates a natural language answer in the language used by the user for the current question.
 11. The application records execution metrics and traces and, in the MVP, records the answer in the selected conversation.
 12. The answer is displayed to the user.
 
@@ -353,6 +363,13 @@ Obtain a reliable answer from structured data using natural language.
 1. The application detects that the result does not support a reliable answer.
 2. The user is informed that the question could not be answered reliably.
 
+#### Public demonstration usage limit reached
+
+1. Before consuming restricted application or AI resources, the application determines that the user's configured usage limit has been reached.
+2. The question is not processed.
+3. No restricted AI resource is consumed.
+4. The user receives an explanatory response.
+
 ### Success Result
 
 The user receives an answer supported by a validated read-only database query.
@@ -367,6 +384,7 @@ The user receives an answer supported by a validated read-only database query.
 - `FR-AI-006`
 - `FR-AI-007`
 - `FR-AI-008`
+- `FR-AI-009`
 - `FR-DATA-004`
 - `NFR-SEC-001`
 - `NFR-SEC-003`
@@ -374,6 +392,7 @@ The user receives an answer supported by a validated read-only database query.
 - `NFR-REL-002`
 - `NFR-REL-003`
 - `NFR-REL-004`
+- `NFR-RES-001`
 
 ---
 
@@ -707,9 +726,14 @@ Control access to the demonstration platform.
 ### Main Success Scenario
 
 1. The administrator opens the administration interface.
-2. The administrator reviews users and access status.
-3. The administrator activates, disables or manages authorized accounts.
-4. The application records administrative changes.
+2. The administrator reviews users, invitations and access status.
+3. The administrator creates an invitation for a person they choose to authorize.
+4. The application generates a unique invitation link.
+5. The administrator retrieves the invitation link and transmits it outside AskMyData.
+6. A recipient holding a valid invitation opens the invitation link.
+7. The recipient creates an individual account.
+8. The invitation becomes accepted and cannot be reused.
+9. The new user can authenticate and access the demonstration platform.
 
 ### Alternative Flows
 
@@ -718,6 +742,18 @@ Control access to the demonstration platform.
 1. The application denies access.
 2. The attempt is logged.
 
+#### Invitation revoked or expired
+
+1. The recipient attempts to use an invitation that is no longer valid.
+2. The application refuses account creation.
+3. Access to the platform is not granted.
+
+#### Manage existing access
+
+1. The administrator reviews an existing user account.
+2. The administrator activates or disables access as required.
+3. The updated access status is applied.
+
 ### Success Result
 
 Only authorized users can access the platform.
@@ -725,6 +761,8 @@ Only authorized users can access the platform.
 ### Related Requirements
 
 - `FR-ADMIN-001`
+- `FR-ADMIN-002`
+- `FR-ADMIN-003`
 
 ---
 
