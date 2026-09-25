@@ -49,6 +49,9 @@ class CatalogScopeService:
             (selection["schema"], selection["table"]) for selection in selections
         }
 
+        if not selected:
+            raise InvalidCatalogScopeSelectionError("Select at least one table.")
+
         if not selected.issubset(allowed):
             raise InvalidCatalogScopeSelectionError("Invalid table selection.")
 

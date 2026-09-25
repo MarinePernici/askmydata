@@ -229,6 +229,9 @@ def catalog_confirmation(request, project_id):
             project_id=project.id,
         )
 
+    available_tables = CatalogScopeService().discover_available_tables(project)
+    available_tables_count = sum(len(tables) for tables in available_tables.values())
+
     return render(
         request,
         "catalogs/confirmation.html",
@@ -236,6 +239,7 @@ def catalog_confirmation(request, project_id):
             "project": project,
             "data_source": data_source,
             "selected_tables": selected_tables,
+            "available_tables_count": available_tables_count,
             "creation_mode": True,
         },
     )

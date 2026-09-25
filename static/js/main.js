@@ -224,3 +224,59 @@ if (conversationPanel && conversationPanelToggle) {
         }
     });
 }
+const tableSelectionCheckboxes = Array.from(
+    document.querySelectorAll('input[name="tables"]'),
+);
+const tableSelectionToggle = document.querySelector(
+    "[data-table-selection-toggle]",
+);
+const tableSelectionCount = document.querySelector(
+    "[data-table-selection-count]",
+);
+const tableSelectionSubmit = document.querySelector(
+    "[data-table-selection-submit]",
+);
+
+if (
+    tableSelectionCheckboxes.length &&
+    tableSelectionToggle &&
+    tableSelectionCount &&
+    tableSelectionSubmit
+) {
+    const updateTableSelectionControls = () => {
+        const selectedCount = tableSelectionCheckboxes.filter(
+            (checkbox) => checkbox.checked,
+        ).length;
+        const allSelected =
+            selectedCount === tableSelectionCheckboxes.length;
+
+        tableSelectionCount.textContent =
+            `${selectedCount} / ${tableSelectionCheckboxes.length} ` +
+            "tables selected";
+        tableSelectionToggle.textContent = allSelected
+            ? "Deselect all"
+            : "Select all";
+        tableSelectionSubmit.disabled = selectedCount === 0;
+    };
+
+    tableSelectionToggle.addEventListener("click", () => {
+        const allSelected = tableSelectionCheckboxes.every(
+            (checkbox) => checkbox.checked,
+        );
+
+        tableSelectionCheckboxes.forEach((checkbox) => {
+            checkbox.checked = !allSelected;
+        });
+
+        updateTableSelectionControls();
+    });
+
+    tableSelectionCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener(
+            "change",
+            updateTableSelectionControls,
+        );
+    });
+
+    updateTableSelectionControls();
+}

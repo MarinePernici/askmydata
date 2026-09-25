@@ -110,6 +110,11 @@
                         Selected tables
                     </h3>
 
+                    <p class="confirmation-section-description">
+                        {{ selected_tables|length }} table{{ selected_tables|length|pluralize }}
+                        selected out of {{ available_tables_count }} available table{{ available_tables_count|pluralize }}
+                    </p>
+
                     <div class="confirmation-tables">
                         {% for table in selected_tables %}
                             <span class="confirmation-table">

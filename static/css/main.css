@@ -1216,6 +1216,20 @@ a {
 
 /* Table selection */
 
+.table-selection-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.table-selection-count {
+    color: var(--color-neutral-500);
+    font-size: var(--text-small-size);
+    line-height: var(--text-small-line-height);
+}
+
 .table-selection {
     display: flex;
     flex-direction: column;
@@ -1309,6 +1323,13 @@ a {
     font-size: var(--text-label-size);
     font-weight: 600;
     line-height: var(--text-label-line-height);
+}
+
+.confirmation-section-description {
+    margin: calc(var(--space-3) * -1) 0 var(--space-4);
+    color: var(--color-neutral-500);
+    font-size: var(--text-small-size);
+    line-height: var(--text-small-line-height);
 }
 
 .confirmation-details {

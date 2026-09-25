@@ -117,6 +117,28 @@ class CatalogScopeServiceTests(TestCase):
             hasattr(project, "catalog_scope"),
         )
 
+    def test_rejects_empty_selection(self):
+        project = create_test_project()
+
+        service = CatalogScopeService(
+            connector_factory=lambda project: FakeConnector(),
+        )
+
+        available_tables = {
+            "sales": ["customers", "orders"],
+        }
+
+        with self.assertRaises(InvalidCatalogScopeSelectionError):
+            service.save_selection(
+                project=project,
+                selections=[],
+                available_tables=available_tables,
+            )
+
+        self.assertFalse(
+            hasattr(project, "catalog_scope"),
+        )
+
     def test_saves_valid_selection(self):
         project = create_test_project()
 

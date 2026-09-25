@@ -84,6 +84,18 @@
                 <form method="post" class="wizard-form">
                     {% csrf_token %}
 
+                    <div class="table-selection-toolbar">
+                        <span class="table-selection-count" data-table-selection-count></span>
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-sm"
+                            data-table-selection-toggle
+                        >
+                            Select all
+                        </button>
+                    </div>
+
                     <div class="table-selection">
                         {% for schema, tables in available_tables.items %}
                             {% if tables %}
@@ -141,7 +153,11 @@
                             Back
                         </a>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            data-table-selection-submit
+                        >
                             Continue
                         </button>
                     </div>
