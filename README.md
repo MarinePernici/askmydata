@@ -1,12 +1,32 @@
 # AskMyData
 
-AskMyData is a web application for exploring structured data using natural language.
+[Français](README.fr.md)
 
-The application aims to make data exploration accessible to users without requiring them to write SQL queries themselves. A user connects a data source, selects the data they want to make available to AskMyData, and then asks questions in natural language. AskMyData relies on a Knowledge Catalog to understand the available data, generates a SQL query, validates it before execution, executes it using read-only access, and then produces an understandable natural-language answer.
+**Natural-language exploration of PostgreSQL data with controlled SQL generation and execution.**
 
-The first version focuses on PostgreSQL while maintaining an architecture that can be extended to other structured data sources.
+AskMyData is a web application that allows users to explore structured data without writing SQL themselves. Users connect a PostgreSQL data source, select the data available to the application, and ask questions in natural language.
 
-> AskMyData is currently under development. The project is being built incrementally from documented architecture and specifications.
+AskMyData builds a semantic Knowledge Catalog from the selected database schema, uses it to generate SQL queries, validates every query before execution, executes validated queries with read-only access, and returns answers in natural language.
+
+> **Status: MVP complete — Production-readiness in progress.**
+>
+> The end-to-end PostgreSQL data exploration workflow is implemented and has been validated against a realistic dataset. Current work focuses on production readiness, CI/CD, observability, deployment, and a public demonstration environment.
+
+## Key Features
+
+- Natural-language exploration of PostgreSQL data
+- Automatic database schema discovery
+- Semantic Knowledge Catalog with generated descriptions and business-oriented synonyms
+- Controlled natural-language-to-SQL pipeline
+- Mandatory SQL validation before execution
+- Read-only access to external data sources
+- Catalog Scope enforcement to restrict accessible schemas and tables
+- Clarification of ambiguous analytical questions
+- Rejection of questions that cannot be answered from the project's data
+- Contextual conversations with persistent history
+- Execution tracing for query pipeline diagnostics
+- Automated tests and documented quality benchmarking
+- Docker Compose development environment
 
 ## How It Works
 
@@ -23,7 +43,7 @@ A typical AskMyData workflow is:
 9. Execute the validated query using read-only database access.
 10. Validate the result and generate a natural-language answer.
 
-When a question is ambiguous or cannot be answered reliably, AskMyData can request clarification rather than generate an answer that is not sufficiently supported by the available data.
+When a question is ambiguous or requires a missing business definition, AskMyData can request clarification before generating SQL. When the requested information cannot be derived from the project's available data, the question is rejected without SQL execution.
 
 ## Knowledge Catalog
 
@@ -56,41 +76,45 @@ Each conversation maintains its own context, allowing users to:
 
 Generated SQL is never executed directly.
 
-The pipeline separates query generation, validation, and execution. Before execution, generated SQL is checked against explicit security rules and the project's Catalog Scope.
+AskMyData separates SQL generation, validation, and execution into distinct stages. Every generated query must pass application-level validation before it can reach the external database.
 
-The application relies on several safeguards, including:
+The current safeguards include:
 
 - read-only SQL operations;
 - mandatory SQL validation before execution;
-- access restricted to the selected Catalog Scope;
-- read-only credentials for external PostgreSQL sources;
-- controlled execution limits;
+- Catalog Scope enforcement for accessible schemas and tables;
+- read-only database credentials;
+- query execution limits;
 - result validation before answer generation;
-- execution traces for pipeline diagnostics and traceability;
-- protection of application secrets and data-source credentials.
+- execution traces for pipeline diagnostics;
+- environment-based secret management.
 
-Instructions provided to the LLM are not considered a security boundary on their own.
+Queries that fail SQL validation are not executed. Questions requiring information outside the project's available data are rejected before reaching SQL execution.
+
+LLM instructions are treated as guidance, not as a security boundary. Database permissions and application-level validation remain responsible for enforcing access restrictions.
 
 ## Architecture
 
-AskMyData follows a **modular monolith** architecture built around Django.
+AskMyData follows a **modular monolith** architecture built with Django.
 
-The application is organized around several business capabilities:
+The application is organized into modules with explicit responsibilities:
 
-- Accounts;
-- Projects;
-- Data Source Management;
-- Knowledge Catalog;
-- Conversation Management;
-- Query Engine;
-- Connectors;
-- Observability.
+- **Accounts** — authentication and user identity
+- **Projects** — project lifecycle and configuration
+- **Data Source** — external database configuration and connection testing
+- **Knowledge Catalog** — schema discovery and semantic metadata
+- **Conversation** — conversation and message history
+- **Query Engine** — context building, SQL generation, validation, execution, and answer generation
+- **Connectors** — database and LLM provider abstractions
+- **Observability** — execution traces and diagnostics
 
-The Query Engine is an internal application module responsible for coordinating the pipeline from a natural-language question to an answer.
+External systems are accessed through explicit connector abstractions.
 
-External data sources are accessed through a connector abstraction. PostgreSQL is the only connector implemented in the initial scope, but the architecture is designed to allow additional connectors to be introduced later without requiring a major architectural redesign.
+PostgreSQL is the only data source currently implemented. The architecture is designed to allow additional connectors without coupling the domain model to a specific database technology.
 
-LLM access also relies on a provider-independent interface.
+LLM access is also provider-independent so that providers can be changed without modifying the core query workflow.
+
+For the detailed component model and architectural decisions, see the [architecture documentation](docs/application-components.md) and [ADRs](docs/adrs/README.md).
 
 ## Technology Stack
 
@@ -100,66 +124,70 @@ LLM access also relies on a provider-independent interface.
 - Django
 - PostgreSQL
 - Django Templates
-- limited client-side JavaScript
+- HTML / CSS
+- limited JavaScript
 
-### Data Access and AI
+### Data and Query Processing
 
-- psycopg for PostgreSQL access
-- pglast for SQL parsing and validation
+- psycopg
+- pglast for PostgreSQL SQL parsing and validation
 - provider-independent LLM integration
 
-### Engineering and Deployment
+### Development and Quality
 
-Currently implemented:
+- Django test framework
+- Ruff
+- Docker
+- Docker Compose
+- Git / GitHub
 
-- automated testing
-- Ruff code formatting
-- Docker / Docker Compose
+## Quality & Validation
 
-Planned for the Production-ready Portfolio phase:
+The MVP has been evaluated through a documented quality benchmark using the Pagila PostgreSQL sample database.
 
-- GitHub Actions
-- static analysis and type checking
-- structured logging
-- health checks
-- monitoring and error tracking
+The benchmark covered the complete application workflow, including:
 
-Specific infrastructure and observability tools will be selected during the Production-ready Portfolio phase.
+- schema discovery and semantic catalog generation;
+- simple and complex aggregations;
+- temporal filtering;
+- multi-table joins and many-to-many relationships;
+- conversational context and clarification;
+- SQL validation and Catalog Scope enforcement;
+- unsupported business metrics;
+- questions that cannot be answered from the project's data.
 
-## Local Development with Docker
+Fourteen query scenarios and one catalog-generation scenario were evaluated against reference PostgreSQL results.
+
+The benchmark was also used as an iterative quality process: functional and usability issues discovered during realistic testing were investigated, fixed, and validated through automated tests and real-data retesting.
+
+At the latest recorded benchmark validation point, the full Docker test suite contained **371 passing tests**.
+
+See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
+
+## Local Development
 
 ### Prerequisites
 
 - Docker
 - Docker Compose
 
-### Environment Configuration
+### Setup
 
-Create the local environment file from the provided example:
+Clone the repository and create the local environment file:
 
 ```bash
+git clone https://github.com/MarinePernici/AskMyData.git
+cd AskMyData
 cp .env.example .env
 ```
 
-Then configure the required values in `.env`.
+Review `.env` and configure the required values, including the LLM provider credentials.
 
-### Start the Application
-
-Build the application image:
+Build and start the application:
 
 ```bash
 docker compose build
-```
-
-Start the services:
-
-```bash
 docker compose up -d
-```
-
-Apply the database migrations:
-
-```bash
 docker compose exec web python manage.py migrate
 ```
 
@@ -168,150 +196,116 @@ The application is then available at:
 ```text
 http://localhost:8000/projects/
 ```
-Unauthenticated users are redirected to the login page.
 
-### Run the Test Suite
+### Tests
+
+Run the complete test suite inside the application container:
 
 ```bash
 docker compose exec web python manage.py test
 ```
 
-### Code Formatting
+### Code Quality
 
-Python code is automatically formatted with Ruff.
-
-Check that the code is correctly formatted:
+Check Ruff:
 
 ```bash
+uv run ruff check .
 uv run ruff format --check .
 ```
 
-Apply formatting:
+Format the code when needed:
 
 ```bash
 uv run ruff format .
 ```
 
-### Stop the Application
+### Stop the Environment
 
 ```bash
 docker compose down
 ```
 
-The Docker Compose development environment runs the Django application and its PostgreSQL application database in separate containers.
+### Integration Test Database
 
-PostgreSQL integration tests use the external test database configured through the `TEST_SOURCE_DB_*` environment variables. When the tests are executed inside Docker Desktop, the test database running on the host is reached through `host.docker.internal`.
+Tests that exercise a real external PostgreSQL source use dedicated `TEST_SOURCE_DB_*` environment variables.
 
-## Development Roadmap
+When the test database runs on the Docker host, the application container can access it through `host.docker.internal`.
 
-Development is organized into three incremental stages.
+The integration test database must use dedicated credentials and must not point to a production or personal database.
 
-### Foundation
+## Roadmap
 
-The Foundation validates the core technical pipeline:
+### Completed — Foundation
 
-- PostgreSQL connectivity;
-- schema discovery;
-- minimal Knowledge Catalog;
-- natural-language question processing;
-- SQL generation;
-- SQL validation;
-- read-only execution;
-- result validation;
-- natural-language answer generation;
-- execution traces;
-- automated tests for the core system.
+- Modular Django architecture
+- Core domain model and persistence
+- PostgreSQL connector
+- Knowledge Catalog foundation
+- Natural-language-to-SQL pipeline
+- SQL validation and read-only execution
+- Execution tracing
 
-### MVP
+### Completed — MVP
 
-The MVP adds the complete user workflow:
+- User authentication
+- Project creation and management
+- PostgreSQL connection configuration and testing
+- Secure data-source credential handling
+- Catalog Scope selection
+- Schema discovery and semantic Knowledge Catalog generation
+- Knowledge Catalog regeneration
+- Natural-language data exploration
+- Contextual conversations and persistent history
+- Clarification of ambiguous questions
+- Rejection of questions unsupported by project data
+- SQL validation and scope enforcement
+- Automated test coverage
+- Docker Compose development environment
+- Realistic PostgreSQL quality benchmark
 
-- authentication and session management;
-- project creation, editing, and archiving;
-- PostgreSQL configuration and connection testing;
-- secure credential handling;
-- Catalog Scope selection;
-- Knowledge Catalog generation and regeneration;
-- automatic semantic metadata generation;
-- data schema exploration;
-- multiple contextual conversations per project;
-- persistent conversation history;
-- clarification handling;
-- responsive web interface for different desktop screen sizes;
-- Docker Compose development environment.
+### In Progress — Production Readiness
 
-### Production-ready Portfolio
+Current work focuses on turning the validated MVP into a deployable public portfolio application.
 
-The final phase focuses on production readiness and deployment:
+Planned work includes:
 
-- broader test coverage;
-- static analysis and type checking;
-- CI/CD with GitHub Actions;
-- production Docker images;
-- structured logging and monitoring;
-- health checks;
-- error tracking;
-- cloud deployment;
-- public demonstration environment;
-- invitation-based access;
-- administration tools;
-- internationalization and user preferences.
+- CI/CD with GitHub Actions
+- static analysis and type checking
+- structured logging
+- health checks
+- monitoring and error tracking
+- production-oriented Docker configuration
+- cloud deployment
+- secure public demo environment
+- predefined demonstration datasets
+- invitation-based access and administration tools
 
-## Current Scope
+### Future Extensions
 
-The current scope is intentionally limited.
-
-PostgreSQL is the only supported external data source.
-
-The following are notably outside the current portfolio scope:
-
-- additional database and file connectors;
-- autonomous multi-agent systems;
-- long-term AI memory;
-- fine-tuning;
-- RAG-based document exploration;
-- collaborative workspaces;
-- advanced analytics features;
-- enterprise-oriented features;
-- manual semantic metadata editing;
-- manual synonym management;
-- advanced Knowledge Catalog version comparison;
-- interfaces specifically designed for mobile devices.
-
-These limitations are intentional so that the project can focus on a complete, secure, testable, and deployable data exploration workflow.
+The architecture is designed to support future capabilities such as additional data-source connectors, but these are intentionally outside the current production-readiness scope.
 
 ## Documentation
 
-The project is documented before and throughout its implementation.
+Detailed project documentation is available in [`docs/`](docs/):
 
-Detailed documentation covers:
+- [Product Vision](docs/product-vision.md)
+- [MVP Scope](docs/mvp-scope.md)
+- [Requirements](docs/requirements.md)
+- [Functional Use Cases](docs/functional-use-cases.md)
+- [Domain Model](docs/domain-model.md)
+- [Application Components](docs/application-components.md)
+- [Design System](docs/design-system.md)
+- [Architecture Decision Records](docs/adrs/README.md)
+- [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md)
+- [PlantUML Diagrams](docs/diagrams/README.md)
 
-- product vision;
-- MVP scope;
-- functional and non-functional requirements;
-- functional use cases;
-- domain model;
-- application components;
-- design system;
-- Architecture Decision Records (ADRs);
-- PlantUML architecture and domain diagrams.
+The documentation records the main product, domain, architectural, and technical decisions made throughout the project.
 
-This documentation serves as the reference for implementation decisions.
+## Project Context
 
-## Project Goals
+AskMyData is a personal portfolio project designed and developed to explore the engineering challenges involved in building a controlled natural-language interface for structured data.
 
-AskMyData is also a portfolio project designed to apply and strengthen skills in:
+The project is also used to deepen practical experience in software architecture, Python and Django development, data engineering, SQL safety, LLM integration, automated testing, containerization, and production-oriented development practices.
 
-- Python application development;
-- Django architecture;
-- data engineering and SQL;
-- LLM integration;
-- secure AI-assisted data access;
-- software architecture;
-- automated testing;
-- Docker;
-- CI/CD;
-- observability;
-- production deployment.
-
-The objective is not only to build a functional AI prototype, but to develop a structured software project that explicitly incorporates architectural decisions, security constraints, testing, documentation, and deployment practices.
+Rather than focusing only on a working prototype, the project follows a documented software-development approach including requirements, domain modeling, architectural decisions, functional testing, realistic quality benchmarking, and progressive production readiness.
