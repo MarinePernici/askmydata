@@ -2877,16 +2877,18 @@ html {
     box-shadow: var(--shadow-overlay);
 }
 
-.landing-product-preview-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 480px;
-    border: var(--border-default);
-    border-radius: var(--radius-lg);
-    background: var(--color-white);
-    color: var(--color-neutral-500);
-    font-size: var(--text-small-size);
+.landing-product-preview-inner {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.landing-product-preview-image {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
 }
 
 /* Landing sections */
@@ -3055,9 +3057,9 @@ html {
 
 .landing-scope-inner {
     display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-columns: 0.7fr 1.3fr;
+    gap: var(--space-12);
     align-items: center;
-    gap: var(--space-16);
 }
 
 .landing-scope-content {
@@ -3081,16 +3083,18 @@ html {
     box-shadow: var(--shadow-overlay);
 }
 
-.landing-scope-preview-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 360px;
-    border: var(--border-default);
-    border-radius: var(--radius-lg);
-    background: var(--color-white);
-    color: var(--color-neutral-500);
-    font-size: var(--text-small-size);
+.landing-scope-preview-inner {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.landing-scope-preview-image {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
 }
 
 /* Landing technology */
@@ -3278,10 +3282,6 @@ html {
         margin-top: var(--space-12);
     }
 
-    .landing-product-preview-placeholder {
-        min-height: 360px;
-    }
-
     .landing-section {
         padding: 72px 0;
     }
@@ -3357,10 +3357,6 @@ html {
         max-width: 640px;
     }
 
-    .landing-scope-preview-placeholder {
-        min-height: 320px;
-    }
-
     .landing-final-cta-title {
         font-size: 30px;
         line-height: 38px;
@@ -3398,10 +3394,6 @@ html {
         flex: 1 1 140px;
     }
 
-    .landing-product-preview-placeholder {
-        min-height: 260px;
-    }
-
     .landing-section {
         padding: 56px 0;
     }
@@ -3413,10 +3405,6 @@ html {
 
     .landing-controls-grid {
         grid-template-columns: 1fr;
-    }
-
-    .landing-scope-preview-placeholder {
-        min-height: 240px;
     }
 
     .landing-technology-grid {
