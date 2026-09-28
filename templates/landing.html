@@ -1,0 +1,530 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AskMyData</title>
+    <meta
+        name="description"
+        content="Ask questions in natural language and get answers from your data with a controlled, read-only query pipeline."
+    >
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body id="top" class="landing-page">
+    <header class="landing-header">
+        <div class="landing-container landing-header-inner">
+            <a
+                href="{% url 'landing' %}"
+                class="landing-brand"
+                aria-label="AskMyData home"
+            >
+                <img
+                    src="{% static 'images/askmydata-logo.png' %}"
+                    alt=""
+                    class="landing-brand-logo"
+                >
+                <span>AskMyData</span>
+            </a>
+
+            <nav class="landing-navigation" aria-label="Main navigation">
+                <div class="landing-navigation-links">
+                    <a href="#how-it-works" class="landing-navigation-link">
+                        How it works
+                    </a>
+
+                    <a href="#safety" class="landing-navigation-link">
+                        Safety
+                    </a>
+
+                    <a href="#technology" class="landing-navigation-link">
+                        Technology
+                    </a>
+                </div>
+
+                <a href="{% url 'login' %}" class="btn btn-secondary">
+                    Sign in
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="landing-hero">
+            <div class="landing-container landing-hero-inner">
+                <div class="landing-hero-content">
+                    <p class="landing-eyebrow">
+                        Natural language data exploration
+                    </p>
+
+                    <h1 class="landing-hero-title">
+                        Ask questions. Get answers from your data.
+                    </h1>
+
+                    <p class="landing-hero-description">
+                        Connect your data, define what AskMyData can access,
+                        and explore it using natural language.
+                    </p>
+
+                    <div class="landing-hero-actions">
+                        <span
+                            class="btn btn-primary"
+                            aria-disabled="true"
+                            title="Public demo access is coming soon"
+                        >
+                            Try the demo
+                        </span>
+
+                        <a href="{% url 'login' %}" class="btn btn-secondary">
+                            Sign in
+                        </a>
+                    </div>
+                </div>
+
+                <div class="landing-product-preview">
+                    <div class="landing-product-preview-placeholder">
+                        <span>AskMyData product preview</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="landing-section landing-how-it-works">
+            <div class="landing-container">
+                <header class="landing-section-header">
+                    <p class="landing-eyebrow">How it works</p>
+
+                    <h2 class="landing-section-title">
+                        From your data to an answer
+                    </h2>
+
+                    <p class="landing-section-description">
+                        AskMyData turns natural language questions into a controlled
+                        query workflow.
+                    </p>
+                </header>
+
+                <div class="landing-pipeline">
+                    <article class="landing-pipeline-step">
+                        <div class="landing-pipeline-marker">
+                            <span class="landing-pipeline-number">01</span>
+
+                            <div class="landing-pipeline-icon" aria-hidden="true">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <ellipse cx="12" cy="5" rx="8" ry="3" />
+                                    <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+                                    <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3>Connect your data</h3>
+
+                        <p>
+                            Connect a supported data source to your project.
+                        </p>
+                    </article>
+
+                    <article class="landing-pipeline-step">
+                        <div class="landing-pipeline-marker">
+                            <span class="landing-pipeline-number">02</span>
+
+                            <div class="landing-pipeline-icon" aria-hidden="true">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                                    <path d="m15 17 2 2 4-5" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3>Define the scope</h3>
+
+                        <p>
+                            Choose the tables AskMyData is allowed to use for exploration.
+                        </p>
+                    </article>
+
+                    <article class="landing-pipeline-step">
+                        <div class="landing-pipeline-marker">
+                            <span class="landing-pipeline-number">03</span>
+
+                            <div class="landing-pipeline-icon" aria-hidden="true">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                                    <path d="M8 9h8" />
+                                    <path d="M8 13h5" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3>Ask questions</h3>
+
+                        <p>
+                            Explore your data using natural language instead of writing SQL.
+                        </p>
+                    </article>
+
+                    <article class="landing-pipeline-step">
+                        <div class="landing-pipeline-marker">
+                            <span class="landing-pipeline-number">04</span>
+
+                            <div class="landing-pipeline-icon" aria-hidden="true">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M4 19V9" />
+                                    <path d="M10 19V5" />
+                                    <path d="M16 19v-7" />
+                                    <path d="M22 19V3" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3>Get answers</h3>
+
+                        <p>
+                            AskMyData validates and executes read-only SQL before producing
+                            an answer.
+                        </p>
+                    </article>
+                </div>
+
+            </div>
+            <a href="#top" class="landing-back-to-top">
+                <span aria-hidden="true">↑</span>
+                Back to top
+            </a>
+        </section>
+
+        <section id="safety" class="landing-section landing-controls">
+            <div class="landing-container">
+                <header class="landing-section-header">
+                    <p class="landing-eyebrow">Controlled by design</p>
+
+                    <h2 class="landing-section-title">
+                        Built for controlled data exploration
+                    </h2>
+
+                    <p class="landing-section-description">
+                        AskMyData keeps the query pipeline constrained from question
+                        to execution.
+                    </p>
+                </header>
+
+                <div class="landing-controls-grid">
+                    <article class="landing-control">
+                        <div class="landing-control-icon" aria-hidden="true">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Read-only by design</h3>
+                            <p>
+                                Queries are restricted to read-only operations.
+                                AskMyData cannot modify the connected data.
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="landing-control">
+                        <div class="landing-control-icon" aria-hidden="true">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect x="3" y="3" width="7" height="7" rx="1" />
+                                <rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                <rect x="14" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Controlled data scope</h3>
+                            <p>
+                                You choose which tables belong to the Catalog Scope.
+                                Generated queries are restricted to that scope.
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="landing-control">
+                        <div class="landing-control-icon" aria-hidden="true">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M4 5h16" />
+                                <path d="M4 12h10" />
+                                <path d="M4 19h7" />
+                                <path d="m16 17 2 2 4-4" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>SQL validation before execution</h3>
+                            <p>
+                                Generated SQL is validated before it can reach the
+                                database.
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="landing-control">
+                        <div class="landing-control-icon" aria-hidden="true">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                                <path d="M9 9a3 3 0 1 1 5.5 1.7c-.9.8-1.5 1.2-1.5 2.3" />
+                                <path d="M13 16h.01" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Clarifies instead of guessing</h3>
+                            <p>
+                                Ambiguous questions can trigger clarification, while
+                                questions outside the available data are rejected.
+                            </p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <a href="#top" class="landing-back-to-top">
+                <span aria-hidden="true">↑</span>
+                Back to top
+            </a>
+        </section>
+
+        <section class="landing-section landing-scope">
+            <div class="landing-container landing-scope-inner">
+                <div class="landing-scope-content">
+                    <p class="landing-eyebrow">Your data, your scope</p>
+
+                    <h2 class="landing-section-title">
+                        Decide what AskMyData can explore
+                    </h2>
+
+                    <p class="landing-scope-description">
+                        Select the tables that belong to your project's Catalog Scope.
+                        AskMyData uses that scope to build contextual knowledge and
+                        constrain generated queries.
+                    </p>
+
+                    <p class="landing-scope-description">
+                        The result is a query environment grounded in the data you
+                        explicitly selected.
+                    </p>
+                </div>
+
+                <div class="landing-scope-preview">
+                    <div class="landing-scope-preview-placeholder">
+                        <span>Catalog Scope product preview</span>
+                    </div>
+                </div>
+            </div>
+            <a href="#top" class="landing-back-to-top">
+                <span aria-hidden="true">↑</span>
+                Back to top
+            </a>
+        </section>
+
+        <section id="technology"class="landing-section landing-technology">
+            <div class="landing-container">
+                <header class="landing-section-header">
+                    <p class="landing-eyebrow">Current technology</p>
+
+                    <h2 class="landing-section-title">
+                        Built to evolve
+                    </h2>
+
+                    <p class="landing-section-description">
+                        AskMyData currently uses PostgreSQL and OpenAI models, with
+                        extensible interfaces designed for additional integrations.
+                    </p>
+                </header>
+
+                <div class="landing-technology-grid">
+                    <article class="landing-technology-item">
+                        <p class="landing-technology-label">
+                            Data source
+                        </p>
+
+                        <h3>PostgreSQL</h3>
+
+                        <p>
+                            Currently supported. Additional data source connectors
+                            are planned.
+                        </p>
+                    </article>
+
+                    <article class="landing-technology-item">
+                        <p class="landing-technology-label">
+                            AI model provider
+                        </p>
+
+                        <h3>OpenAI</h3>
+
+                        <p>
+                            Currently supported. Additional model providers are
+                            planned.
+                        </p>
+                    </article>
+                </div>
+            </div>
+            <a href="#top" class="landing-back-to-top">
+                <span aria-hidden="true">↑</span>
+                Back to top
+            </a>
+        </section>
+
+        <section class="landing-section landing-final-cta">
+            <div class="landing-container landing-final-cta-inner">
+                <p class="landing-eyebrow">Explore with AskMyData</p>
+
+                <h2 class="landing-final-cta-title">
+                    Ask your data, not your database.
+                </h2>
+
+                <p class="landing-final-cta-description">
+                    Explore your project's data using natural language through a
+                    controlled, read-only query workflow.
+                </p>
+
+                <div class="landing-final-cta-actions">
+                    <span
+                        class="btn btn-primary"
+                        aria-disabled="true"
+                        title="Public demo access is coming soon"
+                    >
+                        Try the demo
+                    </span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="landing-footer">
+        <div class="landing-container landing-footer-inner">
+            <a
+                href="{% url 'landing' %}"
+                class="landing-brand"
+                aria-label="AskMyData home"
+            >
+                <img
+                    src="{% static 'images/askmydata-logo.png' %}"
+                    alt=""
+                    class="landing-brand-logo"
+                >
+                <span>AskMyData</span>
+            </a>
+
+            <div class="landing-footer-links">
+                <!-- TODO: Replace contact email before public deployment. -->
+                <a
+                    href="mailto:contact@askmydata.example"
+                    class="landing-footer-link landing-footer-link-with-icon"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path d="m3 7 9 6 9-6" />
+                    </svg>
+                    <span>Contact</span>
+                </a>
+
+                <a
+                    href="https://github.com/MarinePernici/askmydata"
+                    class="landing-footer-link landing-footer-link-with-icon"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6
+                            6.8-7A5.4 5.4 0 0 0 19.4 4c.1-.4.6-1.9-.1-4
+                            0 0-1.1-.4-3.6 1.3a12.3 12.3 0 0 0-6.5 0
+                            C6.7-.4 5.6 0 5.6 0c-.7 2.1-.2 3.6-.1 4
+                            a5.4 5.4 0 0 0-1.4 3.7c0 5.4 3.5 6.5
+                            6.8 7-.5.4-.8 1-.9 1.6-.1.6-.1 1.2 0 1.7v4"
+                        />
+                        <path d="M9 18c-4.5 2-5-2-7-2" />
+                    </svg>
+                    <span>GitHub</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
