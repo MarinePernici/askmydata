@@ -150,6 +150,9 @@ The initial interface is rendered by Django using server-side templates and stan
 * provide the conversational exploration interface;
 * display simplified execution states;
 * display validation and business errors;
+* distinguish successful answers, clarification requests, unsupported questions and technical failures through appropriate visual feedback;
+* display a dismissible error dialog when a question fails for technical reasons;
+* preserve the corresponding error message in the conversation after the dialog is dismissed;
 * submit user actions to application services.
 
 ### Does Not
@@ -444,6 +447,8 @@ Manages conversations and user-visible messages associated with projects.
 * retrieve conversation history;
 * append user and assistant messages;
 * provide limited contextual history for the selected conversation;
+* preserve safe assistant error messages associated with failed Question Runs;
+* exclude failed question-and-answer exchanges from the contextual history provided to the Query Engine;
 * archive conversations with projects.
 
 ### Domain Concepts
@@ -915,7 +920,8 @@ Implements the Connector abstraction for PostgreSQL.
 * verify read-only permissions;
 * retrieve schema metadata;
 * execute approved SQL;
-* map PostgreSQL errors into application errors.
+* translate PostgreSQL connection failures into application-level connection errors;
+* normalize database execution errors without exposing raw driver exceptions or sensitive connection details.
 
 ### Dependencies
 
@@ -1275,11 +1281,16 @@ Components should return structured application errors rather than leaking raw i
 
 ### Rules
 
-* User-facing messages remain generic and understandable.
-* Technical details are logged safely.
-* Sensitive information is removed from errors.
-* External provider errors are translated into application-level errors.
-* Failed Question Runs remain traceable.
+* Infrastructure exceptions are translated into structured application-level errors.
+* PostgreSQL connection failures are distinguished from other query execution failures.
+* User-facing messages remain understandable and do not expose raw exceptions, credentials or sensitive database details.
+* Failed Question Runs and their execution traces remain persistent and traceable.
+* When a question fails during processing, a safe explanatory assistant message is persisted in the associated conversation.
+* Failed question-and-answer exchanges remain visible in the conversation history but are excluded from subsequent LLM conversational context.
+* Technical failures trigger a dismissible error dialog in the conversational interface.
+* Dismissing the dialog does not remove the persistent assistant error message.
+* Clarification requests and questions that cannot be answered do not trigger the technical error dialog.
+* Technical details are logged safely for diagnosis.
 
 ---
 

@@ -224,6 +224,15 @@ if (conversationPanel && conversationPanelToggle) {
         }
     });
 }
+
+const questionErrorDialog = document.querySelector(
+    "[data-question-error-dialog]",
+);
+
+if (questionErrorDialog && !questionErrorDialog.open) {
+    questionErrorDialog.showModal();
+}
+
 const tableSelectionCheckboxes = Array.from(
     document.querySelectorAll('input[name="tables"]'),
 );

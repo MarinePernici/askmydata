@@ -205,6 +205,21 @@ Example:
 
 rather than a green indicator without a textual label.
 
+### Conversational Response States
+
+The conversational interface distinguishes four response states:
+
+| State | Semantic color | Usage |
+|---|---|---|
+| Success | Green | A question has been answered successfully. |
+| Clarification | Blue | Additional information is required before the question can be answered. |
+| Cannot answer | Amber | The question cannot be answered using the available project data. |
+| Technical error | Red | A technical failure prevented the question from being processed successfully. |
+
+Each state combines an appropriate color, an icon and an explanatory message.
+
+Technical errors must remain visually distinct from clarification requests and questions that cannot be answered.
+
 ---
 
 # 6. Typography
@@ -467,6 +482,14 @@ Examples:
 
 - Dashboard;
 - Create Project.
+
+### Project Ordering
+
+The dashboard groups projects according to their lifecycle status.
+
+Within each group, projects are displayed in reverse chronological order, with the most recently created projects first.
+
+The project switcher in the sidebar uses alphabetical ordering by project name.
 
 ## 13.2 Project Context
 
@@ -739,6 +762,18 @@ The interface should accommodate the fact that answering one natural-language qu
 Internal SQL execution should therefore not be presented as if every user question necessarily maps to a single SQL query.
 
 Detailed technical traces, if implemented, should be treated as secondary or debugging information.
+
+### Error Presentation
+
+When a question fails for technical reasons, the interface displays a dismissible error dialog containing a safe explanatory message.
+
+The dialog can be closed using its close button or the Escape key.
+
+Closing the dialog does not remove the corresponding assistant error message from the conversation history.
+
+The dialog is displayed when the technical failure occurs. It does not reopen automatically when the user reloads the conversation.
+
+Clarification requests and questions that cannot be answered are displayed directly in the conversation without triggering the technical error dialog.
 
 ---
 

@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from apps.conversations.models import Conversation, Message
 from apps.projects.models import Project
+from apps.runs.error_messages import get_safe_error_message
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
@@ -173,12 +174,23 @@ class QuestionRunService:
             raise
 
         except Exception as exc:
+            safe_message = get_safe_error_message(exc)
+
+            assistant_message = self._conversation_service.add_message(
+                conversation=conversation,
+                role=Message.Role.ASSISTANT,
+                content=safe_message,
+            )
+
+            question_run.assistant_message = assistant_message
             question_run.status = QuestionRun.Status.FAILED
             question_run.completed_at = timezone.now()
             question_run.error_code = exc.__class__.__name__
             question_run.error_message = str(exc)
+
             question_run.save(
                 update_fields=[
+                    "assistant_message",
                     "status",
                     "completed_at",
                     "error_code",
@@ -190,7 +202,6 @@ class QuestionRunService:
                 "Unexpected failure while processing question run %s.",
                 question_run.id,
             )
-
             raise
 
         assistant_message = self._conversation_service.add_message(

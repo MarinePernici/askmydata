@@ -20,3 +20,7 @@ class DataSourcePermissionError(QueryExecutionError):
 
 class QueryTimeoutError(QueryExecutionError):
     """Raised when a SQL query exceeds its execution timeout."""
+
+
+class DataSourceConnectionError(QueryExecutionError):
+    """Raised when the data source connection cannot be established."""

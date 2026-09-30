@@ -94,7 +94,7 @@ class ProjectService:
     def list_for_user(self, user):
         return Project.objects.filter(
             owner=user,
-        )
+        ).order_by("-created_at", "-id")
 
     def ensure_writable(self, project: Project) -> None:
         if project.is_archived:

@@ -1,6 +1,7 @@
-from django.db.models import Max
+from django.db.models import Max, Q
 
 from apps.conversations.models import Conversation, Message
+from apps.runs.models import QuestionRun
 from query_engine.types import ConversationMessage
 
 
@@ -36,9 +37,11 @@ class ConversationService:
         max_messages: int = 20,
     ) -> tuple[ConversationMessage, ...]:
         messages = list(
-            conversation.messages.order_by("-sequence_number")[:max_messages]
+            conversation.messages.exclude(
+                Q(question_run__status=QuestionRun.Status.FAILED)
+                | Q(generated_by_run__status=QuestionRun.Status.FAILED)
+            ).order_by("-sequence_number")[:max_messages]
         )
-
         messages.reverse()
 
         return tuple(

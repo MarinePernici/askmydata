@@ -2,6 +2,7 @@ import psycopg
 
 from connectors.postgresql import PostgreSQLConnectionConfig
 from query_engine.exceptions import (
+    DataSourceConnectionError,
     DataSourcePermissionError,
     QueryTimeoutError,
 )
@@ -57,6 +58,10 @@ class PostgreSQLQueryExecutor(QueryExecutor):
         except psycopg.errors.QueryCanceled as exc:
             raise QueryTimeoutError(
                 "The query exceeded the configured execution timeout."
+            ) from exc
+        except psycopg.OperationalError as exc:
+            raise DataSourceConnectionError(
+                "Unable to connect to the configured data source."
             ) from exc
 
         return QueryExecutionResult(

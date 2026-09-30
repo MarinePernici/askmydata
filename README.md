@@ -24,6 +24,8 @@ AskMyData builds a semantic Knowledge Catalog from the selected database schema,
 - Clarification of ambiguous analytical questions
 - Rejection of questions that cannot be answered from the project's data
 - Contextual conversations with persistent history
+- Persistent, user-friendly error messages for failed questions
+- Failed exchanges excluded from subsequent LLM conversational context
 - Execution tracing for query pipeline diagnostics
 - Automated tests and documented quality benchmarking
 - Docker Compose development environment
@@ -44,6 +46,8 @@ A typical AskMyData workflow is:
 10. Validate the result and generate a natural-language answer.
 
 When a question is ambiguous or requires a missing business definition, AskMyData can request clarification before generating SQL. When the requested information cannot be derived from the project's available data, the question is rejected without SQL execution.
+
+Technical failures are handled separately from clarification requests and questions that cannot be answered. When a question fails, AskMyData displays a dismissible error dialog and preserves a safe explanatory message in the conversation history.
 
 ## Knowledge Catalog
 
@@ -71,6 +75,8 @@ Each conversation maintains its own context, allowing users to:
 - respond to clarification requests;
 - return to existing conversations;
 - keep conversation histories isolated from one another.
+
+Failed question-and-answer exchanges remain visible in the conversation history but are excluded from the context provided to the LLM for subsequent questions.
 
 ## Security and Controlled SQL Execution
 
@@ -163,6 +169,8 @@ The benchmark was also used as an iterative quality process: functional and usab
 At the latest recorded benchmark validation point, the full Docker test suite contained **371 passing tests**.
 
 See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
+
+The latest full Django test suite execution completed successfully with **389 passing tests**.
 
 ## Local Development
 

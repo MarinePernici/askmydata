@@ -789,13 +789,12 @@ class ProjectListViewTests(TestCase):
 
         self.assertQuerySetEqual(
             response.context["active_projects"],
-            [ready_project, regenerating_project],
-            ordered=False,
+            [regenerating_project, ready_project],
         )
+
         self.assertQuerySetEqual(
             response.context["setup_projects"],
-            [draft_project, configuring_project, building_project],
-            ordered=False,
+            [building_project, configuring_project, draft_project],
         )
         self.assertQuerySetEqual(
             response.context["archived_projects"],

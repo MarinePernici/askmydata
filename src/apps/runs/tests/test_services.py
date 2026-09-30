@@ -11,7 +11,12 @@ from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
-from query_engine.exceptions import SQLValidationError
+from query_engine.exceptions import (
+    DataSourceConnectionError,
+    DataSourcePermissionError,
+    QueryTimeoutError,
+    SQLValidationError,
+)
 from query_engine.types import (
     AnswerGenerationResult,
     CannotAnswerResult,
@@ -434,7 +439,7 @@ class QuestionRunServiceTests(TestCase):
             "How many customers do we have?",
         )
 
-    def test_failed_run_keeps_user_message_without_assistant_message(self):
+    def test_failed_run_creates_safe_assistant_message(self):
         project = self.create_project_with_data_source()
         conversation = self.create_conversation(project)
 
@@ -457,23 +462,17 @@ class QuestionRunServiceTests(TestCase):
 
         messages = list(conversation.messages.all())
 
-        self.assertEqual(
-            len(messages),
-            1,
-        )
+        self.assertEqual(len(messages), 2)
 
+        self.assertEqual(messages[0].role, Message.Role.USER)
+        self.assertEqual(messages[0].content, "Return one.")
+
+        self.assertEqual(messages[1].role, Message.Role.ASSISTANT)
         self.assertEqual(
-            messages[0].role,
-            Message.Role.USER,
+            messages[1].content,
+            "Unable to process your question. Please try again.",
         )
-        self.assertEqual(
-            messages[0].content,
-            "Return one.",
-        )
-        self.assertEqual(
-            messages[0].sequence_number,
-            1,
-        )
+        self.assertNotIn("LLM unavailable", messages[1].content)
 
         question_run = QuestionRun.objects.get()
 
@@ -485,9 +484,87 @@ class QuestionRunServiceTests(TestCase):
             question_run.user_message,
             messages[0],
         )
-        self.assertIsNone(
+        self.assertEqual(
             question_run.assistant_message,
+            messages[1],
         )
+
+        self.assertEqual(
+            question_run.error_message,
+            "LLM unavailable",
+        )
+
+    def test_execution_errors_create_safe_assistant_messages(self):
+        cases = (
+            (
+                DataSourceConnectionError,
+                (
+                    "Unable to connect to the project's data source. "
+                    "Check the connection and try again."
+                ),
+            ),
+            (
+                DataSourcePermissionError,
+                (
+                    "The database user no longer has the required permissions. "
+                    "Check the data source permissions."
+                ),
+            ),
+            (
+                QueryTimeoutError,
+                "The query took too long to execute. Try a more specific question.",
+            ),
+        )
+
+        for exception_class, expected_message in cases:
+            with self.subTest(exception=exception_class.__name__):
+                project = self.create_project_with_data_source()
+                conversation = self.create_conversation(project)
+
+                service = QuestionRunService(
+                    generator=FakeGenerator(),
+                    validator=FakeValidator(),
+                    executor_factory=FakeExecutorFactory(),
+                    result_validator=FakeResultValidator(),
+                    answer_generator=FakeAnswerGenerator(),
+                    catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+                    conversation_service=ConversationService(),
+                )
+
+                technical_detail = "Sensitive database connection details"
+
+                with (
+                    patch.object(
+                        FakeExecutor,
+                        "execute",
+                        side_effect=exception_class(technical_detail),
+                    ),
+                    self.assertRaises(exception_class),
+                ):
+                    service.run(
+                        project=project,
+                        conversation=conversation,
+                        question="Return one.",
+                    )
+
+                run = QuestionRun.objects.get(
+                    conversation=conversation,
+                )
+
+                self.assertEqual(run.status, QuestionRun.Status.FAILED)
+                self.assertEqual(run.error_code, exception_class.__name__)
+                self.assertEqual(run.error_message, technical_detail)
+
+                self.assertIsNotNone(run.assistant_message)
+                self.assertEqual(
+                    run.assistant_message.content,
+                    expected_message,
+                )
+                self.assertNotIn(
+                    technical_detail,
+                    run.assistant_message.content,
+                )
+                self.assertEqual(conversation.messages.count(), 2)
 
     def test_sql_validation_failure_creates_safe_assistant_message(self):
         project = self.create_project_with_data_source()

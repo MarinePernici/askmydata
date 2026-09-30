@@ -13,15 +13,67 @@
     <header class="conversations-header">
         <h1>Conversations</h1>
     </header>
-    {% if messages %}
-        <div class="messages">
+        {% if messages %}
             {% for message in messages %}
-                <div class="message message-{{ message.tags }}">
-                    {{ message }}
-                </div>
+                {% if "question-error" in message.tags %}
+                    <dialog
+                        class="conversation-error-dialog"
+                        data-question-error-dialog
+                        aria-labelledby="question-error-title-{{ forloop.counter }}"
+                        aria-describedby="question-error-description-{{ forloop.counter }}"
+                    >
+                        <div class="conversation-error-dialog-header">
+                            <div class="conversation-error-dialog-title">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 8v4" />
+                                    <path d="M12 16h.01" />
+                                </svg>
+
+                                <h2 id="question-error-title-{{ forloop.counter }}">
+                                    Unable to process your question
+                                </h2>
+                            </div>
+
+                            <form method="dialog">
+                                <button
+                                    type="submit"
+                                    class="conversation-error-dialog-close"
+                                    aria-label="Close error dialog"
+                                    autofocus
+                                >
+                                    &times;
+                                </button>
+                            </form>
+                        </div>
+
+                        <p id="question-error-description-{{ forloop.counter }}">
+                            {{ message }}
+                        </p>
+
+                        <form method="dialog" class="conversation-error-dialog-actions">
+                            <button type="submit" class="btn btn-secondary">
+                                Close
+                            </button>
+                        </form>
+                    </dialog>
+                {% else %}
+                    <div class="messages">
+                        <div class="message message-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endif %}
             {% endfor %}
-        </div>
-    {% endif %}
+        {% endif %}
 
     <div class="conversations-workspace">
         {% include "conversations/_conversation_panel.html" %}
@@ -89,12 +141,101 @@
             >
                 {% for message in conversation_messages %}
                     <article
-                        class="conversation-message conversation-message-{{ message.role }}"
+                        class="conversation-message conversation-message-{{ message.role }}
+                        {% if message.role == 'assistant' %}
+                            {% if message.generated_by_run.status == 'completed' %}
+                                conversation-message-success
+                            {% elif message.generated_by_run.status == 'needs_clarification' %}
+                                conversation-message-info
+                            {% elif message.generated_by_run.status == 'rejected' %}
+                                conversation-message-warning
+                            {% elif message.generated_by_run.status == 'failed' %}
+                                conversation-message-error
+                            {% endif %}
+                        {% endif %}"
                         {% if forloop.last %}data-conversation-last-message{% endif %}
                     >
                         <p class="conversation-message-author">
+
                             {% if message.role == "user" %}
                                 You
+
+                            {% elif message.generated_by_run.status == "completed" %}
+                                <!-- Success: circle-check -->
+                                <svg
+                                    class="conversation-status-icon"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="m8 12 3 3 5-6" />
+                                </svg>
+                                AskMyData · Answer
+
+                            {% elif message.generated_by_run.status == "needs_clarification" %}
+                                <!-- Info: message-circle-question -->
+                                <svg
+                                    class="conversation-status-icon"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                                    <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
+                                    <path d="M12 17h.01" />
+                                </svg>
+                                AskMyData · Clarification needed
+
+                            {% elif message.generated_by_run.status == "rejected" %}
+                                <!-- Warning: triangle-alert -->
+                                <svg
+                                    class="conversation-status-icon"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        d="M10.29 3.86 1.82 18
+                                        a2 2 0 0 0 1.71 3h16.94
+                                        a2 2 0 0 0 1.71-3L13.71 3.86
+                                        a2 2 0 0 0-3.42 0Z"
+                                    />
+                                    <path d="M12 9v4" />
+                                    <path d="M12 17h.01" />
+                                </svg>
+                                AskMyData · Cannot answer
+
+                            {% elif message.generated_by_run.status == "failed" %}
+                                <!-- Error: circle-alert -->
+                                <svg
+                                    class="conversation-status-icon"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 8v4" />
+                                    <path d="M12 16h.01" />
+                                </svg>
+                                AskMyData · Error
+
                             {% else %}
                                 AskMyData
                             {% endif %}

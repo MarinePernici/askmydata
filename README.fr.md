@@ -24,6 +24,8 @@ AskMyData construit un Knowledge Catalog sémantique à partir du schéma sélec
 - Clarification des questions analytiques ambiguës
 - Rejet des questions auxquelles les données du projet ne permettent pas de répondre
 - Conversations contextualisées avec historique persistant
+- Messages d'erreur compréhensibles et conservés dans l'historique en cas d'échec
+- Exclusion des échanges échoués du contexte conversationnel transmis au LLM
 - Traces d'exécution pour le diagnostic du pipeline de requêtes
 - Tests automatisés et benchmark qualité documenté
 - Environnement de développement Docker Compose
@@ -44,6 +46,8 @@ Un parcours typique dans AskMyData est le suivant :
 10. Valider le résultat et générer une réponse en langage naturel.
 
 Lorsqu'une question est ambiguë ou nécessite une définition métier manquante, AskMyData peut demander une clarification avant de générer du SQL. Lorsque l'information demandée ne peut pas être déduite des données disponibles dans le projet, la question est rejetée sans exécution SQL.
+
+Les erreurs techniques sont traitées séparément des demandes de clarification et des questions auxquelles les données ne permettent pas de répondre. Lorsqu'une question échoue, AskMyData affiche une fenêtre d'erreur pouvant être fermée et conserve un message explicatif dans l'historique de la conversation.
 
 ## Knowledge Catalog
 
@@ -71,6 +75,8 @@ Chaque conversation conserve son propre contexte, ce qui permet à l'utilisateur
 - répondre aux demandes de clarification ;
 - revenir à des conversations existantes ;
 - conserver des historiques de conversation isolés les uns des autres.
+
+Les échanges ayant échoué restent visibles dans l'historique de la conversation, mais sont exclus du contexte transmis au LLM pour les questions suivantes.
 
 ## Sécurité et exécution contrôlée du SQL
 
@@ -163,6 +169,8 @@ Le benchmark a également servi de démarche qualité itérative : les problème
 Au dernier point de validation documenté dans le benchmark, la suite de tests complète exécutée sous Docker comptait **371 tests réussis**.
 
 Voir le [benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md) pour la méthodologie complète, les scénarios, les résultats, les problèmes identifiés et leurs résolutions.
+
+La dernière exécution de la suite complète de tests Django s'est terminée avec succès, avec **389 tests réussis**.
 
 ## Développement local
 
@@ -306,6 +314,6 @@ Cette documentation retrace les principales décisions produit, métier, archite
 
 AskMyData est un projet portfolio personnel conçu et développé pour explorer les problématiques d'ingénierie liées à la création d'une interface contrôlée en langage naturel pour des données structurées.
 
-Le projet permet également d'approfondir la pratique de l'architecture logicielle, du développement Python et Django,de l'ingénierie des données, de la sécurisation du SQL, de l'intégration de LLM, des tests automatisés, de la conteneurisation et des pratiques de développement orientées production.
+Le projet permet également d'approfondir la pratique de l'architecture logicielle, du développement Python et Django, de l'ingénierie des données, de la sécurisation du SQL, de l'intégration de LLM, des tests automatisés, de la conteneurisation et des pratiques de développement orientées production.
 
 Au-delà de la réalisation d'un prototype fonctionnel, le projet suit une démarche de développement documentée comprenant les exigences, la modélisation du domaine, les décisions d'architecture, les tests fonctionnels, un benchmark qualité sur des données réalistes et une progression vers un niveau de préparation à la production.

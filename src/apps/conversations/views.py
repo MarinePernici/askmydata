@@ -6,8 +6,10 @@ from django.shortcuts import redirect, render
 from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
+from apps.runs.error_messages import get_safe_error_message
 from config.services import create_question_run_service
 from query_engine.exceptions import (
+    DataSourceConnectionError,
     DataSourcePermissionError,
     QueryTimeoutError,
     SQLValidationError,
@@ -218,25 +220,24 @@ def conversation_ask(
             conversation=conversation,
             question=question,
         )
-    except DataSourcePermissionError:
+
+    except (
+        DataSourceConnectionError,
+        DataSourcePermissionError,
+        QueryTimeoutError,
+    ) as exc:
         messages.error(
             request,
-            (
-                "The configured database user no longer has the required "
-                "permissions. Check the data source permissions."
-            ),
-        )
-    except QueryTimeoutError:
-        messages.error(
-            request,
-            "The query took too long to execute. Try a more specific question.",
+            get_safe_error_message(exc),
+            extra_tags="question-error",
         )
     except SQLValidationError:
         pass
-    except Exception:  # noqa: BLE001 - Final UI safety net for unexpected failures.
+    except Exception as exc:  # noqa: BLE001 - Final UI safety net.
         messages.error(
             request,
-            "Unable to process your question.",
+            get_safe_error_message(exc),
+            extra_tags="question-error",
         )
 
     return redirect(

@@ -7,6 +7,7 @@ import psycopg
 
 from connectors.postgresql import PostgreSQLConnectionConfig
 from query_engine.exceptions import (
+    DataSourceConnectionError,
     DataSourcePermissionError,
     QueryTimeoutError,
 )
@@ -147,6 +148,25 @@ class PostgreSQLQueryExecutorTests(unittest.TestCase):
             self.assertRaises(QueryTimeoutError),
         ):
             executor.execute("SELECT * FROM sales.customers")
+
+    def test_translates_connection_error(self):
+        executor = PostgreSQLQueryExecutor(self.config)
+
+        with (
+            patch(
+                "query_engine.postgresql_executor.psycopg.connect",
+                side_effect=psycopg.OperationalError(
+                    "connection to server failed: sensitive details"
+                ),
+            ),
+            self.assertRaises(DataSourceConnectionError) as context,
+        ):
+            executor.execute("SELECT * FROM sales.customers")
+
+        self.assertEqual(
+            str(context.exception),
+            "Unable to connect to the configured data source.",
+        )
 
     def test_translates_real_permission_error(self):
         noselect_config = PostgreSQLConnectionConfig(

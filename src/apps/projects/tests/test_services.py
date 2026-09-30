@@ -318,6 +318,10 @@ class ProjectServiceTests(TestCase):
             owner=user,
             name="Owned project",
         )
+        newer_project = Project.objects.create(
+            owner=user,
+            name="Newer project",
+        )
         Project.objects.create(
             owner=other_user,
             name="Other project",
@@ -327,7 +331,10 @@ class ProjectServiceTests(TestCase):
 
         projects = service.list_for_user(user)
 
-        self.assertEqual(list(projects), [owned_project])
+        self.assertEqual(
+            list(projects),
+            [newer_project, owned_project],
+        )
 
     def test_ensure_writable_allows_active_project(self):
         project = create_test_project(

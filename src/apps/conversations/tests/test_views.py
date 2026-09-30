@@ -12,12 +12,15 @@ from apps.runs.models import QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
 from query_engine.exceptions import (
+    DataSourceConnectionError,
     DataSourcePermissionError,
     QueryTimeoutError,
     SQLValidationError,
 )
 from query_engine.types import (
     AnswerGenerationResult,
+    CannotAnswerResult,
+    ClarificationResult,
     QueryExecutionResult,
     ResultValidationResult,
     SQLGenerationResult,
@@ -66,6 +69,18 @@ class HTTPFakeAnswerGenerator:
 class HTTPFakeCatalogReader:
     def get_current(self, project):
         return KnowledgeCatalog(tables=())
+
+
+class HTTPFakeClarificationGenerator:
+    def generate(self, question, catalog, history=()):
+        return ClarificationResult(
+            question="Which date range should I use?",
+        )
+
+
+class HTTPFakeCannotAnswerGenerator:
+    def generate(self, question, catalog, history=()):
+        return CannotAnswerResult()
 
 
 class ConversationViewTests(TestCase):
@@ -1016,6 +1031,10 @@ class ConversationViewTests(TestCase):
             response,
             "Sensitive internal details",
         )
+        self.assertContains(
+            response,
+            "data-question-error-dialog",
+        )
 
     @patch("apps.conversations.views.create_question_run_service")
     def test_question_run_permission_error_displays_safe_message(
@@ -1054,14 +1073,23 @@ class ConversationViewTests(TestCase):
             data={"question": "How many customers?"},
             follow=True,
         )
-
         self.assertContains(
             response,
-            "The configured database user no longer has the required permissions.",
+            "The database user no longer has the required permissions. "
+            "Check the data source permissions.",
         )
         self.assertNotContains(
             response,
             "permission denied for table customers",
+        )
+        self.assertContains(
+            response,
+            "data-question-error-dialog",
+        )
+
+        self.assertContains(
+            response,
+            'aria-labelledby="question-error-title-1"',
         )
 
     @patch("apps.conversations.views.create_question_run_service")
@@ -1112,6 +1140,10 @@ class ConversationViewTests(TestCase):
             response,
             "canceling statement due to statement timeout",
         )
+        self.assertContains(
+            response,
+            "data-question-error-dialog",
+        )
 
     @patch("apps.conversations.views.create_question_run_service")
     def test_question_run_sql_validation_error_redirects_without_flash_message(
@@ -1161,6 +1193,63 @@ class ConversationViewTests(TestCase):
         self.assertNotContains(
             response,
             "I can't answer this question with the data available in this project.",
+        )
+        self.assertNotContains(
+            response,
+            "data-question-error-dialog",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_connection_error_displays_safe_modal(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-connection-error",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = DataSourceConnectionError(
+            "Sensitive connection details"
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+            follow=True,
+        )
+
+        self.assertContains(
+            response,
+            "Unable to connect to the project's data source. "
+            "Check the connection and try again.",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "data-question-error-dialog",
+        )
+        self.assertNotContains(
+            response,
+            "Sensitive connection details",
         )
 
     @patch("apps.conversations.views.create_question_run_service")
@@ -1415,4 +1504,134 @@ class ConversationViewTests(TestCase):
         self.assertEqual(
             run.status,
             QuestionRun.Status.COMPLETED,
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_clarification_displays_without_error_modal(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="clarification-user",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="test_database",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        create_question_run_service.return_value = QuestionRunService(
+            generator=HTTPFakeClarificationGenerator(),
+            validator=HTTPFakeValidator(),
+            executor_factory=HTTPFakeExecutorFactory(),
+            result_validator=HTTPFakeResultValidator(),
+            answer_generator=HTTPFakeAnswerGenerator(),
+            catalog_reader=HTTPFakeCatalogReader(),
+            conversation_service=ConversationService(),
+        )
+
+        self.client.force_login(user)
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many recent orders?"},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Which date range should I use?")
+        self.assertNotContains(response, "data-question-error-dialog")
+
+        run = QuestionRun.objects.get(conversation=conversation)
+        self.assertEqual(
+            run.status,
+            QuestionRun.Status.NEEDS_CLARIFICATION,
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_cannot_answer_displays_without_error_modal(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="cannot-answer-user",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="test_database",
+            username="readonly",
+        )
+        data_source.set_password("secret-password")
+        data_source.save()
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        create_question_run_service.return_value = QuestionRunService(
+            generator=HTTPFakeCannotAnswerGenerator(),
+            validator=HTTPFakeValidator(),
+            executor_factory=HTTPFakeExecutorFactory(),
+            result_validator=HTTPFakeResultValidator(),
+            answer_generator=HTTPFakeAnswerGenerator(),
+            catalog_reader=HTTPFakeCatalogReader(),
+            conversation_service=ConversationService(),
+        )
+
+        self.client.force_login(user)
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "What is the weather tomorrow?"},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "data-question-error-dialog")
+
+        run = QuestionRun.objects.get(conversation=conversation)
+        self.assertEqual(
+            run.status,
+            QuestionRun.Status.REJECTED,
+        )
+        self.assertContains(
+            response,
+            "I can't answer this question using the data available "
+            "in this project. Please ask a question related to the "
+            "project's data.",
+            html=True,
         )

@@ -3,6 +3,7 @@ from django.test import TestCase
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
 from apps.projects.tests.factories import create_test_project
+from apps.runs.models import QuestionRun
 from query_engine.types import ConversationMessage
 
 
@@ -158,6 +159,63 @@ class ConversationServiceTests(TestCase):
         self.assertEqual(len(history), 20)
         self.assertEqual(history[0].content, "Message 6")
         self.assertEqual(history[-1].content, "Message 25")
+
+    def test_get_history_excludes_failed_question_and_error_message(self):
+        previous_question = Message.objects.create(
+            conversation=self.conversation,
+            role=Message.Role.USER,
+            content="How many customers are there?",
+            sequence_number=1,
+        )
+
+        previous_answer = Message.objects.create(
+            conversation=self.conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are 599 customers.",
+            sequence_number=2,
+        )
+
+        failed_question = Message.objects.create(
+            conversation=self.conversation,
+            role=Message.Role.USER,
+            content="Show me the latest payments.",
+            sequence_number=3,
+        )
+
+        error_message = Message.objects.create(
+            conversation=self.conversation,
+            role=Message.Role.ASSISTANT,
+            content="Unable to process your question.",
+            sequence_number=4,
+        )
+
+        QuestionRun.objects.create(
+            project=self.project,
+            conversation=self.conversation,
+            user_message=failed_question,
+            assistant_message=error_message,
+            status=QuestionRun.Status.FAILED,
+        )
+
+        history = self.service.get_history(
+            conversation=self.conversation,
+        )
+
+        self.assertEqual(
+            history,
+            (
+                ConversationMessage(
+                    role=Message.Role.USER,
+                    content=previous_question.content,
+                ),
+                ConversationMessage(
+                    role=Message.Role.ASSISTANT,
+                    content=previous_answer.content,
+                ),
+            ),
+        )
+
+        self.assertEqual(self.conversation.messages.count(), 4)
 
     def test_create_conversation_for_project(self):
         conversation = self.service.create_conversation(

@@ -260,6 +260,8 @@ The system shall allow multiple conversations to be created and maintained withi
 
 The system shall use previous exchanges as conversational context.
 
+Failed question-and-answer exchanges shall be excluded from the context provided to the AI Query Engine, while remaining accessible in the conversation history.
+
 **Release:** MVP
 
 ---
@@ -267,6 +269,8 @@ The system shall use previous exchanges as conversational context.
 ### FR-CONV-003
 
 The system shall allow users to access the persistent conversation history of each project.
+
+The history shall preserve user questions and assistant messages associated with failed Question Runs, including safe explanatory error messages.
 
 **Release:** MVP
 
@@ -382,6 +386,8 @@ External PostgreSQL connections shall use database accounts restricted to read-o
 
 The system shall return informative error messages without exposing sensitive information.
 
+Technical failures shall be presented through safe, user-facing messages. In the conversational interface, technical errors shall also trigger a dismissible error dialog without removing the corresponding message from the persistent history.
+
 **Release:** MVP
 
 ### NFR-REL-002
@@ -393,6 +399,10 @@ Unexpected failures shall be logged.
 ### NFR-REL-003
 
 The system shall handle AI query pipeline failures gracefully and shall not present failed or incomplete results as valid answers.
+
+The system shall distinguish successful answers, clarification requests, requests that cannot be answered, and technical failures through appropriate user-facing feedback.
+
+Failed Question Runs shall remain traceable, and their user-visible error messages shall not expose raw infrastructure exceptions or sensitive database details.
 
 **Release:** MVP
 

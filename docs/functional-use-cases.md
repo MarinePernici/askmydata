@@ -349,14 +349,20 @@ Obtain a reliable answer from structured data using natural language.
 
 1. SQL validation fails.
 2. The application may attempt a controlled regeneration.
-3. If validation still fails, the run is marked as failed.
+3. If validation still fails, the Question Run is marked as failed.
 4. No invalid query is executed.
+5. A safe explanatory assistant message is persisted in the conversation.
+6. Technical validation details are not exposed to the user.
 
 #### Query execution failure
 
-1. The application records the technical error.
-2. The user receives a safe error message.
-3. Sensitive database details are not exposed.
+1. The application records the technical failure and marks the Question Run as failed.
+2. A safe assistant error message is persisted in the conversation.
+3. The user is informed of the failure through an error dialog.
+4. The dialog can be dismissed without removing the error message from the conversation.
+5. Connection errors, insufficient database permissions and query timeouts receive specific, actionable messages.
+6. Unexpected failures receive a generic error message.
+7. Raw technical errors and sensitive database details are not exposed to the user.
 
 #### Unusable result
 
@@ -489,6 +495,13 @@ Ask follow-up questions using previous exchanges as context.
 
 1. The application uses only the configured amount of recent context.
 2. Older messages remain visible but are not necessarily sent to the LLM.
+
+#### Previous question failed
+
+1. The failed exchange remains visible in the conversation history.
+2. Failed user and assistant messages are excluded from the conversational context provided to the AI Query Engine.
+3. The application selects recent eligible messages within the configured context limit.
+4. The user may submit another question without starting a new conversation.
 
 ### Success Result
 
@@ -897,3 +910,5 @@ The following rules apply to all use cases:
 17. A user may access only projects they own.
 18. Archived projects cannot execute new questions.
 19. The application must not generate an answer presented as reliable when the available data does not support it.
+20. The project dashboard groups projects by lifecycle status.
+21. Within each dashboard group, projects are displayed from newest to oldest based on their creation date.
