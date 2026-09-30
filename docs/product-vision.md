@@ -85,6 +85,8 @@ This narrower scope allows the project to validate the core concepts before exte
 
 The first public deployment of AskMyData will provide a controlled demonstration environment designed to expose the real application workflow without allowing arbitrary external database connections.
 
+The application root (`/`) serves as the public AskMyData landing page for both authenticated and unauthenticated visitors. The authenticated application remains accessible through its dedicated application routes, starting with the project dashboard.
+
 Users will be able to create their own projects and follow the standard project creation workflow. During data source configuration, they will choose from a predefined set of approximately four to five demonstration PostgreSQL databases, each accompanied by a short description.
 
 The standard PostgreSQL connection fields will remain visible to illustrate how a real data source is configured. In demo mode, these fields will be populated automatically and displayed as read-only. Actual credentials and secrets will remain exclusively server-side.
