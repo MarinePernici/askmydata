@@ -1004,6 +1004,22 @@ Provides logging, metrics and diagnostic capabilities across the application.
 * expose health information without leaking connection details or internal exception information;
 * support monitoring integrations.
 
+### Structured Application Logging
+
+Application logs use Python's standard logging infrastructure and are emitted as JSON to the application output stream.
+
+Structured log records contain standard operational fields such as timestamp, severity level, logger name and message. Application events may additionally include explicit correlation fields such as:
+
+* event name;
+* Project identifier;
+* Question Run identifier.
+
+Only explicitly supported structured fields are included. Arbitrary application data is not automatically added to log records.
+
+Structured application logs complement, rather than replace, persisted `ExecutionTrace` records. Execution traces provide durable step-level traceability for Question Runs, while application logs provide operational diagnostics for the running application.
+
+The Production-ready Portfolio does not require a dedicated external logging or telemetry platform. Monitoring integrations may consume these structured logs in later deployment stages.
+
 ### Data That May Be Recorded
 
 * Question Run identifier;

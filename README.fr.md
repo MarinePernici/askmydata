@@ -280,13 +280,13 @@ Déjà implémenté :
 
 - suite complète de tests automatisés
 - configuration de Ruff pour le linting et le formatage
+- logs applicatifs structurés en JSON avec corrélation par Project et Question Run
 - health checks de liveness et de readiness de l'application
 - surveillance de l'état des conteneurs Docker pour l'application et la base PostgreSQL interne
 
 Travaux d'industrialisation restants :
 
 - CI/CD avec GitHub Actions
-- logs structurés
 - métriques d'exécution et d'utilisation des LLM
 - monitoring et suivi des erreurs
 - configuration Docker orientée production

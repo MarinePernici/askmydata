@@ -280,13 +280,13 @@ Already implemented:
 
 - comprehensive automated test suite
 - Ruff-based linting and formatting configuration
+- structured JSON application logging with Project and Question Run correlation
 - application liveness and readiness health checks
 - Docker health monitoring for the application and internal PostgreSQL database
 
 Remaining production-readiness work includes:
 
 - CI/CD with GitHub Actions
-- structured logging
 - execution and LLM usage metrics
 - monitoring and error tracking
 - production-oriented Docker configuration

@@ -963,6 +963,10 @@ class QuestionRunServiceTests(TestCase):
         question_run = QuestionRun.objects.get()
 
         logger.exception.assert_called_once_with(
-            "Unexpected failure while processing question run %s.",
-            question_run.id,
+            "Unexpected failure while processing question run.",
+            extra={
+                "event": "question_run.failed",
+                "project_id": project.id,
+                "question_run_id": question_run.id,
+            },
         )

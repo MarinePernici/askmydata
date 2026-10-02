@@ -1,3 +1,5 @@
+import logging
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
@@ -19,6 +21,8 @@ from catalog.semantic_enricher import SemanticEnricher
 from catalog.snapshot_serializer import CatalogSnapshotSerializer
 from catalog.types import KnowledgeCatalog as DomainKnowledgeCatalog
 from connectors.postgresql import PostgreSQLConnector
+
+logger = logging.getLogger(__name__)
 
 
 class CatalogService:
@@ -137,6 +141,15 @@ class CatalogService:
             )
 
         self._project_service.mark_ready(project)
+
+        logger.info(
+            "Catalog built successfully.",
+            extra={
+                "event": "catalog.built",
+                "project_id": project.id,
+                "catalog_version": knowledge_catalog.version,
+            },
+        )
 
         return catalog
 

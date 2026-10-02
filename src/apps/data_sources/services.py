@@ -1,3 +1,5 @@
+import logging
+
 from django.utils import timezone
 
 from apps.catalogs.services import CatalogService
@@ -9,6 +11,8 @@ from connectors.postgresql import (
     PostgreSQLConnectionConfig,
     PostgreSQLConnector,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DataSourceService:
@@ -45,6 +49,15 @@ class DataSourceService:
                 "last_connection_at",
                 "updated_at",
             ]
+        )
+
+        logger.info(
+            "Data source connection tested.",
+            extra={
+                "event": "data_source.connection_tested",
+                "project_id": data_source.project_id,
+                "connection_status": data_source.connection_status,
+            },
         )
 
         return is_connected
@@ -131,6 +144,15 @@ class DataSourceService:
                 "last_connection_at",
                 "updated_at",
             ]
+        )
+
+        logger.info(
+            "Data source connection tested.",
+            extra={
+                "event": "data_source.connection_tested",
+                "project_id": project.id,
+                "connection_status": data_source.connection_status,
+            },
         )
 
         return data_source
