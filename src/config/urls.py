@@ -18,10 +18,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from .views import landing
+from .views import health_live, health_ready, landing
 
 urlpatterns = [
     path("", landing, name="landing"),
+    path("health/live/", health_live, name="health-live"),
+    path("health/ready/", health_ready, name="health-ready"),
     path("admin/", admin.site.urls),
     path(
         "auth/",

@@ -999,7 +999,9 @@ Provides logging, metrics and diagnostic capabilities across the application.
 * produce structured application logs;
 * correlate logs with Project and Question Run identifiers;
 * record LLM usage metrics;
-* expose health information;
+* expose a liveness endpoint (`/health/live/`) that confirms the application process can respond without checking external dependencies;
+* expose a readiness endpoint (`/health/ready/`) that verifies access to the internal application database;
+* expose health information without leaking connection details or internal exception information;
 * support monitoring integrations.
 
 ### Data That May Be Recorded

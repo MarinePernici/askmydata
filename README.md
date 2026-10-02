@@ -276,12 +276,18 @@ The integration test database must use dedicated credentials and must not point 
 
 Current work focuses on turning the validated MVP into a deployable public portfolio application.
 
-Planned work includes:
+Already implemented:
+
+- comprehensive automated test suite
+- Ruff-based linting and formatting configuration
+- application liveness and readiness health checks
+- Docker health monitoring for the application and internal PostgreSQL database
+
+Remaining production-readiness work includes:
 
 - CI/CD with GitHub Actions
-- static analysis and type checking
 - structured logging
-- health checks
+- execution and LLM usage metrics
 - monitoring and error tracking
 - production-oriented Docker configuration
 - cloud deployment
