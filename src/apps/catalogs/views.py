@@ -282,8 +282,11 @@ def catalog_build(request, project_id):
         )
     except Exception:
         logger.exception(
-            "Unexpected catalog build failure for project %s.",
-            project.id,
+            "Unexpected catalog build failure.",
+            extra={
+                "event": "catalog.build_failed",
+                "project_id": project.id,
+            },
         )
         messages.error(
             request,
@@ -334,8 +337,11 @@ def catalog_regenerate(request, project_id):
         )
     except Exception:
         logger.exception(
-            "Unexpected catalog regeneration failure for project %s.",
-            project.id,
+            "Unexpected catalog regeneration failure.",
+            extra={
+                "event": "catalog.regeneration_failed",
+                "project_id": project.id,
+            },
         )
         messages.error(
             request,

@@ -616,10 +616,12 @@ class CatalogScopeViewTests(TestCase):
             "Project has no data source.",
         )
 
+    @patch("apps.catalogs.views.logger")
     @patch("apps.catalogs.views.create_catalog_service")
     def test_catalog_build_displays_generic_error_on_unexpected_failure(
         self,
         create_catalog_service_mock,
+        logger,
     ):
         user = get_user_model().objects.create_user(
             username="marine",
@@ -654,6 +656,14 @@ class CatalogScopeViewTests(TestCase):
         self.assertNotContains(
             response,
             "database connection details",
+        )
+
+        logger.exception.assert_called_once_with(
+            "Unexpected catalog build failure.",
+            extra={
+                "event": "catalog.build_failed",
+                "project_id": project.id,
+            },
         )
 
 
@@ -1277,8 +1287,10 @@ class CatalogRegenerateViewTests(TestCase):
 
         create_catalog_service_mock.return_value.build_for_project.assert_not_called()
 
+    @patch("apps.catalogs.views.logger")
     def test_regenerate_catalog_displays_generic_error_on_unexpected_failure(
         self,
+        logger,
         create_catalog_service_mock,
     ):
         create_catalog_service_mock.return_value.build_for_project.side_effect = (
@@ -1303,4 +1315,12 @@ class CatalogRegenerateViewTests(TestCase):
         self.assertNotContains(
             response,
             "database connection details",
+        )
+
+        logger.exception.assert_called_once_with(
+            "Unexpected catalog regeneration failure.",
+            extra={
+                "event": "catalog.regeneration_failed",
+                "project_id": self.project.id,
+            },
         )
