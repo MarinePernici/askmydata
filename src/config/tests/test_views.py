@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
+from django.db import OperationalError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -22,3 +25,29 @@ class LandingViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "landing.html")
         self.assertEqual(response.request["PATH_INFO"], "/")
+
+
+class HealthCheckViewTests(TestCase):
+    def test_liveness_returns_ok(self):
+        response = self.client.get(reverse("health-live"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_readiness_returns_ok_when_database_is_available(self):
+        response = self.client.get(reverse("health-ready"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    @patch("config.views.connection.cursor")
+    def test_readiness_returns_unavailable_when_database_is_unavailable(
+        self,
+        mock_cursor,
+    ):
+        mock_cursor.side_effect = OperationalError("database unavailable")
+
+        response = self.client.get(reverse("health-ready"))
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"status": "unavailable"})

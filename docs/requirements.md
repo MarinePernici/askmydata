@@ -542,7 +542,12 @@ The application shall produce structured logs and provide traceability across cr
 
 ### ENG-010
 
-The application shall expose health checks.
+The application shall expose public health checks for deployment and operational monitoring:
+
+- a liveness check confirming that the application process can respond without depending on external services;
+- a readiness check confirming that the application can access its internal database.
+
+Health-check responses shall not expose database credentials, connection information, or internal exception details.
 
 **Release:** Production-ready Portfolio
 

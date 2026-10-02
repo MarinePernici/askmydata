@@ -276,12 +276,18 @@ La base d'intégration doit utiliser des identifiants dédiés et ne doit pas po
 
 Le travail actuel vise à transformer le MVP validé en une application portfolio publique et déployable.
 
-Les travaux prévus comprennent :
+Déjà implémenté :
+
+- suite complète de tests automatisés
+- configuration de Ruff pour le linting et le formatage
+- health checks de liveness et de readiness de l'application
+- surveillance de l'état des conteneurs Docker pour l'application et la base PostgreSQL interne
+
+Travaux d'industrialisation restants :
 
 - CI/CD avec GitHub Actions
-- analyse statique et vérification des types
 - logs structurés
-- health checks
+- métriques d'exécution et d'utilisation des LLM
 - monitoring et suivi des erreurs
 - configuration Docker orientée production
 - déploiement cloud
