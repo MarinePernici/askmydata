@@ -116,6 +116,7 @@ class RecordingTracer:
         duration_ms,
         error_code="",
         error_message="",
+        technical_metadata=None,
     ):
         self.events.append(
             {
@@ -124,6 +125,7 @@ class RecordingTracer:
                 "duration_ms": duration_ms,
                 "error_code": error_code,
                 "error_message": error_message,
+                "technical_metadata": technical_metadata or {},
             }
         )
 
@@ -222,11 +224,13 @@ class QueryOrchestratorTests(unittest.TestCase):
 
     def test_run_does_not_execute_invalid_sql(self):
         executor = RecordingExecutor()
+        tracer = RecordingTracer()
 
         orchestrator = QueryOrchestrator(
             generator=FakeGenerator(),
             validator=RejectingValidator(),
             executor=executor,
+            tracer=tracer,
             result_validator=FakeResultValidator(),
             answer_generator=FakeAnswerGenerator(),
         )
@@ -238,6 +242,21 @@ class QueryOrchestratorTests(unittest.TestCase):
             )
 
         self.assertFalse(executor.called)
+
+        self.assertEqual(len(tracer.events), 2)
+
+        sql_validation_event = tracer.events[1]
+
+        self.assertEqual(sql_validation_event["step"], "sql_validation")
+        self.assertEqual(sql_validation_event["status"], "completed")
+        self.assertEqual(
+            sql_validation_event["technical_metadata"],
+            {
+                "sql": "SELECT 1 AS value;",
+                "is_valid": False,
+                "validation_error": "Only SELECT queries are allowed.",
+            },
+        )
 
     def test_run_raises_error_for_invalid_query_result(self):
         orchestrator = QueryOrchestrator(
@@ -301,6 +320,17 @@ class QueryOrchestratorTests(unittest.TestCase):
                 "result_validation",
                 "answer_generation",
             ],
+        )
+
+        sql_validation_event = tracer.events[1]
+
+        self.assertEqual(
+            sql_validation_event["technical_metadata"],
+            {
+                "sql": "SELECT 1 AS value;",
+                "is_valid": True,
+                "validation_error": None,
+            },
         )
 
         self.assertTrue(all(event["status"] == "completed" for event in tracer.events))

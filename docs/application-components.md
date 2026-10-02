@@ -1006,6 +1006,7 @@ Provides logging, metrics and diagnostic capabilities across the application.
 
 * Question Run identifier;
 * processing step;
+* generated SQL and its validation outcome;
 * duration;
 * model name;
 * token usage;

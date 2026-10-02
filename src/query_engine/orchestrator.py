@@ -61,6 +61,11 @@ class QueryOrchestrator:
                 generation_result.sql,
                 catalog=catalog,
             ),
+            metadata_factory=lambda result: {
+                "sql": generation_result.sql,
+                "is_valid": result.is_valid,
+                "validation_error": result.error,
+            },
         )
 
         if not validation_result.is_valid:
@@ -103,6 +108,7 @@ class QueryOrchestrator:
         self,
         step: str,
         operation: Callable[[], T],
+        metadata_factory: Callable[[T], dict[str, object]] | None = None,
     ) -> T:
         started_at = perf_counter()
 
@@ -127,6 +133,7 @@ class QueryOrchestrator:
             step=step,
             status="completed",
             duration_ms=duration_ms,
+            technical_metadata=metadata_factory(result) if metadata_factory else None,
         )
 
         return result

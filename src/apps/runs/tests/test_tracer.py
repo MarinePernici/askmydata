@@ -55,3 +55,22 @@ class DjangoQueryTracerTests(TestCase):
             trace.error_message,
             "Query execution timed out.",
         )
+
+    def test_record_persists_technical_metadata(self):
+        metadata = {
+            "sql": "SELECT COUNT(*) FROM users",
+        }
+
+        self.tracer.record(
+            step="sql_generation",
+            status="completed",
+            duration_ms=42,
+            technical_metadata=metadata,
+        )
+
+        trace = ExecutionTrace.objects.get()
+
+        self.assertEqual(
+            trace.technical_metadata,
+            metadata,
+        )

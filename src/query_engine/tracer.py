@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class QueryTracer(ABC):
@@ -10,6 +11,7 @@ class QueryTracer(ABC):
         duration_ms: int,
         error_code: str = "",
         error_message: str = "",
+        technical_metadata: dict[str, Any] | None = None,
     ) -> None:
         raise NotImplementedError
 
@@ -24,5 +26,6 @@ class NullQueryTracer(QueryTracer):
         duration_ms: int,
         error_code: str = "",
         error_message: str = "",
+        technical_metadata: dict[str, Any] | None = None,
     ) -> None:
         pass

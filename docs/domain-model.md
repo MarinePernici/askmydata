@@ -723,6 +723,7 @@ An ExecutionTrace:
 
 - Execution traces are never exposed directly to end users.
 - Sensitive information must never be stored.
+- Generated SQL and its validation outcome may be stored in the SQL validation trace technical metadata for diagnostics and observability.
 - Hidden prompts are never recorded.
 - Hidden model reasoning is never recorded.
 - Execution traces support traceability and debugging.

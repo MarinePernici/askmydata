@@ -1,3 +1,5 @@
+from typing import Any
+
 from apps.runs.models import ExecutionTrace, QuestionRun
 from query_engine.tracer import QueryTracer
 
@@ -15,6 +17,7 @@ class DjangoQueryTracer(QueryTracer):
         duration_ms: int,
         error_code: str = "",
         error_message: str = "",
+        technical_metadata: dict[str, Any] | None = None,
     ) -> None:
         ExecutionTrace.objects.create(
             question_run=self._question_run,
@@ -23,4 +26,5 @@ class DjangoQueryTracer(QueryTracer):
             duration_ms=duration_ms,
             error_code=error_code,
             error_message=error_message,
+            technical_metadata=technical_metadata or {},
         )
