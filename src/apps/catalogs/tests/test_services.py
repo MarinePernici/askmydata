@@ -1,4 +1,5 @@
 from dataclasses import replace
+from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -244,7 +245,8 @@ class CatalogServiceTests(TestCase):
         with self.assertRaises(DataSourceConfigurationError):
             service.build_for_project(project)
 
-    def test_build_for_project_persists_new_schema_snapshot(self):
+    @patch("apps.catalogs.services.logger")
+    def test_build_for_project_persists_new_schema_snapshot(self, logger):
         project = create_test_project(
             name="Test project",
         )
@@ -302,6 +304,14 @@ class CatalogServiceTests(TestCase):
         self.assertEqual(
             snapshot.schema_data["tables"][0]["name"],
             "orders",
+        )
+        logger.info.assert_called_once_with(
+            "Catalog built successfully.",
+            extra={
+                "event": "catalog.built",
+                "project_id": project.id,
+                "catalog_version": 1,
+            },
         )
 
     def test_build_for_project_does_not_persist_snapshot_when_build_fails(self):
@@ -458,7 +468,8 @@ class CatalogServiceTests(TestCase):
             1,
         )
 
-    def test_successful_regeneration_creates_new_snapshot_version(self):
+    @patch("apps.catalogs.services.logger")
+    def test_successful_regeneration_creates_new_snapshot_version(self, logger):
         project = create_test_project(
             name="Test project",
         )
@@ -521,6 +532,14 @@ class CatalogServiceTests(TestCase):
                 )
             ),
             [1, 2],
+        )
+        logger.info.assert_called_once_with(
+            "Catalog built successfully.",
+            extra={
+                "event": "catalog.built",
+                "project_id": project.id,
+                "catalog_version": 2,
+            },
         )
 
     def test_build_for_project_persists_semantically_enriched_catalog(self):

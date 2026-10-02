@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 
 from apps.catalogs.models import KnowledgeCatalog, SchemaSnapshot
@@ -54,7 +56,8 @@ class DataSourceServiceTests(TestCase):
         self.data_source.set_password("secret-password")
         self.data_source.save()
 
-    def test_successful_connection_updates_status_to_connected(self):
+    @patch("apps.data_sources.services.logger")
+    def test_successful_connection_updates_status_to_connected(self, logger):
         service = DataSourceService(
             connector_class=SuccessfulConnector,
         )
@@ -74,7 +77,17 @@ class DataSourceServiceTests(TestCase):
             self.data_source.last_connection_at,
         )
 
-    def test_failed_connection_updates_status_to_failed(self):
+        logger.info.assert_called_once_with(
+            "Data source connection tested.",
+            extra={
+                "event": "data_source.connection_tested",
+                "project_id": self.project.id,
+                "connection_status": DataSource.ConnectionStatus.CONNECTED,
+            },
+        )
+
+    @patch("apps.data_sources.services.logger")
+    def test_failed_connection_updates_status_to_failed(self, logger):
         service = DataSourceService(
             connector_class=FailingConnector,
         )
@@ -92,6 +105,15 @@ class DataSourceServiceTests(TestCase):
         )
         self.assertIsNotNone(
             self.data_source.last_connection_at,
+        )
+
+        logger.info.assert_called_once_with(
+            "Data source connection tested.",
+            extra={
+                "event": "data_source.connection_tested",
+                "project_id": self.project.id,
+                "connection_status": DataSource.ConnectionStatus.FAILED,
+            },
         )
 
     def test_configure_data_source_marks_project_as_configuring(self):
@@ -238,7 +260,8 @@ class DataSourceServiceTests(TestCase):
             1,
         )
 
-    def test_configure_and_test_saves_valid_configuration(self):
+    @patch("apps.data_sources.services.logger")
+    def test_configure_and_test_saves_valid_configuration(self, logger):
         project = create_test_project(name="Test project")
         service = DataSourceService(
             connector_class=SuccessfulConnector,
@@ -259,6 +282,15 @@ class DataSourceServiceTests(TestCase):
         )
         self.assertIsNotNone(
             data_source.last_connection_at,
+        )
+
+        logger.info.assert_called_once_with(
+            "Data source connection tested.",
+            extra={
+                "event": "data_source.connection_tested",
+                "project_id": project.id,
+                "connection_status": DataSource.ConnectionStatus.CONNECTED,
+            },
         )
 
     def test_configure_and_test_does_not_replace_existing_configuration_on_failure(

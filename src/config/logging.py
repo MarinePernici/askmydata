@@ -10,6 +10,8 @@ class JsonFormatter(logging.Formatter):
         "event",
         "project_id",
         "question_run_id",
+        "connection_status",
+        "catalog_version",
     )
 
     def format(self, record: logging.LogRecord) -> str:

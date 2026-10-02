@@ -40,6 +40,8 @@ class JsonFormatterTests(TestCase):
             event="question_run.failed",
             project_id="project-123",
             question_run_id="run-456",
+            connection_status="connected",
+            catalog_version=2,
         )
 
         payload = json.loads(self.formatter.format(record))
@@ -47,6 +49,8 @@ class JsonFormatterTests(TestCase):
         self.assertEqual(payload["event"], "question_run.failed")
         self.assertEqual(payload["project_id"], "project-123")
         self.assertEqual(payload["question_run_id"], "run-456")
+        self.assertEqual(payload["connection_status"], "connected")
+        self.assertEqual(payload["catalog_version"], 2)
 
     def test_format_omits_missing_structured_fields(self):
         record = self.create_record(event="catalog.build_failed")
@@ -56,6 +60,8 @@ class JsonFormatterTests(TestCase):
         self.assertEqual(payload["event"], "catalog.build_failed")
         self.assertNotIn("project_id", payload)
         self.assertNotIn("question_run_id", payload)
+        self.assertNotIn("connection_status", payload)
+        self.assertNotIn("catalog_version", payload)
 
     def test_format_includes_exception(self):
         try:
