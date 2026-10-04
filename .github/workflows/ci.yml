@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Quality and tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: askmydata
+          POSTGRES_USER: askmydata
+          POSTGRES_PASSWORD: askmydata
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U askmydata -d askmydata"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SECRET_KEY: ci-test-secret-key
+      DJANGO_DEBUG: "False"
+      DATASOURCE_ENCRYPTION_KEY: "w4JgppNCTHiHJkE1dBzLpuOSEHgUqwwXrqLM8Rrw6Vo="
+      OPENAI_API_KEY: ci-test-openai-key
+      LLM_MODEL: gpt-5-mini
+
+      DATABASE_URL: postgresql://askmydata:askmydata@localhost:5432/askmydata
+
+      TEST_SOURCE_DB_HOST: localhost
+      TEST_SOURCE_DB_PORT: "5432"
+      TEST_SOURCE_DB_NAME: askmydata_test_source
+      TEST_SOURCE_DB_USER: askmydata_readonly
+      TEST_SOURCE_DB_PASSWORD: readonly_test_password
+
+      TEST_WRITABLE_DB_USER: askmydata_writable_test
+      TEST_WRITABLE_DB_PASSWORD: writable_test_password
+
+      TEST_NOSELECT_DB_USER: askmydata_noselect_test
+      TEST_NOSELECT_DB_PASSWORD: noselect_test_password
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Set up integration-test database
+        env:
+          PGPASSWORD: askmydata
+        run: |
+          psql \
+            --host=localhost \
+            --username=askmydata \
+            --dbname=askmydata \
+            --set=ON_ERROR_STOP=1 \
+            --file=scripts/setup_test_database.sql
+
+      - name: Run Ruff lint
+        run: uv run ruff check src
+
+      - name: Check Ruff formatting
+        run: uv run ruff format --check src
+
+      - name: Run Django tests
+        run: uv run python src/manage.py test
