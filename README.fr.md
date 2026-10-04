@@ -10,7 +10,7 @@ AskMyData construit un Knowledge Catalog sémantique à partir du schéma sélec
 
 > **État : MVP terminé — Industrialisation en cours.**
 >
-> Le parcours complet d'exploration de données PostgreSQL est implémenté et a été validé sur un jeu de données réaliste. Le travail actuel porte sur l'industrialisation, la CI/CD, l'observabilité, le déploiement et la préparation d'un environnement de démonstration public.
+> Le parcours complet d'exploration de données PostgreSQL est implémenté et a été validé sur un jeu de données réaliste. Le travail actuel porte sur l'industrialisation, l'observabilité, le déploiement et la préparation d'un environnement de démonstration public.
 
 ## Fonctionnalités principales
 
@@ -143,6 +143,7 @@ Pour le détail des composants et des décisions d'architecture, voir la [docume
 
 - framework de tests Django
 - Ruff
+- GitHub Actions
 - Docker
 - Docker Compose
 - Git / GitHub
@@ -170,7 +171,7 @@ Au dernier point de validation documenté dans le benchmark, la suite de tests c
 
 Voir le [benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md) pour la méthodologie complète, les scénarios, les résultats, les problèmes identifiés et leurs résolutions.
 
-La dernière exécution de la suite complète de tests Django s'est terminée avec succès, avec **389 tests réussis**.
+La suite automatisée actuelle contient **397 tests Django réussis** et est exécutée par GitHub Actions avec les contrôles de linting et de formatage Ruff.
 
 ## Développement local
 
@@ -280,13 +281,14 @@ Déjà implémenté :
 
 - suite complète de tests automatisés
 - configuration de Ruff pour le linting et le formatage
+- intégration continue avec GitHub Actions, incluant les tests d'intégration PostgreSQL
 - logs applicatifs structurés en JSON avec corrélation par Project et Question Run
 - health checks de liveness et de readiness de l'application
 - surveillance de l'état des conteneurs Docker pour l'application et la base PostgreSQL interne
 
 Travaux d'industrialisation restants :
 
-- CI/CD avec GitHub Actions
+- déploiement continu
 - métriques d'exécution et d'utilisation des LLM
 - monitoring et suivi des erreurs
 - configuration Docker orientée production
