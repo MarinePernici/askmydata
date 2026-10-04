@@ -1018,3 +1018,63 @@ class QuestionRunServiceTests(TestCase):
                 "question_run_id": question_run.id,
             },
         )
+
+    @patch("apps.runs.services.traced_question_run")
+    def test_run_is_traced_with_correlation_identifiers(self, traced_question_run):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="Return one.",
+        )
+
+        question_run = QuestionRun.objects.get()
+
+        traced_question_run.assert_called_once_with(
+            project_id=project.id,
+            question_run_id=question_run.id,
+        )
+
+    @patch("apps.runs.services.traced_question_run")
+    def test_failed_run_is_traced_with_correlation_identifiers(
+        self,
+        traced_question_run,
+    ):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FailingGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="Return one.",
+            )
+
+        question_run = QuestionRun.objects.get()
+
+        traced_question_run.assert_called_once_with(
+            project_id=project.id,
+            question_run_id=question_run.id,
+        )

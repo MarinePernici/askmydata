@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock, patch
 
 from llm.base import LLMProvider
 from llm.types import LLMMessage, LLMResponse, LLMUsage
@@ -54,6 +55,29 @@ class AnswerGeneratorTests(unittest.TestCase):
         self.assertEqual(result.usage.model, "test-model")
         self.assertEqual(result.usage.prompt_tokens, 100)
         self.assertEqual(result.usage.completion_tokens, 20)
+
+    @patch("query_engine.answer_generator.traced_llm_call")
+    def test_generate_traces_llm_call(self, traced_llm_call):
+        span = MagicMock()
+        traced_llm_call.return_value.__enter__.return_value = span
+
+        provider = FakeLLMProvider()
+        generator = AnswerGenerator(provider)
+
+        generator.generate(
+            question="How many orders are there?",
+            sql="SELECT COUNT(*) AS order_count FROM sales.orders;",
+            result=QueryExecutionResult(
+                columns=("order_count",),
+                rows=((42,),),
+            ),
+        )
+
+        traced_llm_call.assert_called_once_with("answer_generation")
+        span.set_attribute.assert_called_once_with(
+            "llm.model",
+            "test-model",
+        )
 
     def test_generate_sends_question_sql_and_result_to_provider(self):
         provider = FakeLLMProvider()

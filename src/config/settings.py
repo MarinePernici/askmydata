@@ -19,6 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
+    OTEL_ENABLED=(bool, False),
+    OTEL_TRACES_SAMPLER_ARG=(float, 1.0),
 )
 
 environ.Env.read_env(BASE_DIR / ".env")
@@ -34,6 +36,13 @@ DATASOURCE_ENCRYPTION_KEY = env("DATASOURCE_ENCRYPTION_KEY")
 
 OPENAI_API_KEY = env("OPENAI_API_KEY")
 LLM_MODEL = env("LLM_MODEL", default="gpt-5-mini")
+
+# OpenTelemetry
+OTEL_ENABLED = env("OTEL_ENABLED")
+OTEL_SERVICE_NAME = env("OTEL_SERVICE_NAME", default="askmydata")
+OTEL_EXPORTER_OTLP_ENDPOINT = env("OTEL_EXPORTER_OTLP_ENDPOINT", default="")
+OTEL_EXPORTER_OTLP_HEADERS = env("OTEL_EXPORTER_OTLP_HEADERS", default="")
+OTEL_TRACES_SAMPLER_ARG = env("OTEL_TRACES_SAMPLER_ARG")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DJANGO_DEBUG")

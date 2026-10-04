@@ -4,6 +4,7 @@ from time import perf_counter
 from typing import TypeVar
 
 from catalog.types import KnowledgeCatalog
+from config.observability import traced_operation
 from query_engine.exceptions import ResultValidationError, SQLValidationError
 from query_engine.tracer import NullQueryTracer, QueryTracer
 from query_engine.types import (
@@ -119,7 +120,11 @@ class QueryOrchestrator:
         started_counter = perf_counter()
 
         try:
-            result = operation()
+            with traced_operation(
+                step,
+                attributes={"pipeline_step": step},
+            ):
+                result = operation()
         except Exception as exc:
             completed_at = datetime.now(UTC)
             duration_ms = int((perf_counter() - started_counter) * 1000)

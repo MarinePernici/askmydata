@@ -1,3 +1,4 @@
+from config.observability import traced_llm_call
 from llm.base import LLMProvider
 from llm.types import LLMMessage
 from query_engine.types import (
@@ -42,7 +43,9 @@ class AnswerGenerator:
             ),
         ]
 
-        response = self._provider.generate(messages)
+        with traced_llm_call("answer_generation") as span:
+            response = self._provider.generate(messages)
+            span.set_attribute("llm.model", response.usage.model)
 
         return AnswerGenerationResult(
             answer=response.content,

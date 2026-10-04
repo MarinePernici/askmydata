@@ -13,4 +13,8 @@ from django.core.asgi import get_asgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
+from config.observability import configure_opentelemetry
+
+configure_opentelemetry()
+
 application = get_asgi_application()

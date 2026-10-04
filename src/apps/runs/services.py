@@ -8,6 +8,7 @@ from apps.runs.error_messages import get_safe_error_message
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
+from config.observability import traced_question_run
 from query_engine.exceptions import SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import (
@@ -73,6 +74,26 @@ class QuestionRunService:
             started_at=timezone.now(),
         )
 
+        with traced_question_run(
+            project_id=project.id,
+            question_run_id=question_run.id,
+        ):
+            return self._execute_run(
+                project=project,
+                conversation=conversation,
+                question=question,
+                history=history,
+                question_run=question_run,
+            )
+
+    def _execute_run(
+        self,
+        project: Project,
+        conversation: Conversation,
+        question: str,
+        history,
+        question_run: QuestionRun,
+    ) -> QueryRunResult | ClarificationResult | CannotAnswerResult:
         try:
             catalog = self._catalog_reader.get_current(
                 project=project,
