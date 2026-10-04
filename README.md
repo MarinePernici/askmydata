@@ -10,7 +10,7 @@ AskMyData builds a semantic Knowledge Catalog from the selected database schema,
 
 > **Status: MVP complete — Production-readiness in progress.**
 >
-> The end-to-end PostgreSQL data exploration workflow is implemented and has been validated against a realistic dataset. Current work focuses on production readiness, CI/CD, observability, deployment, and a public demonstration environment.
+> The end-to-end PostgreSQL data exploration workflow is implemented and has been validated against a realistic dataset. Current work focuses on production readiness, observability, deployment, and a public demonstration environment.
 
 ## Key Features
 
@@ -143,6 +143,7 @@ For the detailed component model and architectural decisions, see the [architect
 
 - Django test framework
 - Ruff
+- GitHub Actions
 - Docker
 - Docker Compose
 - Git / GitHub
@@ -170,7 +171,7 @@ At the latest recorded benchmark validation point, the full Docker test suite co
 
 See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
 
-The latest full Django test suite execution completed successfully with **389 passing tests**.
+The current automated Django test suite contains **397 passing tests** and is executed by GitHub Actions together with Ruff linting and formatting checks.
 
 ## Local Development
 
@@ -280,13 +281,14 @@ Already implemented:
 
 - comprehensive automated test suite
 - Ruff-based linting and formatting configuration
+- continuous integration with GitHub Actions, including PostgreSQL integration tests
 - structured JSON application logging with Project and Question Run correlation
 - application liveness and readiness health checks
 - Docker health monitoring for the application and internal PostgreSQL database
 
 Remaining production-readiness work includes:
 
-- CI/CD with GitHub Actions
+- continuous deployment
 - execution and LLM usage metrics
 - monitoring and error tracking
 - production-oriented Docker configuration
