@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from apps.runs.models import ExecutionTrace, QuestionRun
@@ -15,6 +16,8 @@ class DjangoQueryTracer(QueryTracer):
         step: str,
         status: str,
         duration_ms: int,
+        started_at: datetime,
+        completed_at: datetime,
         error_code: str = "",
         error_message: str = "",
         technical_metadata: dict[str, Any] | None = None,
@@ -23,6 +26,8 @@ class DjangoQueryTracer(QueryTracer):
             question_run=self._question_run,
             step=step,
             status=status,
+            started_at=started_at,
+            completed_at=completed_at,
             duration_ms=duration_ms,
             error_code=error_code,
             error_message=error_message,

@@ -109,13 +109,18 @@ class QuestionRunService:
 
                 question_run.assistant_message = assistant_message
                 question_run.status = QuestionRun.Status.NEEDS_CLARIFICATION
-                question_run.completed_at = timezone.now()
+                self._apply_llm_usage(question_run, result.usages)
+                self._complete_run_timing(question_run)
 
                 question_run.save(
                     update_fields=[
                         "assistant_message",
                         "status",
                         "completed_at",
+                        "latency_ms",
+                        "model_name",
+                        "prompt_tokens",
+                        "completion_tokens",
                     ]
                 )
 
@@ -134,13 +139,18 @@ class QuestionRunService:
 
                 question_run.assistant_message = assistant_message
                 question_run.status = QuestionRun.Status.REJECTED
-                question_run.completed_at = timezone.now()
+                self._apply_llm_usage(question_run, result.usages)
+                self._complete_run_timing(question_run)
 
                 question_run.save(
                     update_fields=[
                         "assistant_message",
                         "status",
                         "completed_at",
+                        "latency_ms",
+                        "model_name",
+                        "prompt_tokens",
+                        "completion_tokens",
                     ]
                 )
 
@@ -158,7 +168,7 @@ class QuestionRunService:
 
             question_run.assistant_message = assistant_message
             question_run.status = QuestionRun.Status.FAILED
-            question_run.completed_at = timezone.now()
+            self._complete_run_timing(question_run)
             question_run.error_code = exc.__class__.__name__
             question_run.error_message = str(exc)
             question_run.save(
@@ -166,6 +176,7 @@ class QuestionRunService:
                     "assistant_message",
                     "status",
                     "completed_at",
+                    "latency_ms",
                     "error_code",
                     "error_message",
                 ]
@@ -184,7 +195,7 @@ class QuestionRunService:
 
             question_run.assistant_message = assistant_message
             question_run.status = QuestionRun.Status.FAILED
-            question_run.completed_at = timezone.now()
+            self._complete_run_timing(question_run)
             question_run.error_code = exc.__class__.__name__
             question_run.error_message = str(exc)
 
@@ -193,6 +204,7 @@ class QuestionRunService:
                     "assistant_message",
                     "status",
                     "completed_at",
+                    "latency_ms",
                     "error_code",
                     "error_message",
                 ]
@@ -216,15 +228,43 @@ class QuestionRunService:
 
         question_run.assistant_message = assistant_message
         question_run.status = QuestionRun.Status.COMPLETED
-        question_run.completed_at = timezone.now()
+        self._apply_llm_usage(question_run, result.usages)
+        self._complete_run_timing(question_run)
         question_run.row_count = len(result.execution.rows)
         question_run.save(
             update_fields=[
                 "assistant_message",
                 "status",
                 "completed_at",
+                "latency_ms",
                 "row_count",
+                "model_name",
+                "prompt_tokens",
+                "completion_tokens",
             ]
         )
 
         return result
+
+    @staticmethod
+    def _complete_run_timing(question_run: QuestionRun) -> None:
+        question_run.completed_at = timezone.now()
+        question_run.latency_ms = int(
+            (question_run.completed_at - question_run.started_at).total_seconds() * 1000
+        )
+
+    @staticmethod
+    def _apply_llm_usage(question_run: QuestionRun, usages) -> None:
+        if not usages:
+            return
+
+        question_run.model_name = usages[0].model
+
+        prompt_tokens = [usage.prompt_tokens for usage in usages]
+        completion_tokens = [usage.completion_tokens for usage in usages]
+
+        if all(value is not None for value in prompt_tokens):
+            question_run.prompt_tokens = sum(prompt_tokens)
+
+        if all(value is not None for value in completion_tokens):
+            question_run.completion_tokens = sum(completion_tokens)

@@ -124,10 +124,13 @@ class SQLGenerator:
 
             return ClarificationResult(
                 question=clarification.strip(),
+                usages=(response.usage,),
             )
 
         if payload.get("cannot_answer") is True:
-            return CannotAnswerResult()
+            return CannotAnswerResult(
+                usages=(response.usage,),
+            )
 
         try:
             sql = payload["sql"]
@@ -140,4 +143,5 @@ class SQLGenerator:
         return SQLGenerationResult(
             sql=sql,
             explanation=explanation,
+            usage=response.usage,
         )

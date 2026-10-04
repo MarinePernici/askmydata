@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from django.test import TestCase
 
 from apps.projects.tests.factories import create_test_project
@@ -16,12 +18,32 @@ class DjangoQueryTracerTests(TestCase):
         self.tracer = DjangoQueryTracer(
             question_run=self.question_run,
         )
+        self.started_at = datetime(
+            2026,
+            10,
+            4,
+            12,
+            0,
+            0,
+            tzinfo=UTC,
+        )
+        self.completed_at = datetime(
+            2026,
+            10,
+            4,
+            12,
+            0,
+            1,
+            tzinfo=UTC,
+        )
 
     def test_record_persists_execution_trace(self):
         self.tracer.record(
             step="sql_generation",
             status="completed",
             duration_ms=42,
+            started_at=self.started_at,
+            completed_at=self.completed_at,
         )
 
         trace = ExecutionTrace.objects.get()
@@ -33,6 +55,8 @@ class DjangoQueryTracerTests(TestCase):
         self.assertEqual(trace.step, "sql_generation")
         self.assertEqual(trace.status, "completed")
         self.assertEqual(trace.duration_ms, 42)
+        self.assertEqual(trace.started_at, self.started_at)
+        self.assertEqual(trace.completed_at, self.completed_at)
         self.assertEqual(trace.error_code, "")
         self.assertEqual(trace.error_message, "")
 
@@ -41,6 +65,8 @@ class DjangoQueryTracerTests(TestCase):
             step="query_execution",
             status="failed",
             duration_ms=120,
+            started_at=self.started_at,
+            completed_at=self.completed_at,
             error_code="QueryCanceled",
             error_message="Query execution timed out.",
         )
@@ -65,6 +91,8 @@ class DjangoQueryTracerTests(TestCase):
             step="sql_generation",
             status="completed",
             duration_ms=42,
+            started_at=self.started_at,
+            completed_at=self.completed_at,
             technical_metadata=metadata,
         )
 

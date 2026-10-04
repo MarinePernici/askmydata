@@ -3,7 +3,7 @@ import unittest
 from catalog.types import KnowledgeCatalog, SemanticMetadata, TableMetadata
 from connectors.types import ColumnMetadata
 from llm.base import LLMProvider
-from llm.types import LLMMessage, LLMResponse
+from llm.types import LLMMessage, LLMResponse, LLMUsage
 from query_engine.exceptions import SQLGenerationError
 from query_engine.sql_generator import SQLGenerator
 from query_engine.types import (
@@ -11,6 +11,14 @@ from query_engine.types import (
     ClarificationResult,
     ConversationMessage,
 )
+
+
+def make_usage() -> LLMUsage:
+    return LLMUsage(
+        model="fake-model",
+        prompt_tokens=100,
+        completion_tokens=20,
+    )
 
 
 class FakeLLMProvider(LLMProvider):
@@ -28,7 +36,7 @@ class FakeLLMProvider(LLMProvider):
                 '{"sql": "SELECT COUNT(*) FROM sales.orders;", '
                 '"explanation": "Counts all orders."}'
             ),
-            model="fake-model",
+            usage=make_usage(),
         )
 
 
@@ -39,7 +47,7 @@ class InvalidJSONProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content="not-json",
-            model="fake-model",
+            usage=make_usage(),
         )
 
 
@@ -50,7 +58,7 @@ class MissingFieldProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content='{"sql": "SELECT 1;"}',
-            model="fake-model",
+            usage=make_usage(),
         )
 
 
@@ -61,7 +69,7 @@ class ClarificationProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content=('{"clarification": "Which date range should I use?"}'),
-            model="fake-model",
+            usage=make_usage(),
         )
 
 
@@ -72,7 +80,7 @@ class EmptyClarificationProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content='{"clarification": "   "}',
-            model="fake-model",
+            usage=make_usage(),
         )
 
 
@@ -83,7 +91,7 @@ class CannotAnswerProvider(LLMProvider):
     ) -> LLMResponse:
         return LLMResponse(
             content='{"cannot_answer": true}',
-            model="fake-model",
+            usage=make_usage(),
         )
 
 
@@ -114,6 +122,7 @@ class SQLGeneratorTests(unittest.TestCase):
             result.explanation,
             "Counts all orders.",
         )
+        self.assertEqual(result.usage, make_usage())
 
     def test_generate_sends_catalog_and_question_to_provider(self):
         provider = FakeLLMProvider()
@@ -282,6 +291,7 @@ class SQLGeneratorTests(unittest.TestCase):
             result,
             ClarificationResult(
                 question="Which date range should I use?",
+                usages=(make_usage(),),
             ),
         )
 
@@ -296,7 +306,9 @@ class SQLGeneratorTests(unittest.TestCase):
 
         self.assertEqual(
             result,
-            CannotAnswerResult(),
+            CannotAnswerResult(
+                usages=(make_usage(),),
+            ),
         )
 
     def test_generate_instructs_model_to_reject_unanswerable_questions(self):

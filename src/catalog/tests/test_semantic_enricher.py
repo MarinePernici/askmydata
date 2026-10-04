@@ -4,7 +4,13 @@ from catalog.exceptions import SemanticEnrichmentError
 from catalog.semantic_enricher import SemanticEnricher
 from catalog.types import ColumnMetadata, KnowledgeCatalog, TableMetadata
 from connectors.types import RelationshipMetadata
-from llm.types import LLMResponse
+from llm.types import LLMResponse, LLMUsage
+
+FAKE_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=100,
+    completion_tokens=20,
+)
 
 
 class FakeLLMProvider:
@@ -14,7 +20,7 @@ class FakeLLMProvider:
                 '{"description": "Customer orders recorded in the sales system.", '
                 '"business_synonyms": ["sales orders", "purchases"]}'
             ),
-            model="fake-model",
+            usage=FAKE_USAGE,
         )
 
 
@@ -22,7 +28,7 @@ class InvalidJSONProvider:
     def generate(self, messages):
         return LLMResponse(
             content="This is not valid JSON",
-            model="fake-model",
+            usage=FAKE_USAGE,
         )
 
 
@@ -30,7 +36,7 @@ class MissingFieldProvider:
     def generate(self, messages):
         return LLMResponse(
             content='{"description": "Customer orders"}',
-            model="fake-model",
+            usage=FAKE_USAGE,
         )
 
 
@@ -40,7 +46,7 @@ class InvalidFieldTypeProvider:
             content=(
                 '{"description": "Customer orders", "business_synonyms": "orders"}'
             ),
-            model="fake-model",
+            usage=FAKE_USAGE,
         )
 
 
@@ -57,12 +63,12 @@ class PartiallyFailingProvider:
                     '{"description": "Customer data", '
                     '"business_synonyms": ["customers"]}'
                 ),
-                model="fake-model",
+                usage=FAKE_USAGE,
             )
 
         return LLMResponse(
             content="invalid json",
-            model="fake-model",
+            usage=FAKE_USAGE,
         )
 
 
@@ -77,7 +83,7 @@ class CapturingProvider:
             content=(
                 '{"description": "Customer orders", "business_synonyms": ["orders"]}'
             ),
-            model="fake-model",
+            usage=FAKE_USAGE,
         )
 
 

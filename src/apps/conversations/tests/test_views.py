@@ -11,6 +11,7 @@ from apps.projects.models import Project
 from apps.runs.models import QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
+from llm.types import LLMUsage
 from query_engine.exceptions import (
     DataSourceConnectionError,
     DataSourcePermissionError,
@@ -27,12 +28,25 @@ from query_engine.types import (
     SQLValidationResult,
 )
 
+SQL_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=100,
+    completion_tokens=20,
+)
+
+ANSWER_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=50,
+    completion_tokens=10,
+)
+
 
 class HTTPFakeGenerator:
     def generate(self, question, catalog, history=()):
         return SQLGenerationResult(
             sql="SELECT 42 AS customer_count;",
             explanation="Returns the customer count.",
+            usage=SQL_USAGE,
         )
 
 
@@ -63,6 +77,7 @@ class HTTPFakeAnswerGenerator:
     def generate(self, question, sql, result):
         return AnswerGenerationResult(
             answer="There are 42 customers.",
+            usage=ANSWER_USAGE,
         )
 
 
@@ -75,12 +90,15 @@ class HTTPFakeClarificationGenerator:
     def generate(self, question, catalog, history=()):
         return ClarificationResult(
             question="Which date range should I use?",
+            usages=(SQL_USAGE,),
         )
 
 
 class HTTPFakeCannotAnswerGenerator:
     def generate(self, question, catalog, history=()):
-        return CannotAnswerResult()
+        return CannotAnswerResult(
+            usages=(SQL_USAGE,),
+        )
 
 
 class ConversationViewTests(TestCase):

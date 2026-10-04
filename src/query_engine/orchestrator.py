@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import UTC, datetime
 from time import perf_counter
 from typing import TypeVar
 
@@ -102,6 +103,10 @@ class QueryOrchestrator:
             explanation=generation_result.explanation,
             execution=execution_result,
             answer=answer_result.answer,
+            usages=(
+                generation_result.usage,
+                answer_result.usage,
+            ),
         )
 
     def _run_traced_step(
@@ -110,29 +115,36 @@ class QueryOrchestrator:
         operation: Callable[[], T],
         metadata_factory: Callable[[T], dict[str, object]] | None = None,
     ) -> T:
-        started_at = perf_counter()
+        started_at = datetime.now(UTC)
+        started_counter = perf_counter()
 
         try:
             result = operation()
         except Exception as exc:
-            duration_ms = int((perf_counter() - started_at) * 1000)
+            completed_at = datetime.now(UTC)
+            duration_ms = int((perf_counter() - started_counter) * 1000)
 
             self._tracer.record(
                 step=step,
                 status="failed",
                 duration_ms=duration_ms,
+                started_at=started_at,
+                completed_at=completed_at,
                 error_code=exc.__class__.__name__,
                 error_message=str(exc),
             )
 
             raise
 
-        duration_ms = int((perf_counter() - started_at) * 1000)
+        completed_at = datetime.now(UTC)
+        duration_ms = int((perf_counter() - started_counter) * 1000)
 
         self._tracer.record(
             step=step,
             status="completed",
             duration_ms=duration_ms,
+            started_at=started_at,
+            completed_at=completed_at,
             technical_metadata=metadata_factory(result) if metadata_factory else None,
         )
 

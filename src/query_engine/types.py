@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from llm.types import LLMUsage
+
 
 @dataclass(frozen=True)
 class SQLGenerationResult:
@@ -7,6 +9,7 @@ class SQLGenerationResult:
 
     sql: str
     explanation: str
+    usage: LLMUsage
 
 
 @dataclass(frozen=True)
@@ -38,6 +41,7 @@ class AnswerGenerationResult:
     """Natural-language answer generated from a query result."""
 
     answer: str
+    usage: LLMUsage
 
 
 @dataclass(frozen=True)
@@ -48,6 +52,7 @@ class QueryRunResult:
     explanation: str
     execution: QueryExecutionResult
     answer: str
+    usages: tuple[LLMUsage, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -59,8 +64,11 @@ class ConversationMessage:
 @dataclass(frozen=True)
 class ClarificationResult:
     question: str
+    usages: tuple[LLMUsage, ...] = ()
 
 
 @dataclass(frozen=True)
 class CannotAnswerResult:
     """The question cannot be answered from the available project data."""
+
+    usages: tuple[LLMUsage, ...] = ()

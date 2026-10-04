@@ -46,4 +46,5 @@ class AnswerGenerator:
 
         return AnswerGenerationResult(
             answer=response.content,
+            usage=response.usage,
         )

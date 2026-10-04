@@ -11,6 +11,7 @@ from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
+from llm.types import LLMUsage
 from query_engine.exceptions import (
     DataSourceConnectionError,
     DataSourcePermissionError,
@@ -28,12 +29,25 @@ from query_engine.types import (
     SQLValidationResult,
 )
 
+SQL_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=100,
+    completion_tokens=20,
+)
+
+ANSWER_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=50,
+    completion_tokens=10,
+)
+
 
 class FakeGenerator:
     def generate(self, question, catalog, history=()):
         return SQLGenerationResult(
             sql="SELECT 1 AS value;",
             explanation="Returns one value.",
+            usage=SQL_USAGE,
         )
 
 
@@ -67,6 +81,7 @@ class FakeAnswerGenerator:
     def generate(self, question, sql, result):
         return AnswerGenerationResult(
             answer="There is one value.",
+            usage=ANSWER_USAGE,
         )
 
 
@@ -90,6 +105,7 @@ class RecordingGenerator:
         return SQLGenerationResult(
             sql="SELECT 1 AS value;",
             explanation="Returns one value.",
+            usage=SQL_USAGE,
         )
 
 
@@ -121,6 +137,7 @@ class ClarificationGenerator:
     ):
         return ClarificationResult(
             question="Which date range should I use?",
+            usages=(SQL_USAGE,),
         )
 
 
@@ -131,7 +148,9 @@ class CannotAnswerGenerator:
         catalog,
         history=(),
     ):
-        return CannotAnswerResult()
+        return CannotAnswerResult(
+            usages=(SQL_USAGE,),
+        )
 
 
 class QuestionRunServiceTests(TestCase):
@@ -191,6 +210,14 @@ class QuestionRunServiceTests(TestCase):
         self.assertIsNotNone(run.completed_at)
         self.assertEqual(run.row_count, 1)
 
+        self.assertIsNotNone(run.latency_ms)
+        self.assertGreaterEqual(run.latency_ms, 0)
+
+        self.assertEqual(run.model_name, "fake-model")
+        self.assertEqual(run.prompt_tokens, 150)
+        self.assertEqual(run.completion_tokens, 30)
+        self.assertIsNone(run.estimated_cost)
+
         self.assertEqual(result.answer, "There is one value.")
 
         self.assertEqual(
@@ -227,6 +254,8 @@ class QuestionRunServiceTests(TestCase):
         )
         self.assertIsNotNone(run.started_at)
         self.assertIsNotNone(run.completed_at)
+        self.assertIsNotNone(run.latency_ms)
+        self.assertGreaterEqual(run.latency_ms, 0)
         self.assertEqual(
             run.error_code,
             "RuntimeError",
@@ -625,6 +654,8 @@ class QuestionRunServiceTests(TestCase):
             question_run.assistant_message,
             messages[1],
         )
+        self.assertIsNotNone(question_run.latency_ms)
+        self.assertGreaterEqual(question_run.latency_ms, 0)
 
     def test_run_appends_messages_after_highest_sequence_number(self):
         project = self.create_project_with_data_source()
@@ -789,6 +820,7 @@ class QuestionRunServiceTests(TestCase):
             result,
             ClarificationResult(
                 question="Which date range should I use?",
+                usages=(SQL_USAGE,),
             ),
         )
 
@@ -807,6 +839,13 @@ class QuestionRunServiceTests(TestCase):
             run.assistant_message.role,
             Message.Role.ASSISTANT,
         )
+        self.assertIsNotNone(run.latency_ms)
+        self.assertGreaterEqual(run.latency_ms, 0)
+
+        self.assertEqual(run.model_name, "fake-model")
+        self.assertEqual(run.prompt_tokens, 100)
+        self.assertEqual(run.completion_tokens, 20)
+        self.assertIsNone(run.estimated_cost)
 
     def test_answer_to_clarification_uses_previous_exchange_as_history(self):
         project = self.create_project_with_data_source()
@@ -882,12 +921,21 @@ class QuestionRunServiceTests(TestCase):
 
         self.assertEqual(
             result,
-            CannotAnswerResult(),
+            CannotAnswerResult(
+                usages=(SQL_USAGE,),
+            ),
         )
         self.assertEqual(
             run.status,
             QuestionRun.Status.REJECTED,
         )
+        self.assertIsNotNone(run.latency_ms)
+        self.assertGreaterEqual(run.latency_ms, 0)
+
+        self.assertEqual(run.model_name, "fake-model")
+        self.assertEqual(run.prompt_tokens, 100)
+        self.assertEqual(run.completion_tokens, 20)
+        self.assertIsNone(run.estimated_cost)
         self.assertIsNotNone(run.assistant_message)
         self.assertEqual(
             run.assistant_message.content,

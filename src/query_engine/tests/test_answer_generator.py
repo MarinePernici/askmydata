@@ -1,7 +1,7 @@
 import unittest
 
 from llm.base import LLMProvider
-from llm.types import LLMMessage, LLMResponse
+from llm.types import LLMMessage, LLMResponse, LLMUsage
 from query_engine.answer_generator import AnswerGenerator
 from query_engine.types import QueryExecutionResult
 
@@ -18,7 +18,11 @@ class FakeLLMProvider(LLMProvider):
 
         return LLMResponse(
             content="There are 42 orders.",
-            model="fake-model",
+            usage=LLMUsage(
+                model="test-model",
+                prompt_tokens=100,
+                completion_tokens=20,
+            ),
         )
 
 
@@ -47,6 +51,9 @@ class AnswerGeneratorTests(unittest.TestCase):
             result.answer,
             "There are 42 orders.",
         )
+        self.assertEqual(result.usage.model, "test-model")
+        self.assertEqual(result.usage.prompt_tokens, 100)
+        self.assertEqual(result.usage.completion_tokens, 20)
 
     def test_generate_sends_question_sql_and_result_to_provider(self):
         provider = FakeLLMProvider()

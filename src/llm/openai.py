@@ -1,7 +1,7 @@
 from openai import OpenAI
 
 from llm.base import LLMProvider
-from llm.types import LLMMessage, LLMResponse
+from llm.types import LLMMessage, LLMResponse, LLMUsage
 
 
 class OpenAIProvider(LLMProvider):
@@ -34,5 +34,11 @@ class OpenAIProvider(LLMProvider):
 
         return LLMResponse(
             content=response.output_text,
-            model=response.model,
+            usage=LLMUsage(
+                model=response.model,
+                prompt_tokens=response.usage.input_tokens if response.usage else None,
+                completion_tokens=response.usage.output_tokens
+                if response.usage
+                else None,
+            ),
         )

@@ -21,12 +21,25 @@ from catalog.types import (
     TableMetadata,
 )
 from connectors.types import ColumnMetadata
+from llm.types import LLMUsage
 from query_engine.types import (
     AnswerGenerationResult,
     QueryExecutionResult,
     ResultValidationResult,
     SQLGenerationResult,
     SQLValidationResult,
+)
+
+SQL_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=100,
+    completion_tokens=20,
+)
+
+ANSWER_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=50,
+    completion_tokens=10,
 )
 
 
@@ -40,6 +53,7 @@ class RecordingGenerator:
         return SQLGenerationResult(
             sql="SELECT id FROM sales.orders;",
             explanation="Returns order identifiers.",
+            usage=SQL_USAGE,
         )
 
 
@@ -78,6 +92,7 @@ class FakeAnswerGenerator:
     def generate(self, question, sql, result):
         return AnswerGenerationResult(
             answer="There are two orders.",
+            usage=ANSWER_USAGE,
         )
 
 
@@ -191,9 +206,29 @@ class QuestionRunIntegrationTests(TestCase):
             2,
         )
 
-        self.assertEqual(
+        self.assertIsNotNone(question_run.started_at)
+        self.assertIsNotNone(question_run.completed_at)
+        self.assertIsNotNone(question_run.latency_ms)
+        self.assertGreaterEqual(question_run.latency_ms, 0)
+
+        self.assertEqual(question_run.model_name, "fake-model")
+        self.assertEqual(question_run.prompt_tokens, 150)
+        self.assertEqual(question_run.completion_tokens, 30)
+        self.assertIsNone(question_run.estimated_cost)
+
+        traces = list(
             ExecutionTrace.objects.filter(
                 question_run=question_run,
-            ).count(),
-            5,
+            )
         )
+
+        self.assertEqual(len(traces), 5)
+
+        for trace in traces:
+            self.assertIsNotNone(trace.started_at)
+            self.assertIsNotNone(trace.completed_at)
+            self.assertGreaterEqual(
+                trace.completed_at,
+                trace.started_at,
+            )
+            self.assertGreaterEqual(trace.duration_ms, 0)

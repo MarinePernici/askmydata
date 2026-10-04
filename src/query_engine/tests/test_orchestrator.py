@@ -1,6 +1,7 @@
 import unittest
 
 from catalog.types import KnowledgeCatalog
+from llm.types import LLMUsage
 from query_engine.exceptions import ResultValidationError, SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import (
@@ -14,12 +15,25 @@ from query_engine.types import (
     SQLValidationResult,
 )
 
+SQL_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=100,
+    completion_tokens=20,
+)
+
+ANSWER_USAGE = LLMUsage(
+    model="fake-model",
+    prompt_tokens=50,
+    completion_tokens=10,
+)
+
 
 class FakeGenerator:
     def generate(self, question, catalog, history=()):
         return SQLGenerationResult(
             sql="SELECT 1 AS value;",
             explanation="Returns one value.",
+            usage=SQL_USAGE,
         )
 
 
@@ -51,6 +65,7 @@ class FakeAnswerGenerator:
     def generate(self, question, sql, result):
         return AnswerGenerationResult(
             answer="There is one value.",
+            usage=ANSWER_USAGE,
         )
 
 
@@ -102,6 +117,7 @@ class RecordingAnswerGenerator:
         self.called = True
         return AnswerGenerationResult(
             answer="This should not be generated.",
+            usage=ANSWER_USAGE,
         )
 
 
@@ -114,6 +130,8 @@ class RecordingTracer:
         step,
         status,
         duration_ms,
+        started_at,
+        completed_at,
         error_code="",
         error_message="",
         technical_metadata=None,
@@ -123,6 +141,8 @@ class RecordingTracer:
                 "step": step,
                 "status": status,
                 "duration_ms": duration_ms,
+                "started_at": started_at,
+                "completed_at": completed_at,
                 "error_code": error_code,
                 "error_message": error_message,
                 "technical_metadata": technical_metadata or {},
@@ -150,6 +170,7 @@ class RecordingGenerator:
         return SQLGenerationResult(
             sql="SELECT 1;",
             explanation="Test query.",
+            usage=SQL_USAGE,
         )
 
 
@@ -162,6 +183,7 @@ class ClarificationGenerator:
     ):
         return ClarificationResult(
             question="Which date range should I use?",
+            usages=(SQL_USAGE,),
         )
 
 
@@ -172,7 +194,9 @@ class CannotAnswerGenerator:
         catalog,
         history=(),
     ):
-        return CannotAnswerResult()
+        return CannotAnswerResult(
+            usages=(SQL_USAGE,),
+        )
 
 
 class QueryOrchestratorTests(unittest.TestCase):
@@ -220,6 +244,10 @@ class QueryOrchestratorTests(unittest.TestCase):
         self.assertEqual(
             result.answer,
             "There is one value.",
+        )
+        self.assertEqual(
+            result.usages,
+            (SQL_USAGE, ANSWER_USAGE),
         )
 
     def test_run_does_not_execute_invalid_sql(self):
@@ -337,6 +365,14 @@ class QueryOrchestratorTests(unittest.TestCase):
 
         self.assertTrue(all(event["duration_ms"] >= 0 for event in tracer.events))
 
+        self.assertTrue(all(event["started_at"] is not None for event in tracer.events))
+        self.assertTrue(
+            all(event["completed_at"] is not None for event in tracer.events)
+        )
+        self.assertTrue(
+            all(event["completed_at"] >= event["started_at"] for event in tracer.events)
+        )
+
     def test_orchestrator_traces_failed_sql_generation(self):
         tracer = RecordingTracer()
 
@@ -364,6 +400,12 @@ class QueryOrchestratorTests(unittest.TestCase):
         self.assertEqual(event["error_code"], "RuntimeError")
         self.assertEqual(event["error_message"], "LLM unavailable")
         self.assertGreaterEqual(event["duration_ms"], 0)
+        self.assertIsNotNone(event["started_at"])
+        self.assertIsNotNone(event["completed_at"])
+        self.assertGreaterEqual(
+            event["completed_at"],
+            event["started_at"],
+        )
 
     def test_history_is_forwarded_to_sql_generator(self):
         history = (
@@ -418,6 +460,7 @@ class QueryOrchestratorTests(unittest.TestCase):
             result,
             ClarificationResult(
                 question="Which date range should I use?",
+                usages=(SQL_USAGE,),
             ),
         )
 
@@ -469,7 +512,9 @@ class QueryOrchestratorTests(unittest.TestCase):
 
         self.assertEqual(
             result,
-            CannotAnswerResult(),
+            CannotAnswerResult(
+                usages=(SQL_USAGE,),
+            ),
         )
 
         self.assertFalse(executor.called)

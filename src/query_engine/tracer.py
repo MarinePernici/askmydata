@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Any
 
 
@@ -9,6 +10,8 @@ class QueryTracer(ABC):
         step: str,
         status: str,
         duration_ms: int,
+        started_at: datetime,
+        completed_at: datetime,
         error_code: str = "",
         error_message: str = "",
         technical_metadata: dict[str, Any] | None = None,
@@ -24,6 +27,8 @@ class NullQueryTracer(QueryTracer):
         step: str,
         status: str,
         duration_ms: int,
+        started_at: datetime,
+        completed_at: datetime,
         error_code: str = "",
         error_message: str = "",
         technical_metadata: dict[str, Any] | None = None,
