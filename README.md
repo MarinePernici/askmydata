@@ -171,7 +171,7 @@ At the latest recorded benchmark validation point, the full Docker test suite co
 
 See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
 
-The current automated Django test suite contains **397 passing tests** and is executed by GitHub Actions together with Ruff linting and formatting checks.
+The current automated Django test suite contains **430 passing tests** and is executed by GitHub Actions together with Ruff linting and formatting checks.
 
 ## Local Development
 
@@ -191,6 +191,18 @@ cp .env.example .env
 ```
 
 Review `.env` and configure the required values, including the LLM provider credentials.
+
+OpenTelemetry is disabled by default. To export traces and metrics to an OTLP-compatible observability backend, configure:
+
+```dotenv
+OTEL_ENABLED=True
+OTEL_SERVICE_NAME=askmydata
+OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otlp-endpoint
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20your-credentials
+OTEL_TRACES_SAMPLER_ARG=1.0
+```
+
+Telemetry is optional and must not affect application execution if the observability backend is unavailable.
 
 Build and start the application:
 
@@ -283,14 +295,16 @@ Already implemented:
 - Ruff-based linting and formatting configuration
 - continuous integration with GitHub Actions, including PostgreSQL integration tests
 - structured JSON application logging with Project and Question Run correlation
+- OpenTelemetry distributed tracing for HTTP requests, PostgreSQL queries, Question Runs, Query Engine steps, and LLM calls
+- OpenTelemetry metrics for Question Run throughput and duration, LLM token usage, and Query Engine step duration
+- optional OTLP export to an external observability backend, with telemetry disabled by default
 - application liveness and readiness health checks
 - Docker health monitoring for the application and internal PostgreSQL database
 
 Remaining production-readiness work includes:
 
 - continuous deployment
-- execution and LLM usage metrics
-- monitoring and error tracking
+- production error tracking and alerting
 - production-oriented Docker configuration
 - cloud deployment
 - secure public demo environment

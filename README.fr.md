@@ -171,7 +171,7 @@ Au dernier point de validation documenté dans le benchmark, la suite de tests c
 
 Voir le [benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md) pour la méthodologie complète, les scénarios, les résultats, les problèmes identifiés et leurs résolutions.
 
-La suite automatisée actuelle contient **397 tests Django réussis** et est exécutée par GitHub Actions avec les contrôles de linting et de formatage Ruff.
+La suite automatisée actuelle contient **430 tests Django réussis** et est exécutée par GitHub Actions avec les contrôles de linting et de formatage Ruff.
 
 ## Développement local
 
@@ -191,6 +191,18 @@ cp .env.example .env
 ```
 
 Vérifiez le fichier `.env` et configurez les valeurs nécessaires, notamment les identifiants du fournisseur LLM.
+
+OpenTelemetry est désactivé par défaut. Pour exporter les traces et les métriques vers un backend d'observabilité compatible OTLP, configurez :
+
+```dotenv
+OTEL_ENABLED=True
+OTEL_SERVICE_NAME=askmydata
+OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otlp-endpoint
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20your-credentials
+OTEL_TRACES_SAMPLER_ARG=1.0
+```
+
+La télémétrie est optionnelle et ne doit pas affecter l'exécution de l'application si le backend d'observabilité est indisponible.
 
 Construisez et démarrez l'application :
 
@@ -283,14 +295,16 @@ Déjà implémenté :
 - configuration de Ruff pour le linting et le formatage
 - intégration continue avec GitHub Actions, incluant les tests d'intégration PostgreSQL
 - logs applicatifs structurés en JSON avec corrélation par Project et Question Run
+- tracing distribué OpenTelemetry pour les requêtes HTTP, les requêtes PostgreSQL, les Question Runs, les étapes du Query Engine et les appels LLM
+- métriques OpenTelemetry pour le nombre et la durée des Question Runs, l'utilisation des tokens LLM et la durée des étapes du Query Engine
+- export OTLP optionnel vers un backend d'observabilité externe, avec télémétrie désactivée par défaut
 - health checks de liveness et de readiness de l'application
 - surveillance de l'état des conteneurs Docker pour l'application et la base PostgreSQL interne
 
 Travaux d'industrialisation restants :
 
 - déploiement continu
-- métriques d'exécution et d'utilisation des LLM
-- monitoring et suivi des erreurs
+- suivi des erreurs et alerting en production
 - configuration Docker orientée production
 - déploiement cloud
 - environnement de démonstration public sécurisé
