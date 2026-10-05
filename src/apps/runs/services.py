@@ -8,6 +8,11 @@ from apps.runs.error_messages import get_safe_error_message
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
+from config.observability import (
+    record_llm_token_metrics,
+    record_question_run_metrics,
+    traced_question_run,
+)
 from query_engine.exceptions import SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import (
@@ -73,6 +78,26 @@ class QuestionRunService:
             started_at=timezone.now(),
         )
 
+        with traced_question_run(
+            project_id=project.id,
+            question_run_id=question_run.id,
+        ):
+            return self._execute_run(
+                project=project,
+                conversation=conversation,
+                question=question,
+                history=history,
+                question_run=question_run,
+            )
+
+    def _execute_run(
+        self,
+        project: Project,
+        conversation: Conversation,
+        question: str,
+        history,
+        question_run: QuestionRun,
+    ) -> QueryRunResult | ClarificationResult | CannotAnswerResult:
         try:
             catalog = self._catalog_reader.get_current(
                 project=project,
@@ -253,10 +278,22 @@ class QuestionRunService:
             (question_run.completed_at - question_run.started_at).total_seconds() * 1000
         )
 
+        record_question_run_metrics(
+            status=question_run.status,
+            duration_ms=question_run.latency_ms,
+        )
+
     @staticmethod
     def _apply_llm_usage(question_run: QuestionRun, usages) -> None:
         if not usages:
             return
+
+        for usage in usages:
+            record_llm_token_metrics(
+                model=usage.model,
+                prompt_tokens=usage.prompt_tokens,
+                completion_tokens=usage.completion_tokens,
+            )
 
         question_run.model_name = usages[0].model
 

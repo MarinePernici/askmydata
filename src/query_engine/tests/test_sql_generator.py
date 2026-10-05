@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock, patch
 
 from catalog.types import KnowledgeCatalog, SemanticMetadata, TableMetadata
 from connectors.types import ColumnMetadata
@@ -123,6 +124,25 @@ class SQLGeneratorTests(unittest.TestCase):
             "Counts all orders.",
         )
         self.assertEqual(result.usage, make_usage())
+
+    @patch("query_engine.sql_generator.traced_llm_call")
+    def test_generate_traces_llm_call(self, traced_llm_call):
+        span = MagicMock()
+        traced_llm_call.return_value.__enter__.return_value = span
+
+        provider = FakeLLMProvider()
+        generator = SQLGenerator(provider)
+
+        generator.generate(
+            question="How many orders are there?",
+            catalog=KnowledgeCatalog(tables=()),
+        )
+
+        traced_llm_call.assert_called_once_with("sql_generation")
+        span.set_attribute.assert_called_once_with(
+            "llm.model",
+            "fake-model",
+        )
 
     def test_generate_sends_catalog_and_question_to_provider(self):
         provider = FakeLLMProvider()

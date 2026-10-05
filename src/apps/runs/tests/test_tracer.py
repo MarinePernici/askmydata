@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -101,4 +102,22 @@ class DjangoQueryTracerTests(TestCase):
         self.assertEqual(
             trace.technical_metadata,
             metadata,
+        )
+
+    @patch("apps.runs.tracer.record_pipeline_step_metrics")
+    def test_record_records_pipeline_step_metric(
+        self,
+        record_pipeline_step_metrics,
+    ):
+        self.tracer.record(
+            step="sql_validation",
+            status="completed",
+            duration_ms=42,
+            started_at=self.started_at,
+            completed_at=self.completed_at,
+        )
+
+        record_pipeline_step_metrics.assert_called_once_with(
+            step="sql_validation",
+            duration_ms=42,
         )

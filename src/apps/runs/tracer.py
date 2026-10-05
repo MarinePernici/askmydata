@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from apps.runs.models import ExecutionTrace, QuestionRun
+from config.observability import record_pipeline_step_metrics
 from query_engine.tracer import QueryTracer
 
 
@@ -32,4 +33,9 @@ class DjangoQueryTracer(QueryTracer):
             error_code=error_code,
             error_message=error_message,
             technical_metadata=technical_metadata or {},
+        )
+
+        record_pipeline_step_metrics(
+            step=step,
+            duration_ms=duration_ms,
         )
