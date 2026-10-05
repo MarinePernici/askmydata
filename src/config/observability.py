@@ -55,6 +55,13 @@ def configure_opentelemetry() -> None:
     if not settings.OTEL_ENABLED:
         return
 
+    try:
+        _configure_opentelemetry()
+    except Exception:  # noqa: BLE001
+        logger.error("Failed to configure OpenTelemetry.")
+
+
+def _configure_opentelemetry() -> None:
     resource = Resource.create(
         {
             "service.name": settings.OTEL_SERVICE_NAME,
@@ -130,18 +137,29 @@ def traced_operation(
         logger.exception("Failed to create OpenTelemetry span.")
         span_context = nullcontext(None)
 
-    with span_context as span:
-        try:
-            yield span
-        except Exception as exc:
-            if span is not None:
-                try:
-                    span.set_status(Status(StatusCode.ERROR))
-                    span.set_attribute("error.type", exc.__class__.__name__)
-                except Exception:
-                    logger.exception("Failed to update OpenTelemetry span.")
+    try:
+        span = span_context.__enter__()
+    except Exception:  # noqa: BLE001
+        logger.error("Failed to enter OpenTelemetry span context.")
+        span_context = nullcontext(None)
+        span = span_context.__enter__()
 
-            raise
+    try:
+        yield span
+    except Exception as exc:
+        if span is not None:
+            try:
+                span.set_status(Status(StatusCode.ERROR))
+                span.set_attribute("error.type", exc.__class__.__name__)
+            except Exception:  # noqa: BLE001
+                logger.error("Failed to update OpenTelemetry span.")
+
+        raise
+    finally:
+        try:
+            span_context.__exit__(None, None, None)
+        except Exception:  # noqa: BLE001
+            logger.error("Failed to exit OpenTelemetry span context.")
 
 
 @contextmanager
@@ -172,6 +190,21 @@ def traced_llm_call(
         },
     ) as span:
         yield span
+
+
+def set_span_attribute(
+    span: trace.Span | None,
+    key: str,
+    value: str | int,
+) -> None:
+    """Set a span attribute without affecting business execution."""
+    if span is None:
+        return
+
+    try:
+        span.set_attribute(key, value)
+    except Exception:  # noqa: BLE001
+        logger.error("Failed to update OpenTelemetry span attribute.")
 
 
 def record_question_run_metrics(

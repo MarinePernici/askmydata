@@ -9,6 +9,7 @@ from config.observability import (
     record_llm_token_metrics,
     record_pipeline_step_metrics,
     record_question_run_metrics,
+    set_span_attribute,
     traced_llm_call,
     traced_operation,
 )
@@ -54,6 +55,23 @@ class ConfigureOpenTelemetryTests(SimpleTestCase):
         psycopg_instrument.assert_called_once_with()
         set_meter_provider.assert_called_once()
         set_tracer_provider.assert_called_once()
+
+    @override_settings(
+        OTEL_ENABLED=True,
+        OTEL_SERVICE_NAME="askmydata-test",
+        OTEL_EXPORTER_OTLP_ENDPOINT="https://otel.example.com",
+        OTEL_EXPORTER_OTLP_HEADERS="Authorization=test",
+        OTEL_TRACES_SAMPLER_ARG=1.0,
+    )
+    @patch(
+        "config.observability.Resource.create",
+        side_effect=RuntimeError("OpenTelemetry failure"),
+    )
+    def test_configuration_failure_does_not_prevent_startup(
+        self,
+        resource_create,
+    ):
+        configure_opentelemetry()
 
 
 class ParseOtlpHeadersTests(SimpleTestCase):
@@ -151,6 +169,47 @@ class TracedOperationTests(SimpleTestCase):
             traced_operation("sql_validation"),
         ):
             raise ValueError("business failure")
+
+    @patch("config.observability.trace.get_tracer")
+    def test_context_entry_failure_does_not_affect_business_execution(
+        self,
+        get_tracer,
+    ):
+        span_context = MagicMock()
+        span_context.__enter__.side_effect = RuntimeError("OpenTelemetry failure")
+
+        tracer = MagicMock()
+        tracer.start_as_current_span.return_value = span_context
+        get_tracer.return_value = tracer
+
+        executed = False
+
+        with traced_operation("sql_validation") as span:
+            executed = True
+            self.assertIsNone(span)
+
+        self.assertTrue(executed)
+
+    @patch("config.observability.trace.get_tracer")
+    def test_context_exit_failure_does_not_affect_business_execution(
+        self,
+        get_tracer,
+    ):
+        span = MagicMock()
+        span_context = MagicMock()
+        span_context.__enter__.return_value = span
+        span_context.__exit__.side_effect = RuntimeError("OpenTelemetry failure")
+
+        tracer = MagicMock()
+        tracer.start_as_current_span.return_value = span_context
+        get_tracer.return_value = tracer
+
+        executed = False
+
+        with traced_operation("sql_validation"):
+            executed = True
+
+        self.assertTrue(executed)
 
 
 class TracedLlmCallTests(SimpleTestCase):
@@ -263,4 +322,30 @@ class MetricFailureIsolationTests(SimpleTestCase):
         question_run_duration.record.assert_called_once_with(
             125,
             attributes={"status": "completed"},
+        )
+
+
+class SetSpanAttributeTests(SimpleTestCase):
+    def test_sets_attribute(self):
+        span = MagicMock()
+
+        set_span_attribute(
+            span,
+            "llm.model",
+            "test-model",
+        )
+
+        span.set_attribute.assert_called_once_with(
+            "llm.model",
+            "test-model",
+        )
+
+    def test_failure_does_not_propagate(self):
+        span = MagicMock()
+        span.set_attribute.side_effect = RuntimeError("OpenTelemetry failure")
+
+        set_span_attribute(
+            span,
+            "llm.model",
+            "test-model",
         )

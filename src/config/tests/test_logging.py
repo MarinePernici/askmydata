@@ -1,6 +1,9 @@
 import json
 import logging
 from unittest import TestCase
+from unittest.mock import patch
+
+from opentelemetry.sdk.trace import TracerProvider
 
 from config.logging import JsonFormatter
 
@@ -74,3 +77,43 @@ class JsonFormatterTests(TestCase):
 
         self.assertIn("exception", payload)
         self.assertIn("RuntimeError: Test failure", payload["exception"])
+
+    def test_format_includes_trace_context_when_span_is_active(self):
+        tracer_provider = TracerProvider()
+        tracer = tracer_provider.get_tracer("test")
+
+        with tracer.start_as_current_span("test-span") as span:
+            span_context = span.get_span_context()
+            record = self.create_record()
+
+            payload = json.loads(self.formatter.format(record))
+
+        self.assertEqual(
+            payload["trace_id"],
+            format(span_context.trace_id, "032x"),
+        )
+        self.assertEqual(
+            payload["span_id"],
+            format(span_context.span_id, "016x"),
+        )
+
+    def test_format_omits_trace_context_without_active_span(self):
+        record = self.create_record()
+
+        payload = json.loads(self.formatter.format(record))
+
+        self.assertNotIn("trace_id", payload)
+        self.assertNotIn("span_id", payload)
+
+    @patch(
+        "config.logging.trace.get_current_span",
+        side_effect=RuntimeError("OpenTelemetry failure"),
+    )
+    def test_format_still_works_when_trace_context_fails(self, get_current_span):
+        record = self.create_record()
+
+        payload = json.loads(self.formatter.format(record))
+
+        self.assertEqual(payload["message"], "Question run event.")
+        self.assertNotIn("trace_id", payload)
+        self.assertNotIn("span_id", payload)
