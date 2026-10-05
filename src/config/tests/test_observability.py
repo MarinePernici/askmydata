@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+from uuid import UUID
 
 from django.test import SimpleTestCase, override_settings
 from opentelemetry.trace import SpanKind, StatusCode
@@ -12,6 +13,7 @@ from config.observability import (
     set_span_attribute,
     traced_llm_call,
     traced_operation,
+    traced_question_run,
 )
 
 
@@ -210,6 +212,26 @@ class TracedOperationTests(SimpleTestCase):
             executed = True
 
         self.assertTrue(executed)
+
+
+class TracedQuestionRunTests(SimpleTestCase):
+    @patch("config.observability.traced_operation")
+    def test_converts_uuid_identifiers_to_string_attributes(self, traced_operation):
+        project_id = UUID("12345678-1234-5678-1234-567812345678")
+        question_run_id = UUID("87654321-4321-8765-4321-876543218765")
+        span = MagicMock()
+        traced_operation.return_value.__enter__.return_value = span
+
+        with traced_question_run(project_id, question_run_id) as returned_span:
+            self.assertIs(returned_span, span)
+
+        traced_operation.assert_called_once_with(
+            "question_run",
+            attributes={
+                "project_id": str(project_id),
+                "question_run_id": str(question_run_id),
+            },
+        )
 
 
 class TracedLlmCallTests(SimpleTestCase):

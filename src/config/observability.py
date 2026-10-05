@@ -4,6 +4,7 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager, nullcontext
 from urllib.parse import unquote
+from uuid import UUID
 
 from django.conf import settings
 from opentelemetry import metrics, trace
@@ -164,15 +165,15 @@ def traced_operation(
 
 @contextmanager
 def traced_question_run(
-    project_id: int,
-    question_run_id: int,
+    project_id: UUID,
+    question_run_id: UUID,
 ) -> Generator[trace.Span | None]:
     """Trace one question run using safe correlation identifiers only."""
     with traced_operation(
         "question_run",
         attributes={
-            "project_id": project_id,
-            "question_run_id": question_run_id,
+            "project_id": str(project_id),
+            "question_run_id": str(question_run_id),
         },
     ) as span:
         yield span
