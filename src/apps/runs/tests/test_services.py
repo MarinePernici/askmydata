@@ -1078,3 +1078,92 @@ class QuestionRunServiceTests(TestCase):
             project_id=project.id,
             question_run_id=question_run.id,
         )
+
+    @patch("apps.runs.services.record_question_run_metrics")
+    def test_completed_run_records_question_run_metrics(
+        self,
+        record_question_run_metrics,
+    ):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="Return one.",
+        )
+
+        question_run = QuestionRun.objects.get()
+
+        record_question_run_metrics.assert_called_once_with(
+            status=QuestionRun.Status.COMPLETED,
+            duration_ms=question_run.latency_ms,
+        )
+
+    @patch("apps.runs.services.record_llm_token_metrics")
+    def test_completed_run_records_llm_token_metrics(
+        self,
+        record_llm_token_metrics,
+    ):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        service.run(
+            project=project,
+            conversation=conversation,
+            question="Return one.",
+        )
+
+        self.assertEqual(record_llm_token_metrics.call_count, 2)
+
+    @patch("apps.runs.services.record_question_run_metrics")
+    def test_failed_run_records_question_run_metrics(
+        self,
+        record_question_run_metrics,
+    ):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        service = QuestionRunService(
+            generator=FailingGenerator(),
+            validator=FakeValidator(),
+            executor_factory=FakeExecutorFactory(),
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(RuntimeError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="Return one.",
+            )
+
+        question_run = QuestionRun.objects.get()
+
+        record_question_run_metrics.assert_called_once_with(
+            status=QuestionRun.Status.FAILED,
+            duration_ms=question_run.latency_ms,
+        )

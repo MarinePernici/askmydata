@@ -45,7 +45,8 @@ class AnswerGenerator:
 
         with traced_llm_call("answer_generation") as span:
             response = self._provider.generate(messages)
-            span.set_attribute("llm.model", response.usage.model)
+            if span is not None:
+                span.set_attribute("llm.model", response.usage.model)
 
         return AnswerGenerationResult(
             answer=response.content,

@@ -8,7 +8,11 @@ from apps.runs.error_messages import get_safe_error_message
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
-from config.observability import traced_question_run
+from config.observability import (
+    record_llm_token_metrics,
+    record_question_run_metrics,
+    traced_question_run,
+)
 from query_engine.exceptions import SQLValidationError
 from query_engine.orchestrator import QueryOrchestrator
 from query_engine.types import (
@@ -274,10 +278,22 @@ class QuestionRunService:
             (question_run.completed_at - question_run.started_at).total_seconds() * 1000
         )
 
+        record_question_run_metrics(
+            status=question_run.status,
+            duration_ms=question_run.latency_ms,
+        )
+
     @staticmethod
     def _apply_llm_usage(question_run: QuestionRun, usages) -> None:
         if not usages:
             return
+
+        for usage in usages:
+            record_llm_token_metrics(
+                model=usage.model,
+                prompt_tokens=usage.prompt_tokens,
+                completion_tokens=usage.completion_tokens,
+            )
 
         question_run.model_name = usages[0].model
 
