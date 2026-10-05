@@ -2925,6 +2925,31 @@ html {
     gap: var(--space-3);
 }
 
+.landing-language-select {
+    height: 36px;
+    padding: 0 var(--space-2);
+    border: var(--border-default);
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-0);
+    font: inherit;
+    font-size: var(--text-small-size);
+    font-weight: var(--text-body-medium-weight);
+    color: var(--color-neutral-700);
+    cursor: pointer;
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.landing-language-select:hover {
+    border-color: var(--color-neutral-400);
+}
+
+.landing-language-select:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+}
+
 .landing-navigation-links {
     display: flex;
     align-items: center;

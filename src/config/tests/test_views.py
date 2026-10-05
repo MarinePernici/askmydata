@@ -26,6 +26,32 @@ class LandingViewTests(TestCase):
         self.assertTemplateUsed(response, "landing.html")
         self.assertEqual(response.request["PATH_INFO"], "/")
 
+    def test_anonymous_user_can_switch_to_french(self):
+        response = self.client.post(
+            reverse("set_language"),
+            {
+                "language": "fr",
+                "next": reverse("landing"),
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fr")
+
+    def test_anonymous_user_sees_french_landing_after_switch(self):
+        response = self.client.post(
+            reverse("set_language"),
+            {
+                "language": "fr",
+                "next": reverse("landing"),
+            },
+            follow=True,
+        )
+
+        self.assertContains(response, "Comment ça marche")
+        self.assertContains(response, "Se connecter")
+
 
 class HealthCheckViewTests(TestCase):
     def test_liveness_returns_ok(self):

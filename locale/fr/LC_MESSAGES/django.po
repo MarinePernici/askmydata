@@ -1,0 +1,222 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: AskMyData\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-05 13:25+0000\n"
+"PO-Revision-Date: 2026-10-05\n"
+"Last-Translator: Marine Pernici\n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: templates/landing.html:13
+msgid "Ask questions in natural language and get answers from your data with a controlled, read-only query pipeline."
+msgstr "Posez des questions en langage naturel et obtenez des réponses à partir de vos données grâce à un pipeline de requêtes contrôlé et en lecture seule."
+
+#: templates/landing.html:25 templates/landing.html:525
+msgid "AskMyData home"
+msgstr "Accueil AskMyData"
+
+#: templates/landing.html:35
+msgid "Main navigation"
+msgstr "Navigation principale"
+
+#: templates/landing.html:38 templates/landing.html:126
+msgid "How it works"
+msgstr "Comment ça marche"
+
+#: templates/landing.html:42
+msgid "Safety"
+msgstr "Sécurité"
+
+#: templates/landing.html:46
+msgid "Technology"
+msgstr "Technologie"
+
+#: templates/landing.html:56
+msgid "Language"
+msgstr "Langue"
+
+#: templates/landing.html:71 templates/landing.html:106
+msgid "Sign in"
+msgstr "Se connecter"
+
+#: templates/landing.html:82
+msgid "Natural language data exploration"
+msgstr "Exploration de données en langage naturel"
+
+#: templates/landing.html:86
+msgid "Ask questions. Get answers from your data."
+msgstr "Posez des questions. Obtenez des réponses à partir de vos données."
+
+#: templates/landing.html:90
+msgid "Connect your data, define what AskMyData can access, and explore it using natural language."
+msgstr "Connectez vos données, définissez ce à quoi AskMyData peut accéder et explorez-les en langage naturel."
+
+#: templates/landing.html:100 templates/landing.html:511
+msgid "Public demo access is coming soon"
+msgstr "L'accès à la démo publique sera bientôt disponible"
+
+#: templates/landing.html:102 templates/landing.html:513
+msgid "Try the demo"
+msgstr "Essayer la démo"
+
+#: templates/landing.html:115
+msgid "AskMyData conversation showing rental revenue analysis and a contextual follow-up question"
+msgstr "Conversation AskMyData présentant une analyse des revenus locatifs et une question de suivi contextuelle"
+
+#: templates/landing.html:129
+msgid "From your data to an answer"
+msgstr "De vos données à une réponse"
+
+#: templates/landing.html:133
+msgid "AskMyData turns natural language questions into a controlled query workflow."
+msgstr "AskMyData transforme vos questions en langage naturel en un processus de requête contrôlé."
+
+#: templates/landing.html:161
+msgid "Connect your data"
+msgstr "Connectez vos données"
+
+#: templates/landing.html:164
+msgid "Connect a supported data source to your project."
+msgstr "Connectez une source de données prise en charge à votre projet."
+
+#: templates/landing.html:189
+msgid "Define the scope"
+msgstr "Définissez le périmètre"
+
+#: templates/landing.html:192
+msgid "Choose the tables AskMyData is allowed to use for exploration."
+msgstr "Choisissez les tables qu'AskMyData est autorisé à utiliser pour l'exploration."
+
+#: templates/landing.html:216
+msgid "Ask questions"
+msgstr "Posez vos questions"
+
+#: templates/landing.html:219
+msgid "Explore your data using natural language instead of writing SQL."
+msgstr "Explorez vos données en langage naturel plutôt que d'écrire du SQL."
+
+#: templates/landing.html:244
+msgid "Get answers"
+msgstr "Obtenez des réponses"
+
+#: templates/landing.html:247
+msgid "AskMyData validates and executes read-only SQL before producing an answer."
+msgstr "AskMyData valide et exécute des requêtes SQL en lecture seule avant de produire une réponse."
+
+#: templates/landing.html:258 templates/landing.html:392
+#: templates/landing.html:433 templates/landing.html:488
+msgid "Back to top"
+msgstr "Retour en haut"
+
+#: templates/landing.html:265
+msgid "Controlled by design"
+msgstr "Contrôlé par conception"
+
+#: templates/landing.html:268
+msgid "Built for controlled data exploration"
+msgstr "Conçu pour une exploration contrôlée des données"
+
+#: templates/landing.html:272
+msgid "AskMyData keeps the query pipeline constrained from question to execution."
+msgstr "AskMyData maintient le pipeline de requêtes sous contrôle, de la question jusqu'à l'exécution."
+
+#: templates/landing.html:296
+msgid "Read-only by design"
+msgstr "Lecture seule par conception"
+
+#: templates/landing.html:298
+msgid "Queries are restricted to read-only operations. AskMyData cannot modify the connected data."
+msgstr "Les requêtes sont limitées aux opérations en lecture seule. AskMyData ne peut pas modifier les données connectées."
+
+#: templates/landing.html:324
+msgid "Controlled data scope"
+msgstr "Périmètre de données contrôlé"
+
+#: templates/landing.html:326
+msgid "You choose which tables belong to the Catalog Scope. Generated queries are restricted to that scope."
+msgstr "Vous choisissez les tables incluses dans le Catalog Scope. Les requêtes générées sont limitées à ce périmètre."
+
+#: templates/landing.html:352
+msgid "SQL validation before execution"
+msgstr "Validation du SQL avant exécution"
+
+#: templates/landing.html:354
+msgid "Generated SQL is validated before it can reach the database."
+msgstr "Le SQL généré est validé avant de pouvoir atteindre la base de données."
+
+#: templates/landing.html:379
+msgid "Clarifies instead of guessing"
+msgstr "Demande des précisions plutôt que de supposer"
+
+#: templates/landing.html:381
+msgid "Ambiguous questions can trigger clarification, while questions outside the available data are rejected."
+msgstr "Les questions ambiguës peuvent déclencher une demande de clarification, tandis que celles qui dépassent les données disponibles sont rejetées."
+
+#: templates/landing.html:399
+msgid "Your data, your scope"
+msgstr "Vos données, votre périmètre"
+
+#: templates/landing.html:402
+msgid "Decide what AskMyData can explore"
+msgstr "Décidez de ce qu'AskMyData peut explorer"
+
+#: templates/landing.html:406
+msgid "Select the tables that belong to your project's Catalog Scope. AskMyData uses that scope to build contextual knowledge and constrain generated queries."
+msgstr "Sélectionnez les tables appartenant au Catalog Scope de votre projet. AskMyData utilise ce périmètre pour construire les connaissances contextuelles et limiter les requêtes générées."
+
+#: templates/landing.html:414
+msgid "The result is a query environment grounded in the data you explicitly selected."
+msgstr "Vous obtenez ainsi un environnement de requête fondé sur les données que vous avez explicitement sélectionnées."
+
+#: templates/landing.html:425
+msgid "AskMyData project creation showing the selection of tables included in the project's data scope"
+msgstr "Création d'un projet AskMyData montrant la sélection des tables incluses dans le périmètre de données du projet"
+
+#: templates/landing.html:440
+msgid "Current technology"
+msgstr "Technologies actuelles"
+
+#: templates/landing.html:443
+msgid "Built to evolve"
+msgstr "Conçu pour évoluer"
+
+#: templates/landing.html:447
+msgid "AskMyData currently uses PostgreSQL and OpenAI models, with extensible interfaces designed for additional integrations."
+msgstr "AskMyData utilise actuellement PostgreSQL et les modèles OpenAI, avec des interfaces extensibles conçues pour accueillir de nouvelles intégrations."
+
+#: templates/landing.html:457
+msgid "Data source"
+msgstr "Source de données"
+
+#: templates/landing.html:463
+msgid "Currently supported. Additional data source connectors are planned."
+msgstr "Actuellement pris en charge. D'autres connecteurs de sources de données sont prévus."
+
+#: templates/landing.html:472
+msgid "AI model provider"
+msgstr "Fournisseur de modèles d'IA"
+
+#: templates/landing.html:478
+msgid "Currently supported. Additional model providers are planned."
+msgstr "Actuellement pris en charge. D'autres fournisseurs de modèles sont prévus."
+
+#: templates/landing.html:494
+msgid "Explore with AskMyData"
+msgstr "Explorez avec AskMyData"
+
+#: templates/landing.html:497
+msgid "Ask your data, not your database."
+msgstr "Interrogez vos données, pas votre base de données."
+
+#: templates/landing.html:501
+msgid "Explore your project's data using natural language through a controlled, read-only query workflow."
+msgstr "Explorez les données de votre projet en langage naturel grâce à un processus de requête contrôlé et en lecture seule."
+
+#: templates/landing.html:553
+msgid "Contact"
+msgstr "Contact"

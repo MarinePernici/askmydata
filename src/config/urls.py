@@ -22,6 +22,7 @@ from .views import health_live, health_ready, landing
 
 urlpatterns = [
     path("", landing, name="landing"),
+    path("i18n/", include("django.conf.urls.i18n")),
     path("health/live/", health_live, name="health-live"),
     path("health/ready/", health_ready, name="health-ready"),
     path("admin/", admin.site.urls),
