@@ -1,4 +1,4 @@
-{% load static %}
+{% load i18n static %}
 
 <a href="{% url 'project-list' %}" class="sidebar-brand">
     <img
@@ -12,7 +12,7 @@
     </span>
 </a>
 
-<nav class="sidebar-nav" aria-label="Main navigation">
+<nav class="sidebar-nav" aria-label="{% translate 'Main navigation' %}">
     <a
         href="{% url 'project-list' %}"
         class="nav-item{% if request.resolver_match.url_name == 'project-list' or request.resolver_match.url_name == 'project-create' %} nav-item-active{% endif %}"
@@ -32,14 +32,14 @@
             </svg>
         </span>
 
-        <span>Projects</span>
+        <span>{% translate "Projects" %}</span>
     </a>
 </nav>
 
 {% if project and not creation_mode %}
     <div class="sidebar-project">
         <div class="sidebar-section-label">
-            Current project
+            {% translate "Current project" %}
         </div>
 
         <div class="project-switcher">
@@ -57,7 +57,7 @@
 
                     {% if project.is_archived %}
                         <span class="project-selector-status">
-                            Archived
+                            {% translate "Archived" %}
                         </span>
                     {% endif %}
                 </span>
@@ -92,7 +92,7 @@
 
                         {% if sidebar_project.is_archived %}
                             <span class="project-selector-status">
-                                Archived
+                                {% translate "Archived" %}
                             </span>
                         {% endif %}
                     </a>
@@ -100,7 +100,7 @@
             </div>
         </div>
 
-        <nav class="sidebar-nav" aria-label="Project navigation">
+        <nav class="sidebar-nav" aria-label="{% translate 'Project navigation' %}">
             <a
                 href="{% url 'data-overview' project.id %}"
                 class="nav-item{% if request.resolver_match.url_name == 'data-overview' %} nav-item-active{% endif %}"
@@ -118,7 +118,7 @@
                         <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
                     </svg>
                 </span>
-                <span>Data</span>
+                <span>{% translate "Data" %}</span>
             </a>
 
             <a
@@ -137,7 +137,7 @@
                         <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
                     </svg>
                 </span>
-                <span>Catalog</span>
+                <span>{% translate "Catalog" %}</span>
             </a>
 
             <a
@@ -155,7 +155,7 @@
                         <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
                     </svg>
                 </span>
-                <span>Conversations</span>
+                <span>{% translate "Conversations" %}</span>
             </a>
 
             <a
@@ -174,7 +174,7 @@
                         <circle cx="12" cy="12" r="3" />
                     </svg>
                 </span>
-                <span>Settings</span>
+                <span>{% translate "Settings" %}</span>
             </a>
         </nav>
     </div>
@@ -185,6 +185,26 @@
         <div class="sidebar-user">
             {{ request.user }}
         </div>
+
+        <a
+            href="{% url 'user-preferences' %}"
+            class="nav-item{% if request.resolver_match.url_name == 'user-preferences' %} nav-item-active{% endif %}"
+        >
+            <span class="nav-item-icon" aria-hidden="true">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 21a8 8 0 0 1 16 0" />
+                </svg>
+            </span>
+
+            <span>{% translate "Preferences" %}</span>
+        </a>
 
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
@@ -203,7 +223,7 @@
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                     </svg>
                 </span>
-                <span>Log out</span>
+                <span>{% translate "Log out" %}</span>
             </button>
         </form>
     </div>

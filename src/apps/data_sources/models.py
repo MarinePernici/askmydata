@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from apps.data_sources.encryption import CredentialCipher
 from apps.data_sources.exceptions import DataSourceConfigurationError
@@ -14,9 +15,9 @@ class DataSource(models.Model):
         POSTGRESQL = "postgresql", "PostgreSQL"
 
     class ConnectionStatus(models.TextChoices):
-        NOT_TESTED = "not_tested", "Not tested"
-        CONNECTED = "connected", "Connected"
-        FAILED = "failed", "Failed"
+        NOT_TESTED = "not_tested", _("Not tested")
+        CONNECTED = "connected", _("Connected")
+        FAILED = "failed", _("Failed")
 
     id = models.UUIDField(
         primary_key=True,

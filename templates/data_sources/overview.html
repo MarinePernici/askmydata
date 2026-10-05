@@ -1,35 +1,36 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Data · AskMyData{% endblock %}
+{% block title %}{% translate "Data" %} · AskMyData{% endblock %}
 
 {% block content %}
     <header class="page-header">
         <div class="page-header-content">
-            <h1 class="page-header-title">Data</h1>
+            <h1 class="page-header-title">{% translate "Data" %}</h1>
         </div>
     </header>
 
-    <nav class="tabs" aria-label="Data navigation">
+    <nav class="tabs" aria-label="{% translate "Data navigation" %}">
         <a
             href="{% url 'data-overview' project.id %}"
             class="tab tab-active"
             aria-current="page"
         >
-            Overview
+            {% translate "Overview" %}
         </a>
 
         <a
             href="{% url 'data-schema' project.id %}"
             class="tab"
         >
-            Schema
+            {% translate "Schema" %}
         </a>
     </nav>
 
     <section class="section data-overview-section">
         <div class="section-header">
             <div class="section-header-content">
-                <h2 class="section-header-title">Data source</h2>
+                <h2 class="section-header-title">{% translate "Data source" %}</h2>
             </div>
         </div>
 
@@ -73,27 +74,27 @@
 
             <dl class="data-source-details">
                 <div class="data-source-detail">
-                    <dt>Host</dt>
+                    <dt>{% translate "Host" %}</dt>
                     <dd>{{ data_source.host }}</dd>
                 </div>
 
                 <div class="data-source-detail">
-                    <dt>Database</dt>
+                    <dt>{% translate "Database" %}</dt>
                     <dd>{{ data_source.database }}</dd>
                 </div>
 
                 <div class="data-source-detail">
-                    <dt>Selected tables</dt>
+                    <dt>{% translate "Selected tables" %}</dt>
                     <dd>{{ selected_tables_count }}</dd>
                 </div>
 
                 <div class="data-source-detail">
-                    <dt>Last connection</dt>
+                    <dt>{% translate "Last connection" %}</dt>
                     <dd>
                         {% if data_source.last_connection_at %}
-                            {{ data_source.last_connection_at|date:"M j, Y H:i" }} UTC
+                            {{ data_source.last_connection_at|date:"DATETIME_FORMAT" }} UTC
                         {% else %}
-                            Never
+                            {% translate "Never" %}
                         {% endif %}
                     </dd>
                 </div>
@@ -125,7 +126,7 @@
                             <path d="M3 12a9 9 0 0 0 15 6.7L21 16" />
                             <path d="M16 16h5v5" />
                         </svg>
-                        <span>Test connection</span>
+                        <span>{% translate "Test connection" %}</span>
                     </button>
                 </form>
             </div>

@@ -5,6 +5,8 @@ from django.db import OperationalError
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.authentication.models import UserPreferences
+
 
 class LandingViewTests(TestCase):
     def test_landing_is_publicly_accessible(self):
@@ -51,6 +53,37 @@ class LandingViewTests(TestCase):
 
         self.assertContains(response, "Comment ça marche")
         self.assertContains(response, "Se connecter")
+
+    def test_authenticated_user_can_switch_language_from_landing(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        UserPreferences.objects.create(
+            user=user,
+            language=UserPreferences.Language.FRENCH,
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("set-interface-language"),
+            {
+                "language": "en",
+                "next": reverse("landing"),
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
+
+        user.preferences.refresh_from_db()
+        self.assertEqual(
+            user.preferences.language,
+            UserPreferences.Language.ENGLISH,
+        )
+
+        self.assertContains(response, "How it works")
 
 
 class HealthCheckViewTests(TestCase):

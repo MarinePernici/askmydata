@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Projects · AskMyData{% endblock %}
+{% block title %}{% translate "Projects" %} · AskMyData{% endblock %}
 
 {% block content %}
     <header class="page-header">
         <div class="page-header-content">
-            <h1 class="page-header-title">Projects</h1>
+            <h1 class="page-header-title">{% translate "Projects" %}</h1>
             <p class="page-header-description">
-                Manage your data exploration projects.
+                {% translate "Manage your data exploration projects." %}
             </p>
         </div>
 
@@ -25,7 +26,7 @@
                     <path d="M5 12h14" />
                     <path d="M12 5v14" />
                 </svg>
-                <span>Create project</span>
+                <span>{% translate "Create project" %}</span>
             </a>
         </div>
     </header>
@@ -36,9 +37,9 @@
                 <section class="project-section">
                     <div class="section-header">
                         <div>
-                            <h2 class="section-title">Projects</h2>
+                            <h2 class="section-title">{% translate "Projects" %}</h2>
                             <p class="section-description">
-                                Active projects ready for data exploration.
+                                {% translate "Active projects ready for data exploration." %}
                             </p>
                         </div>
                     </div>
@@ -56,7 +57,7 @@
 
                                     {% if project.status == "regenerating_catalog" %}
                                         <span class="badge">
-                                            Regenerating catalog
+                                            {% translate "Regenerating catalog" %}
                                         </span>
                                     {% endif %}
                                 </a>
@@ -66,7 +67,7 @@
                                         href="{% url 'project-detail' project.id %}"
                                         class="btn btn-secondary"
                                     >
-                                        Open
+                                        {% translate "Open" %}
                                     </a>
                                 </div>
                             </article>
@@ -79,9 +80,9 @@
                 <section class="project-section">
                     <div class="section-header">
                         <div>
-                            <h2 class="section-title">Setup in progress</h2>
+                            <h2 class="section-title">{% translate "Setup in progress" %}</h2>
                             <p class="section-description">
-                                Projects that still need to be configured.
+                                {% translate "Projects that still need to be configured." %}
                             </p>
                         </div>
                     </div>
@@ -98,7 +99,7 @@
                                     </h3>
 
                                     <span class="badge">
-                                        Setup in progress
+                                        {% translate "Setup in progress" %}
                                     </span>
                                 </a>
 
@@ -107,7 +108,7 @@
                                         href="{% url item.setup_url_name item.project.id %}"
                                         class="btn btn-secondary"
                                     >
-                                        Continue setup
+                                        {% translate "Continue" %}
                                     </a>
 
                                     <form
@@ -134,7 +135,7 @@
                                                 <path d="M10 11v5" />
                                                 <path d="M14 11v5" />
                                             </svg>
-                                            <span>Delete</span>
+                                            <span>{% translate "Delete" %}</span>
                                         </button>
                                     </form>
                                 </div>
@@ -148,9 +149,9 @@
                 <section class="project-section">
                     <div class="section-header">
                         <div>
-                            <h2 class="section-title">Archived</h2>
+                            <h2 class="section-title">{% translate "Archived" %}</h2>
                             <p class="section-description">
-                                Read-only projects kept for reference.
+                                {% translate "Read-only projects kept for reference." %}
                             </p>
                         </div>
                     </div>
@@ -167,7 +168,7 @@
                                     </h3>
 
                                     <span class="badge">
-                                        Archived
+                                        {% translate "Archived" %}
                                     </span>
                                 </a>
 
@@ -176,7 +177,7 @@
                                         href="{% url 'project-detail' project.id %}"
                                         class="btn btn-secondary"
                                     >
-                                        View
+                                        {% translate "View" %}
                                     </a>
 
                                     <form
@@ -188,7 +189,7 @@
                                             type="submit"
                                             class="btn btn-secondary"
                                         >
-                                            Restore
+                                            {% translate "Restore" %}
                                         </button>
                                     </form>
                                 </div>
@@ -218,10 +219,10 @@
             </div>
 
             <div class="empty-state-content">
-                <h2 class="empty-state-title">No projects yet</h2>
+                <h2 class="empty-state-title">{% translate "No projects yet" %}</h2>
 
                 <p class="empty-state-description">
-                    Create your first project to connect a data source and start exploring your data.
+                    {% translate "Create your first project to connect a data source and start exploring your data." %}
                 </p>
             </div>
         </section>

@@ -47,7 +47,10 @@
                     </a>
                 </div>
 
-                <form action="{% url 'set_language' %}" method="post">
+                <form
+                    action="{% if request.user.is_authenticated %}{% url 'set-interface-language' %}{% else %}{% url 'set_language' %}{% endif %}"
+                    method="post"
+                >
                     {% csrf_token %}
                     <input name="next" type="hidden" value="{{ request.get_full_path }}">
 

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "User preferences" %} · AskMyData{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-header-title">
+            {% translate "User preferences" %}
+        </h1>
+    </div>
+</header>
+
+<div class="settings-content">
+    <section class="settings-section">
+        <div class="section-header">
+            <div class="section-header-content">
+                <h2 class="section-header-title">
+                    {% translate "General" %}
+                </h2>
+            </div>
+        </div>
+
+        <form method="post" class="settings-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-field">
+                <label
+                    for="{{ form.language.id_for_label }}"
+                    class="form-label"
+                >
+                    {% translate "Language" %}
+                </label>
+
+                <select
+                    name="{{ form.language.html_name }}"
+                    id="{{ form.language.id_for_label }}"
+                    class="form-select"
+                    {% if form.language.errors %}aria-invalid="true"{% endif %}
+                >
+                    {% for value, label in form.language.field.choices %}
+                        <option
+                            value="{{ value }}"
+                            {% if form.language.value == value %}selected{% endif %}
+                        >
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <p class="form-help">
+                    {% translate "Choose the language used by the AskMyData interface." %}
+                </p>
+
+                {% for error in form.language.errors %}
+                    <span class="form-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="settings-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% translate "Save changes" %}
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
