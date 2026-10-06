@@ -104,6 +104,10 @@ class AnswerGeneratorTests(unittest.TestCase):
         )
         self.assertIn("order_count", system_message.content)
         self.assertIn("42", system_message.content)
+        self.assertIn(
+            "Answer in the same language as the user's question.",
+            system_message.content,
+        )
 
         self.assertEqual(user_message.role, "user")
         self.assertEqual(

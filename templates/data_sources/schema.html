@@ -1,20 +1,21 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Data Schema · AskMyData{% endblock %}
+{% block title %}{% translate "Data Schema" %} · AskMyData{% endblock %}
 
 {% block content %}
     <header class="page-header">
         <div class="page-header-content">
-            <h1 class="page-header-title">Data</h1>
+            <h1 class="page-header-title">{% translate "Data" %}</h1>
         </div>
     </header>
 
-    <nav class="tabs" aria-label="Data navigation">
+    <nav class="tabs" aria-label="{% translate "Data navigation" %}">
         <a
             href="{% url 'data-overview' project.id %}"
             class="tab"
         >
-            Overview
+            {% translate "Overview" %}
         </a>
 
         <a
@@ -22,14 +23,14 @@
             class="tab tab-active"
             aria-current="page"
         >
-            Schema
+            {% translate "Schema" %}
         </a>
     </nav>
 
     <section class="section data-overview-section">
         <div class="section-header">
             <div class="section-header-content">
-                <h2 class="section-header-title">Database schema</h2>
+                <h2 class="section-header-title">{% translate "Database schema" %}</h2>
             </div>
         </div>
 
@@ -37,13 +38,13 @@
             <div class="schema-explorer">
                 <aside class="schema-table-list">
                     <div class="schema-table-list-header">
-                        <span>Tables</span>
+                        <span>{% translate "Tables" %}</span>
                         <span class="schema-table-count">
                             {{ catalog.tables|length }}
                         </span>
                     </div>
 
-                    <nav class="schema-table-navigation" aria-label="Database tables">
+                    <nav class="schema-table-navigation" aria-label="{% translate "Database tables" %}">
                         {% for table in catalog.tables %}
                             <a
                                 href="{% url 'data-schema' project.id %}?table={{ table.schema }}.{{ table.name }}"
@@ -82,13 +83,13 @@
 
                     <section class="schema-detail-section">
                         <h4 class="schema-detail-section-title">
-                            Columns
+                            {% translate "Columns" %}
                         </h4>
 
                         <div class="schema-columns">
                             <div class="schema-column schema-column-heading">
-                                <span>Column</span>
-                                <span>Type</span>
+                                <span>{% translate "Column" %}</span>
+                                <span>{% translate "Type" %}</span>
                             </div>
 
                             {% for column in selected_table.columns %}
@@ -114,7 +115,7 @@
                                 </div>
                             {% empty %}
                                 <div class="schema-columns-empty">
-                                    No columns available.
+                                    {% translate "No columns available." %}
                                 </div>
                             {% endfor %}
                         </div>
@@ -122,13 +123,13 @@
 
                     <section class="schema-detail-section">
                         <h4 class="schema-detail-section-title">
-                            Relationships
+                            {% translate "Relationships" %}
                         </h4>
 
                         <div class="schema-relationship-groups">
                             <div class="schema-relationship-group">
                                 <span class="schema-relationship-label">
-                                    Referenced by
+                                    {% translate "Referenced by" %}
                                 </span>
 
                                 {% if referenced_by %}
@@ -146,7 +147,7 @@
 
                             <div class="schema-relationship-group">
                                 <span class="schema-relationship-label">
-                                    References
+                                    {% translate "References" %}
                                 </span>
 
                                 {% if references %}
@@ -169,10 +170,10 @@
             <div class="empty-state">
                 <div class="empty-state-content">
                     <h2 class="empty-state-title">
-                        Schema unavailable
+                        {% translate "Schema unavailable" %}
                     </h2>
                     <p class="empty-state-description">
-                        The database schema will be available when the catalog is ready.
+                        {% translate "The database schema will be available when the catalog is ready." %}
                     </p>
                 </div>
             </div>

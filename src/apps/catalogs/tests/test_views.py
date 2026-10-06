@@ -577,7 +577,7 @@ class CatalogScopeViewTests(TestCase):
 
         self.assertContains(
             response,
-            "Project has no catalog scope.",
+            "Select the project data before building the catalog.",
         )
 
     @patch("apps.catalogs.views.create_catalog_service")
@@ -613,7 +613,7 @@ class CatalogScopeViewTests(TestCase):
 
         self.assertContains(
             response,
-            "Project has no data source.",
+            "Configure a data source before building the catalog.",
         )
 
     @patch("apps.catalogs.views.logger")

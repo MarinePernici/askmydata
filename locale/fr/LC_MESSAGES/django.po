@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: AskMyData\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 16:50+0000\n"
+"POT-Creation-Date: 2026-10-06 12:53+0000\n"
 "PO-Revision-Date: 2026-10-05\n"
 "Last-Translator: Marine Pernici\n"
 "Language-Team: French\n"
@@ -12,17 +12,80 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/apps/data_sources/models.py:19
+#: src/apps/catalogs/models.py:50
+msgid "Pending"
+msgstr "En attente"
+
+#: src/apps/catalogs/models.py:51 templates/catalogs/detail.html:34
+msgid "Building"
+msgstr "En cours de génération"
+
+#: src/apps/catalogs/models.py:52 templates/catalogs/detail.html:32
+msgid "Ready"
+msgstr "Prêt"
+
+#: src/apps/catalogs/models.py:53 templates/catalogs/detail.html:38
+msgid "Stale"
+msgstr "Obsolète"
+
+#: src/apps/catalogs/models.py:54 src/apps/data_sources/models.py:20
+#: templates/catalogs/detail.html:36
+msgid "Failed"
+msgstr "Échec"
+
+#: src/apps/catalogs/views.py:277
+msgid "Configure a data source before building the catalog."
+msgstr "Configurez une source de données avant de générer le catalogue."
+
+#: src/apps/catalogs/views.py:287
+msgid "Select the project data before building the catalog."
+msgstr "Sélectionnez les données du projet avant de générer le catalogue."
+
+#: src/apps/catalogs/views.py:304
+msgid "Unable to build the catalog."
+msgstr "Impossible de générer le catalogue."
+
+#: src/apps/catalogs/views.py:359
+msgid "Unable to regenerate the catalog."
+msgstr "Impossible de régénérer le catalogue."
+
+#: src/apps/conversations/views.py:207 templates/conversations/detail.html:319
+msgid "Project is not ready."
+msgstr "Le projet n’est pas prêt."
+
+#: src/apps/data_sources/models.py:18
 msgid "Not tested"
 msgstr "Non testée"
 
-#: src/apps/data_sources/models.py:20
+#: src/apps/data_sources/models.py:19
 msgid "Connected"
 msgstr "Connectée"
 
-#: src/apps/data_sources/models.py:21
-msgid "Failed"
-msgstr "Échec"
+#: src/apps/runs/error_messages.py:14
+msgid ""
+"Unable to connect to the project's data source. Check the connection and try "
+"again."
+msgstr ""
+"Impossible de se connecter à la source de données du projet. Vérifiez la "
+"connexion et réessayez."
+
+#: src/apps/runs/error_messages.py:20
+msgid ""
+"The database user no longer has the required permissions. Check the data "
+"source permissions."
+msgstr ""
+"L’utilisateur de la base de données ne dispose plus des autorisations "
+"requises. Vérifiez les autorisations de la source de données."
+
+#: src/apps/runs/error_messages.py:25
+msgid "The query took too long to execute. Try a more specific question."
+msgstr ""
+"La requête a pris trop de temps à s’exécuter. Essayez de poser une question "
+"plus précise."
+
+#: src/apps/runs/error_messages.py:27
+msgid "Unable to process your question. Please try again."
+msgstr "Impossible de traiter votre question. Veuillez réessayer."
 
 #: templates/authentication/user_preferences.html:4
 #: templates/authentication/user_preferences.html:10
@@ -59,6 +122,286 @@ msgstr "Fermer la navigation"
 msgid "Open navigation"
 msgstr "Ouvrir la navigation"
 
+#: templates/catalogs/confirmation.html:4
+msgid "Confirm project"
+msgstr "Confirmer le projet"
+
+#: templates/catalogs/confirmation.html:9
+#: templates/catalogs/confirmation.html:157 templates/catalogs/scope.html:9
+#: templates/data_sources/configure.html:9
+#: templates/projects/project_create.html:4
+#: templates/projects/project_create.html:9
+#: templates/projects/project_list.html:29
+msgid "Create project"
+msgstr "Créer un projet"
+
+#: templates/catalogs/confirmation.html:11
+msgid "Review your project configuration before creating the catalog."
+msgstr "Vérifiez la configuration de votre projet avant de créer le catalogue."
+
+#: templates/catalogs/confirmation.html:17 templates/catalogs/scope.html:17
+#: templates/data_sources/configure.html:17
+#: templates/projects/project_create.html:17
+msgid "Project creation progress"
+msgstr "Progression de la création du projet"
+
+#: templates/catalogs/confirmation.html:21 templates/catalogs/scope.html:21
+#: templates/data_sources/configure.html:21
+#: templates/projects/project_create.html:21
+#: templates/projects/project_create.html:50
+msgid "Project info"
+msgstr "Informations du projet"
+
+#: templates/catalogs/confirmation.html:28
+#: templates/catalogs/confirmation.html:88 templates/catalogs/scope.html:28
+#: templates/data_sources/configure.html:28
+#: templates/data_sources/configure.html:50
+#: templates/data_sources/overview.html:33 templates/landing.html:461
+#: templates/projects/project_create.html:28
+msgid "Data source"
+msgstr "Source de données"
+
+#: templates/catalogs/confirmation.html:35 templates/catalogs/scope.html:35
+#: templates/catalogs/scope.html:50 templates/data_sources/configure.html:35
+#: templates/projects/project_create.html:35
+msgid "Data selection"
+msgstr "Sélection des données"
+
+#: templates/catalogs/confirmation.html:42
+#: templates/catalogs/confirmation.html:50 templates/catalogs/scope.html:42
+#: templates/data_sources/configure.html:42
+#: templates/projects/project_create.html:42
+msgid "Confirmation"
+msgstr "Confirmation"
+
+#: templates/catalogs/confirmation.html:52
+msgid "Review the project configuration before creating the catalog."
+msgstr "Vérifiez la configuration du projet avant de créer le catalogue."
+
+#: templates/catalogs/confirmation.html:68
+msgid "Project"
+msgstr "Projet"
+
+#: templates/catalogs/confirmation.html:73
+msgid "Name"
+msgstr "Nom"
+
+#: templates/catalogs/confirmation.html:79
+#: templates/projects/project_create.html:88
+#: templates/projects/project_update.html:60
+msgid "Description"
+msgstr "Description"
+
+#: templates/catalogs/confirmation.html:93
+#: templates/data_sources/schema.html:92
+msgid "Type"
+msgstr "Type"
+
+#: templates/catalogs/confirmation.html:98
+#: templates/data_sources/configure.html:70
+#: templates/data_sources/overview.html:77
+msgid "Host"
+msgstr "Hôte"
+
+#: templates/catalogs/confirmation.html:103
+#: templates/data_sources/configure.html:112
+#: templates/data_sources/overview.html:82
+msgid "Database"
+msgstr "Base de données"
+
+#: templates/catalogs/confirmation.html:111
+#: templates/data_sources/overview.html:87
+msgid "Selected tables"
+msgstr "Tables sélectionnées"
+
+#: templates/catalogs/confirmation.html:115
+#, python-format
+msgid ""
+"\n"
+"                            %(selected_count)s table selected out of "
+"%(available_count)s available\n"
+"                        "
+msgid_plural ""
+"\n"
+"                            %(selected_count)s tables selected out of "
+"%(available_count)s available\n"
+"                        "
+msgstr[0] ""
+"\n"
+"                            %(selected_count)s table sélectionnée sur "
+"%(available_count)s disponibles\n"
+"                        "
+msgstr[1] ""
+"\n"
+"                            %(selected_count)s tables sélectionnées sur "
+"%(available_count)s disponibles\n"
+"                        "
+
+#: templates/catalogs/confirmation.html:129
+msgid "No tables selected."
+msgstr "Aucune table sélectionnée."
+
+#: templates/catalogs/confirmation.html:142 templates/catalogs/scope.html:81
+#: templates/catalogs/scope.html:161 templates/data_sources/configure.html:171
+msgid "Back"
+msgstr "Retour"
+
+#: templates/catalogs/confirmation.html:170
+msgid "Creating project"
+msgstr "Création du projet"
+
+#: templates/catalogs/confirmation.html:173
+msgid "Generating your Knowledge Catalog. This may take a moment."
+msgstr ""
+"Génération de votre catalogue sémantique. Cette opération peut prendre "
+"quelques instants."
+
+#: templates/catalogs/detail.html:4 templates/catalogs/detail.html:8
+#: templates/components/sidebar.html:140
+msgid "Catalog"
+msgstr "Catalogue"
+
+#: templates/catalogs/detail.html:14
+msgid "Knowledge catalog"
+msgstr "Catalogue sémantique"
+
+#: templates/catalogs/detail.html:16
+msgid "Semantic information used by AskMyData to understand your data"
+msgstr ""
+"Informations sémantiques utilisées par AskMyData pour comprendre vos données"
+
+#: templates/catalogs/detail.html:50
+msgid "Last generated"
+msgstr "Dernière génération"
+
+#: templates/catalogs/detail.html:56
+msgid "Not built"
+msgstr "Non généré"
+
+#: templates/catalogs/detail.html:76
+msgid "Regenerate catalog"
+msgstr "Régénérer le catalogue"
+
+#: templates/catalogs/detail.html:88 templates/projects/project_list.html:60
+msgid "Regenerating catalog"
+msgstr "Régénération du catalogue"
+
+#: templates/catalogs/detail.html:91
+msgid "Updating your Knowledge Catalog. This may take a moment."
+msgstr ""
+"Mise à jour de votre catalogue sémantique. Cette opération peut prendre "
+"quelques instants."
+
+#: templates/catalogs/detail.html:101
+msgid "Catalog coverage"
+msgstr "Couverture du catalogue"
+
+#: templates/catalogs/detail.html:105 templates/catalogs/detail.html:124
+#: templates/data_sources/schema.html:41
+msgid "Tables"
+msgstr "Tables"
+
+#: templates/catalogs/detail.html:110 templates/data_sources/schema.html:86
+msgid "Columns"
+msgstr "Colonnes"
+
+#: templates/catalogs/detail.html:115 templates/catalogs/detail.html:171
+msgid "Business synonyms"
+msgstr "Synonymes métier"
+
+#: templates/catalogs/detail.html:157
+msgid "Business description"
+msgstr "Description métier"
+
+#: templates/catalogs/detail.html:165
+msgid "No business description available."
+msgstr "Aucune description métier disponible."
+
+#: templates/catalogs/detail.html:183
+msgid "No business synonyms available."
+msgstr "Aucun synonyme métier disponible."
+
+#: templates/catalogs/detail.html:194
+msgid "Catalog is being generated"
+msgstr "Le catalogue est en cours de génération"
+
+#: templates/catalogs/detail.html:196
+msgid "Semantic information will be available when generation is complete."
+msgstr ""
+"Les informations sémantiques seront disponibles une fois la génération "
+"terminée."
+
+#: templates/catalogs/detail.html:200
+msgid "Catalog generation failed"
+msgstr "Échec de la génération du catalogue"
+
+#: templates/catalogs/detail.html:202
+msgid "The knowledge catalog could not be generated."
+msgstr "Le catalogue sémantique n’a pas pu être généré."
+
+#: templates/catalogs/detail.html:206
+msgid "Catalog needs to be regenerated"
+msgstr "Le catalogue doit être régénéré"
+
+#: templates/catalogs/detail.html:208
+msgid ""
+"The current catalog is no longer synchronized with the project configuration."
+msgstr ""
+"Le catalogue actuel n’est plus synchronisé avec la configuration du projet."
+
+#: templates/catalogs/detail.html:212
+msgid "Catalog not available"
+msgstr "Catalogue indisponible"
+
+#: templates/catalogs/detail.html:214
+msgid "The knowledge catalog has not been generated yet."
+msgstr "Le catalogue sémantique n’a pas encore été généré."
+
+#: templates/catalogs/scope.html:4
+msgid "Select data"
+msgstr "Sélectionner les tables"
+
+#: templates/catalogs/scope.html:11
+msgid "Choose the data you want AskMyData to explore."
+msgstr "Choisissez les données que vous souhaitez explorer avec AskMyData."
+
+#: templates/catalogs/scope.html:52
+msgid "Select the PostgreSQL tables that should be included in this project."
+msgstr "Sélectionnez les tables PostgreSQL à inclure dans ce projet."
+
+#: templates/catalogs/scope.html:73
+msgid "Configure a data source before selecting tables."
+msgstr "Configurez une source de données avant de sélectionner les tables."
+
+#: templates/catalogs/scope.html:92
+msgid "table selected"
+msgstr "table sélectionnée"
+
+#: templates/catalogs/scope.html:93
+msgid "tables selected"
+msgstr "tables sélectionnées"
+
+#: templates/catalogs/scope.html:100 templates/catalogs/scope.html:103
+msgid "Select all"
+msgstr "Tout sélectionner"
+
+#: templates/catalogs/scope.html:101
+msgid "Deselect all"
+msgstr "Tout désélectionner"
+
+#: templates/catalogs/scope.html:146
+msgid "No tables found"
+msgstr "Aucune table trouvée"
+
+#: templates/catalogs/scope.html:149
+msgid "No PostgreSQL tables are available for selection."
+msgstr "Aucune table PostgreSQL n’est disponible pour la sélection."
+
+#: templates/catalogs/scope.html:169 templates/projects/project_create.html:109
+#: templates/projects/project_list.html:111
+msgid "Continue"
+msgstr "Continuer"
+
 #: templates/components/sidebar.html:15 templates/landing.html:35
 msgid "Main navigation"
 msgstr "Navigation principale"
@@ -84,15 +427,15 @@ msgid "Project navigation"
 msgstr "Navigation du projet"
 
 #: templates/components/sidebar.html:121 templates/data_sources/overview.html:4
-#: templates/data_sources/overview.html:9
+#: templates/data_sources/overview.html:9 templates/data_sources/schema.html:9
 msgid "Data"
 msgstr "Données"
 
-#: templates/components/sidebar.html:140
-msgid "Catalog"
-msgstr "Catalogue"
-
 #: templates/components/sidebar.html:158
+#: templates/conversations/_conversation_panel.html:36
+#: templates/conversations/detail.html:15
+#: templates/conversations/detail.html:103 templates/conversations/list.html:4
+#: templates/conversations/list.html:9 templates/conversations/list.html:36
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -110,67 +453,138 @@ msgstr "Préférences"
 msgid "Log out"
 msgstr "Se déconnecter"
 
+#: templates/conversations/_conversation_panel.html:29
+#: templates/conversations/list.html:82
+msgid "New conversation"
+msgstr "Nouvelle conversation"
+
+#: templates/conversations/_conversation_panel.html:49
+#: templates/conversations/detail.html:122
+msgid "Untitled conversation"
+msgstr "Conversation sans titre"
+
+#: templates/conversations/detail.html:8
+msgid "Conversation"
+msgstr "Conversation"
+
+#: templates/conversations/detail.html:43
+msgid "Unable to process your question"
+msgstr "Impossible de traiter votre question"
+
+#: templates/conversations/detail.html:51
+msgid "Close error dialog"
+msgstr "Fermer la fenêtre d’erreur"
+
+#: templates/conversations/detail.html:65
+msgid "Close"
+msgstr "Fermer"
+
+#: templates/conversations/detail.html:114
+msgid "Conversation title"
+msgstr "Titre de la conversation"
+
+#: templates/conversations/detail.html:134
+msgid "Save"
+msgstr "Enregistrer"
+
+#: templates/conversations/detail.html:142
+#: templates/conversations/detail.html:164
+msgid "You"
+msgstr "Vous"
+
+#: templates/conversations/detail.html:143
+msgid "Thinking"
+msgstr "Réflexion en cours"
+
+#: templates/conversations/detail.html:181
+msgid "AskMyData · Answer"
+msgstr "AskMyData · Réponse"
+
+#: templates/conversations/detail.html:199
+msgid "AskMyData · Clarification needed"
+msgstr "AskMyData · Précision nécessaire"
+
+#: templates/conversations/detail.html:222
+msgid "AskMyData · Cannot answer"
+msgstr "AskMyData · Réponse impossible"
+
+#: templates/conversations/detail.html:240
+msgid "AskMyData · Error"
+msgstr "AskMyData · Erreur"
+
+#: templates/conversations/detail.html:254
+msgid "No messages"
+msgstr "Aucun message"
+
+#: templates/conversations/detail.html:256
+msgid "This conversation has no messages."
+msgstr "Cette conversation ne contient aucun message."
+
+#: templates/conversations/detail.html:259
+msgid "Ask your first question"
+msgstr "Posez votre première question"
+
+#: templates/conversations/detail.html:261
+msgid "Ask a question about your data using natural language."
+msgstr "Posez une question sur vos données en langage naturel."
+
+#: templates/conversations/detail.html:270
+msgid "This project is archived and read-only."
+msgstr "Ce projet est archivé et accessible en lecture seule."
+
+#: templates/conversations/detail.html:282
+msgid "Ask a question"
+msgstr "Poser une question"
+
+#: templates/conversations/detail.html:289
+msgid "Ask a question about your data..."
+msgstr "Posez une question sur vos données..."
+
+#: templates/conversations/detail.html:299
+#: templates/conversations/detail.html:300
+msgid "Ask question"
+msgstr "Poser la question"
+
+#: templates/conversations/list.html:43
+msgid "Select a conversation"
+msgstr "Sélectionner une conversation"
+
+#: templates/conversations/list.html:45
+msgid "Choose a conversation from the list to view its messages."
+msgstr "Choisissez une conversation dans la liste pour afficher ses messages."
+
+#: templates/conversations/list.html:48
+msgid "No conversations"
+msgstr "Aucune conversation"
+
+#: templates/conversations/list.html:50
+msgid "This archived project has no conversations."
+msgstr "Ce projet archivé ne contient aucune conversation."
+
+#: templates/conversations/list.html:54
+msgid "Start a conversation"
+msgstr "Démarrer une conversation"
+
+#: templates/conversations/list.html:56
+msgid "Ask questions about your data using natural language."
+msgstr "Posez des questions sur vos données en langage naturel."
+
 #: templates/data_sources/configure.html:4
 msgid "Configure data source"
 msgstr "Configurer la source de données"
 
-#: templates/data_sources/configure.html:9
-#: templates/projects/project_create.html:4
-#: templates/projects/project_create.html:9
-#: templates/projects/project_list.html:29
-msgid "Create project"
-msgstr "Créer un projet"
-
 #: templates/data_sources/configure.html:11
 msgid "Connect a PostgreSQL database to your project."
 msgstr "Connectez une base de données PostgreSQL à votre projet."
-
-#: templates/data_sources/configure.html:17
-#: templates/projects/project_create.html:17
-msgid "Project creation progress"
-msgstr "Progression de la création du projet"
-
-#: templates/data_sources/configure.html:21
-#: templates/projects/project_create.html:21
-#: templates/projects/project_create.html:50
-msgid "Project info"
-msgstr "Informations du projet"
-
-#: templates/data_sources/configure.html:28
-#: templates/data_sources/configure.html:50
-#: templates/data_sources/overview.html:33 templates/landing.html:461
-#: templates/projects/project_create.html:28
-msgid "Data source"
-msgstr "Source de données"
-
-#: templates/data_sources/configure.html:35
-#: templates/projects/project_create.html:35
-msgid "Data selection"
-msgstr "Sélection des données"
-
-#: templates/data_sources/configure.html:42
-#: templates/projects/project_create.html:42
-msgid "Confirmation"
-msgstr "Confirmation"
 
 #: templates/data_sources/configure.html:52
 msgid "Enter the connection details for your PostgreSQL database."
 msgstr ""
 "Saisissez les informations de connexion à votre base de données PostgreSQL."
 
-#: templates/data_sources/configure.html:70
-#: templates/data_sources/overview.html:77
-msgid "Host"
-msgstr "Hôte"
-
 #: templates/data_sources/configure.html:90
 msgid "Port"
 msgstr "Port"
-
-#: templates/data_sources/configure.html:112
-#: templates/data_sources/overview.html:82
-msgid "Database"
-msgstr "Base de données"
 
 #: templates/data_sources/configure.html:132
 #: templates/registration/login.html:58
@@ -182,29 +596,24 @@ msgstr "Nom d’utilisateur"
 msgid "Password"
 msgstr "Mot de passe"
 
-#: templates/data_sources/configure.html:171
-msgid "Back"
-msgstr "Retour"
-
 #: templates/data_sources/configure.html:175
 msgid "Test and continue"
 msgstr "Tester et continuer"
 
 #: templates/data_sources/overview.html:13
+#: templates/data_sources/schema.html:13
 msgid "Data navigation"
-msgstr "Navigation des données"
+msgstr "Navigation dans la section Données"
 
 #: templates/data_sources/overview.html:19
+#: templates/data_sources/schema.html:18
 msgid "Overview"
 msgstr "Vue d'ensemble"
 
 #: templates/data_sources/overview.html:26
+#: templates/data_sources/schema.html:26
 msgid "Schema"
 msgstr "Schéma"
-
-#: templates/data_sources/overview.html:87
-msgid "Selected tables"
-msgstr "Tables sélectionnées"
 
 #: templates/data_sources/overview.html:92
 msgid "Last connection"
@@ -217,6 +626,48 @@ msgstr "Jamais"
 #: templates/data_sources/overview.html:129
 msgid "Test connection"
 msgstr "Tester la connexion"
+
+#: templates/data_sources/schema.html:4
+msgid "Data Schema"
+msgstr "Schéma des données"
+
+#: templates/data_sources/schema.html:33
+msgid "Database schema"
+msgstr "Schéma de la base de données"
+
+#: templates/data_sources/schema.html:47
+msgid "Database tables"
+msgstr "Tables de la base de données"
+
+#: templates/data_sources/schema.html:91
+msgid "Column"
+msgstr "Colonne"
+
+#: templates/data_sources/schema.html:118
+msgid "No columns available."
+msgstr "Aucune colonne disponible."
+
+#: templates/data_sources/schema.html:126
+msgid "Relationships"
+msgstr "Relations"
+
+#: templates/data_sources/schema.html:132
+msgid "Referenced by"
+msgstr "Référencée par"
+
+#: templates/data_sources/schema.html:150
+msgid "References"
+msgstr "Références"
+
+#: templates/data_sources/schema.html:173
+msgid "Schema unavailable"
+msgstr "Schéma indisponible"
+
+#: templates/data_sources/schema.html:176
+msgid "The database schema will be available when the catalog is ready."
+msgstr ""
+"Le schéma de la base de données sera disponible lorsque le catalogue sera "
+"prêt."
 
 #: templates/landing.html:13
 msgid ""
@@ -490,19 +941,9 @@ msgstr ""
 msgid "Project name"
 msgstr "Nom du projet"
 
-#: templates/projects/project_create.html:88
-#: templates/projects/project_update.html:60
-msgid "Description"
-msgstr "Description"
-
 #: templates/projects/project_create.html:105
 msgid "Cancel"
 msgstr "Annuler"
-
-#: templates/projects/project_create.html:109
-#: templates/projects/project_list.html:111
-msgid "Continue"
-msgstr "Continuer"
 
 #: templates/projects/project_list.html:11
 msgid "Manage your data exploration projects."
@@ -511,10 +952,6 @@ msgstr "Gérez vos projets d’exploration de données."
 #: templates/projects/project_list.html:42
 msgid "Active projects ready for data exploration."
 msgstr "Projets actifs prêts pour l’exploration des données."
-
-#: templates/projects/project_list.html:60
-msgid "Regenerating catalog"
-msgstr "Régénération du catalogue"
 
 #: templates/projects/project_list.html:70
 msgid "Open"

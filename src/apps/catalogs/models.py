@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from apps.projects.models import Project
 from catalog.types import (
@@ -46,11 +47,11 @@ class CatalogScope(models.Model):
 
 class KnowledgeCatalog(models.Model):
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        BUILDING = "building", "Building"
-        READY = "ready", "Ready"
-        STALE = "stale", "Stale"
-        FAILED = "failed", "Failed"
+        PENDING = "pending", _("Pending")
+        BUILDING = "building", _("Building")
+        READY = "ready", _("Ready")
+        STALE = "stale", _("Stale")
+        FAILED = "failed", _("Failed")
 
     id = models.UUIDField(
         primary_key=True,

@@ -59,6 +59,7 @@ class SQLGenerator:
                     "would materially change the query, do not choose an interpretation "
                     "yourself.\n"
                     "- Ask one concise clarification question instead.\n"
+                    "- Write clarification questions in the same language as the user's question.\n"
                     "- Do not ask for clarification when the intended query can be determined "
                     "unambiguously from the question, catalog, and conversation history.\n"
                     "- Do not invent or assume business definitions, metrics, formulas, or "
@@ -96,8 +97,12 @@ class SQLGenerator:
                     '- "clarification": one concise question asking for the missing '
                     "information.\n\n"
                     "If the question cannot be answered from the available project data, "
-                    "return exactly this field:\n"
-                    '- "cannot_answer": true'
+                    "return exactly these fields:\n"
+                    '- "cannot_answer": true\n'
+                    '- "message": translate the following message into the same language as '
+                    "the user's question, preserving its meaning without adding or removing "
+                    "information: \"I can't answer this question using the data available "
+                    "in this project. Please ask a question related to the project's data.\""
                 ),
             ),
             LLMMessage(
@@ -135,7 +140,15 @@ class SQLGenerator:
             )
 
         if payload.get("cannot_answer") is True:
+            message = payload.get("message")
+
+            if not isinstance(message, str) or not message.strip():
+                raise SQLGenerationError(
+                    "The LLM returned an invalid SQL generation response."
+                )
+
             return CannotAnswerResult(
+                message=message.strip(),
                 usages=(response.usage,),
             )
 

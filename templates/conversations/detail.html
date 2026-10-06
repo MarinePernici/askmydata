@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}
     {% if conversation.title %}
         {{ conversation.title }} · AskMyData
     {% else %}
-        Conversation · AskMyData
+        {% translate "Conversation" %} · AskMyData
     {% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="conversations-page">
     <header class="conversations-header">
-        <h1>Conversations</h1>
+        <h1>{% translate "Conversations" %}</h1>
     </header>
         {% if messages %}
             {% for message in messages %}
@@ -39,7 +40,7 @@
                                 </svg>
 
                                 <h2 id="question-error-title-{{ forloop.counter }}">
-                                    Unable to process your question
+                                    {% translate "Unable to process your question" %}
                                 </h2>
                             </div>
 
@@ -47,7 +48,7 @@
                                 <button
                                     type="submit"
                                     class="conversation-error-dialog-close"
-                                    aria-label="Close error dialog"
+                                    aria-label="{% translate "Close error dialog" %}"
                                     autofocus
                                 >
                                     &times;
@@ -61,7 +62,7 @@
 
                         <form method="dialog" class="conversation-error-dialog-actions">
                             <button type="submit" class="btn btn-secondary">
-                                Close
+                                {% translate "Close" %}
                             </button>
                         </form>
                     </dialog>
@@ -99,7 +100,7 @@
                         <path d="M4 12h16" />
                         <path d="M4 18h16" />
                     </svg>
-                    Conversations
+                    {% translate "Conversations" %}
                 </button>
 
                 <form
@@ -110,7 +111,7 @@
                     {% csrf_token %}
 
                     <label for="conversation-title" class="sr-only">
-                        Conversation title
+                        {% translate "Conversation title" %}
                     </label>
 
                     <input
@@ -118,7 +119,7 @@
                         type="text"
                         name="title"
                         value="{{ conversation.title }}"
-                        placeholder="Untitled conversation"
+                        placeholder="{% translate "Untitled conversation" %}"
                         maxlength="255"
                         class="conversation-title-input"
                         required
@@ -130,7 +131,7 @@
                         class="btn btn-secondary conversation-title-save"
                         {% if project.is_archived %}disabled{% endif %}
                     >
-                        Save
+                        {% translate "Save" %}
                     </button>
                 </form>
             </header>
@@ -138,6 +139,8 @@
             <div
                 class="conversation-messages"
                 data-conversation-messages
+                data-user-label="{% translate 'You' %}"
+                data-thinking-label="{% translate 'Thinking' %}"
             >
                 {% for message in conversation_messages %}
                     <article
@@ -158,7 +161,7 @@
                         <p class="conversation-message-author">
 
                             {% if message.role == "user" %}
-                                You
+                                {% translate "You" %}
 
                             {% elif message.generated_by_run.status == "completed" %}
                                 <!-- Success: circle-check -->
@@ -175,7 +178,7 @@
                                     <circle cx="12" cy="12" r="10" />
                                     <path d="m8 12 3 3 5-6" />
                                 </svg>
-                                AskMyData · Answer
+                                {% translate "AskMyData · Answer" %}
 
                             {% elif message.generated_by_run.status == "needs_clarification" %}
                                 <!-- Info: message-circle-question -->
@@ -193,7 +196,7 @@
                                     <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
                                     <path d="M12 17h.01" />
                                 </svg>
-                                AskMyData · Clarification needed
+                                {% translate "AskMyData · Clarification needed" %}
 
                             {% elif message.generated_by_run.status == "rejected" %}
                                 <!-- Warning: triangle-alert -->
@@ -216,7 +219,7 @@
                                     <path d="M12 9v4" />
                                     <path d="M12 17h.01" />
                                 </svg>
-                                AskMyData · Cannot answer
+                                {% translate "AskMyData · Cannot answer" %}
 
                             {% elif message.generated_by_run.status == "failed" %}
                                 <!-- Error: circle-alert -->
@@ -234,7 +237,7 @@
                                     <path d="M12 8v4" />
                                     <path d="M12 16h.01" />
                                 </svg>
-                                AskMyData · Error
+                                {% translate "AskMyData · Error" %}
 
                             {% else %}
                                 AskMyData
@@ -248,14 +251,14 @@
                 {% empty %}
                     <div class="conversation-empty" data-conversation-empty>
                         {% if project.is_archived %}
-                            <h3>No messages</h3>
+                            <h3>{% translate "No messages" %}</h3>
                             <p>
-                                This conversation has no messages.
+                                {% translate "This conversation has no messages." %}
                             </p>
                         {% else %}
-                            <h3>Ask your first question</h3>
+                            <h3>{% translate "Ask your first question" %}</h3>
                             <p>
-                                Ask a question about your data using natural language.
+                                {% translate "Ask a question about your data using natural language." %}
                             </p>
                         {% endif %}
                     </div>
@@ -264,7 +267,7 @@
 
             {% if project.is_archived %}
                 <div class="conversation-project-warning">
-                    This project is archived and read-only.
+                    {% translate "This project is archived and read-only." %}
                 </div>
             {% elif project.status == "ready" %}
                 <form
@@ -276,14 +279,14 @@
                     {% csrf_token %}
 
                     <label for="question" class="sr-only">
-                        Ask a question
+                        {% translate "Ask a question" %}
                     </label>
 
                     <input
                         id="question"
                         type="text"
                         name="question"
-                        placeholder="Ask a question about your data..."
+                        placeholder="{% translate "Ask a question about your data..." %}"
                         autocomplete="off"
                         required
                         data-conversation-question-input
@@ -293,8 +296,8 @@
                         type="submit"
                         class="btn btn-primary btn-icon"
                         data-conversation-question-submit
-                        aria-label="Ask question"
-                        title="Ask question"
+                        aria-label="{% translate "Ask question" %}"
+                        title="{% translate "Ask question" %}"
                         disabled
                     >
                         <svg
@@ -313,7 +316,7 @@
                 </form>
             {% else %}
                 <div class="conversation-project-warning">
-                    Project is not ready.
+                    {% translate "Project is not ready." %}
                 </div>
             {% endif %}
         </main>

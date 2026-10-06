@@ -30,6 +30,7 @@ class AnswerGenerator:
                     "- Do not invent facts that are not present in the result.\n"
                     "- If the result is empty, clearly state that no matching "
                     "data was found.\n"
+                    "- Answer in the same language as the user's question.\n"
                     "- Do not expose implementation details unless they are "
                     "needed to answer the question.\n\n"
                     f"SQL:\n{sql}\n\n"

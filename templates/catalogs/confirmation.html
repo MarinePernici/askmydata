@@ -1,44 +1,45 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Confirm project · AskMyData{% endblock %}
+{% block title %}{% translate "Confirm project" %} · AskMyData{% endblock %}
 
 {% block content %}
     <header class="page-header">
         <div class="page-header-content">
-            <h1 class="page-header-title">Create project</h1>
+            <h1 class="page-header-title">{% translate "Create project" %}</h1>
             <p class="page-header-description">
-                Review your project configuration before creating the catalog.
+                {% translate "Review your project configuration before creating the catalog." %}
             </p>
         </div>
     </header>
 
     <div class="wizard">
-        <div class="wizard-steps" aria-label="Project creation progress">
+        <div class="wizard-steps" aria-label="{% translate "Project creation progress" %}">
             <div class="wizard-step wizard-step-complete">
                 <div class="wizard-step-indicator">1</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Project info</span>
+                    <span class="wizard-step-title">{% translate "Project info" %}</span>
                 </div>
             </div>
 
             <div class="wizard-step wizard-step-complete">
                 <div class="wizard-step-indicator">2</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Data source</span>
+                    <span class="wizard-step-title">{% translate "Data source" %}</span>
                 </div>
             </div>
 
             <div class="wizard-step wizard-step-complete">
                 <div class="wizard-step-indicator">3</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Data selection</span>
+                    <span class="wizard-step-title">{% translate "Data selection" %}</span>
                 </div>
             </div>
 
             <div class="wizard-step wizard-step-active">
                 <div class="wizard-step-indicator">4</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Confirmation</span>
+                    <span class="wizard-step-title">{% translate "Confirmation" %}</span>
                 </div>
             </div>
         </div>
@@ -46,9 +47,9 @@
         <section class="card wizard-card">
             <div class="section-header">
                 <div class="section-header-content">
-                    <h2 class="section-header-title">Confirmation</h2>
+                    <h2 class="section-header-title">{% translate "Confirmation" %}</h2>
                     <p class="section-header-description">
-                        Review the project configuration before creating the catalog.
+                        {% translate "Review the project configuration before creating the catalog." %}
                     </p>
                 </div>
             </div>
@@ -64,18 +65,18 @@
             <div class="confirmation-sections">
                 <section class="confirmation-section">
                     <h3 class="confirmation-section-title">
-                        Project
+                        {% translate "Project" %}
                     </h3>
 
                     <dl class="confirmation-details">
                         <div class="confirmation-detail">
-                            <dt>Name</dt>
+                            <dt>{% translate "Name" %}</dt>
                             <dd>{{ project.name }}</dd>
                         </div>
 
                         {% if project.description %}
                             <div class="confirmation-detail">
-                                <dt>Description</dt>
+                                <dt>{% translate "Description" %}</dt>
                                 <dd>{{ project.description }}</dd>
                             </div>
                         {% endif %}
@@ -84,22 +85,22 @@
 
                 <section class="confirmation-section">
                     <h3 class="confirmation-section-title">
-                        Data source
+                        {% translate "Data source" %}
                     </h3>
 
                     <dl class="confirmation-details">
                         <div class="confirmation-detail">
-                            <dt>Type</dt>
+                            <dt>{% translate "Type" %}</dt>
                             <dd>PostgreSQL</dd>
                         </div>
 
                         <div class="confirmation-detail">
-                            <dt>Host</dt>
+                            <dt>{% translate "Host" %}</dt>
                             <dd>{{ data_source.host }}</dd>
                         </div>
 
                         <div class="confirmation-detail">
-                            <dt>Database</dt>
+                            <dt>{% translate "Database" %}</dt>
                             <dd>{{ data_source.database }}</dd>
                         </div>
                     </dl>
@@ -107,12 +108,15 @@
 
                 <section class="confirmation-section">
                     <h3 class="confirmation-section-title">
-                        Selected tables
+                        {% translate "Selected tables" %}
                     </h3>
 
                     <p class="confirmation-section-description">
-                        {{ selected_tables|length }} table{{ selected_tables|length|pluralize }}
-                        selected out of {{ available_tables_count }} available table{{ available_tables_count|pluralize }}
+                        {% blocktranslate count selected_count=selected_tables|length with available_count=available_tables_count %}
+                            {{ selected_count }} table selected out of {{ available_count }} available
+                        {% plural %}
+                            {{ selected_count }} tables selected out of {{ available_count }} available
+                        {% endblocktranslate %}
                     </p>
 
                     <div class="confirmation-tables">
@@ -122,7 +126,7 @@
                             </span>
                         {% empty %}
                             <p class="confirmation-empty">
-                                No tables selected.
+                                {% translate "No tables selected." %}
                             </p>
                         {% endfor %}
                     </div>
@@ -135,7 +139,7 @@
                     class="btn btn-secondary"
                     data-project-create-back
                 >
-                    Back
+                    {% translate "Back" %}
                 </a>
 
                 <form
@@ -150,7 +154,7 @@
                         class="btn btn-primary"
                         data-project-create-submit
                     >
-                        Create project
+                        {% translate "Create project" %}
                     </button>
                 </form>
             </div>
@@ -163,10 +167,10 @@
                 aria-live="polite"
             >
                 <span class="operation-progress-title">
-                    Creating project
+                    {% translate "Creating project" %}
                 </span>
                 <span class="operation-progress-description">
-                    Generating your Knowledge Catalog. This may take a moment.
+                    {% translate "Generating your Knowledge Catalog. This may take a moment." %}
                 </span>
             </div>
         </section>

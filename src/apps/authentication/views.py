@@ -1,17 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import translation
 from django.views.decorators.http import require_POST
 
 from .forms import UserPreferencesForm
 from .models import UserPreferences
-
-
-@login_required
-def dashboard(request):
-    return HttpResponse("Dashboard")
 
 
 @require_POST

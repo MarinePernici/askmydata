@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext as _
 
 from apps.data_sources.models import DataSource
 from apps.projects.exceptions import (
@@ -270,11 +271,21 @@ def catalog_build(request, project_id):
 
     try:
         create_catalog_service().build_for_project(project)
-    except (
-        CatalogScopeNotConfiguredError,
-        DataSourceNotConfiguredError,
-    ) as exc:
-        messages.error(request, str(exc))
+    except DataSourceNotConfiguredError:
+        messages.error(
+            request,
+            _("Configure a data source before building the catalog."),
+        )
+
+        return redirect(
+            "catalog-scope",
+            project_id=project.id,
+        )
+    except CatalogScopeNotConfiguredError:
+        messages.error(
+            request,
+            _("Select the project data before building the catalog."),
+        )
 
         return redirect(
             "catalog-scope",
@@ -290,7 +301,7 @@ def catalog_build(request, project_id):
         )
         messages.error(
             request,
-            "Unable to build the catalog.",
+            _("Unable to build the catalog."),
         )
 
         return redirect(
@@ -345,7 +356,7 @@ def catalog_regenerate(request, project_id):
         )
         messages.error(
             request,
-            "Unable to regenerate the catalog.",
+            _("Unable to regenerate the catalog."),
         )
 
     return redirect(

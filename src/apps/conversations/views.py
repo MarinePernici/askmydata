@@ -2,11 +2,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext as _
 
 from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
-from apps.runs.error_messages import get_safe_error_message
+from apps.runs.error_messages import get_safe_interface_error_message
 from config.services import create_question_run_service
 from query_engine.exceptions import (
     DataSourceConnectionError,
@@ -203,7 +204,7 @@ def conversation_ask(
     if project.status != Project.Status.READY:
         messages.error(
             request,
-            "Project is not ready.",
+            _("Project is not ready."),
         )
 
         return redirect(
@@ -228,7 +229,7 @@ def conversation_ask(
     ) as exc:
         messages.error(
             request,
-            get_safe_error_message(exc),
+            get_safe_interface_error_message(exc),
             extra_tags="question-error",
         )
     except SQLValidationError:
@@ -236,7 +237,7 @@ def conversation_ask(
     except Exception as exc:  # noqa: BLE001 - Final UI safety net.
         messages.error(
             request,
-            get_safe_error_message(exc),
+            get_safe_interface_error_message(exc),
             extra_tags="question-error",
         )
 

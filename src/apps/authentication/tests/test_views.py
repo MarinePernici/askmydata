@@ -39,7 +39,7 @@ class LoginViewTests(TestCase):
             password="test-password",
         )
 
-        next_url = reverse("dashboard")
+        next_url = reverse("project-list")
 
         response = self.client.post(
             f"{reverse('login')}?next={next_url}",
@@ -92,30 +92,6 @@ class LoginViewTests(TestCase):
             reverse("login"),
             fetch_redirect_response=False,
         )
-
-    def test_anonymous_user_is_redirected_to_login(self):
-        response = self.client.get(
-            reverse("dashboard"),
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(
-            response,
-            f"{reverse('login')}?next={reverse('dashboard')}",
-        )
-
-    def test_authenticated_user_can_access_dashboard(self):
-        user = get_user_model().objects.create_user(
-            username="marine",
-            password="test-password",
-        )
-        self.client.force_login(user)
-
-        response = self.client.get(
-            reverse("dashboard"),
-        )
-
-        self.assertEqual(response.status_code, 200)
 
     def test_login_page_displays_askmydata_sign_in_form(self):
         response = self.client.get(reverse("login"))
