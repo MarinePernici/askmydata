@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Conversations · AskMyData{% endblock %}
+{% block title %}{% translate "Conversations" %} · AskMyData{% endblock %}
 
 {% block content %}
 <div class="conversations-page">
     <header class="conversations-header">
-        <h1>Conversations</h1>
+        <h1>{% translate "Conversations" %}</h1>
     </header>
 
     <div class="conversations-workspace">
@@ -32,27 +33,27 @@
                         <path d="M4 12h16" />
                         <path d="M4 18h16" />
                     </svg>
-                    Conversations
+                    {% translate "Conversations" %}
                 </button>
             </header>
 
             <div class="conversation-welcome">
                 {% if project.is_archived %}
                     {% if conversations %}
-                        <h2>Select a conversation</h2>
+                        <h2>{% translate "Select a conversation" %}</h2>
                         <p>
-                            Choose a conversation from the list to view its messages.
+                            {% translate "Choose a conversation from the list to view its messages." %}
                         </p>
                     {% else %}
-                        <h2>No conversations</h2>
+                        <h2>{% translate "No conversations" %}</h2>
                         <p>
-                            This archived project has no conversations.
+                            {% translate "This archived project has no conversations." %}
                         </p>
                     {% endif %}
                 {% else %}
-                    <h2>Start a conversation</h2>
+                    <h2>{% translate "Start a conversation" %}</h2>
                     <p>
-                        Ask questions about your data using natural language.
+                        {% translate "Ask questions about your data using natural language." %}
                     </p>
 
                     <form
@@ -78,7 +79,7 @@
                                 <path d="M12 5v14" />
                                 <path d="M5 12h14" />
                             </svg>
-                            New conversation
+                            {% translate "New conversation" %}
                         </button>
                     </form>
                 {% endif %}

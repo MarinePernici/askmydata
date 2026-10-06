@@ -1,7 +1,8 @@
-{% load static %}
+{% load i18n static %}
+{% get_current_language as LANGUAGE_CODE %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,7 @@
     <title>AskMyData</title>
     <meta
         name="description"
-        content="Ask questions in natural language and get answers from your data with a controlled, read-only query pipeline."
+        content="{% translate 'Ask questions in natural language and get answers from your data with a controlled, read-only query pipeline.' %}"
     >
 
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
@@ -21,7 +22,7 @@
             <a
                 href="{% url 'landing' %}"
                 class="landing-brand"
-                aria-label="AskMyData home"
+                aria-label="{% translate 'AskMyData home' %}"
             >
                 <img
                     src="{% static 'images/askmydata-logo.png' %}"
@@ -31,23 +32,47 @@
                 <span>AskMyData</span>
             </a>
 
-            <nav class="landing-navigation" aria-label="Main navigation">
+            <nav class="landing-navigation" aria-label="{% translate 'Main navigation' %}">
                 <div class="landing-navigation-links">
                     <a href="#how-it-works" class="landing-navigation-link">
-                        How it works
+                        {% translate 'How it works' %}
                     </a>
 
                     <a href="#safety" class="landing-navigation-link">
-                        Safety
+                        {% translate "Safety" %}
                     </a>
 
                     <a href="#technology" class="landing-navigation-link">
-                        Technology
+                        {% translate "Technology" %}
                     </a>
                 </div>
 
+                <form
+                    action="{% if request.user.is_authenticated %}{% url 'set-interface-language' %}{% else %}{% url 'set_language' %}{% endif %}"
+                    method="post"
+                >
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+
+                    <select
+                        name="language"
+                        class="landing-language-select"
+                        aria-label="{% translate 'Language' %}"
+                        onchange="this.form.submit()"
+                    >
+                        {% get_current_language as CURRENT_LANGUAGE %}
+
+                        <option value="en"{% if CURRENT_LANGUAGE == "en" %} selected{% endif %}>
+                            EN
+                        </option>
+                        <option value="fr"{% if CURRENT_LANGUAGE == "fr" %} selected{% endif %}>
+                            FR
+                        </option>
+                    </select>
+                </form>
+
                 <a href="{% url 'login' %}" class="btn btn-secondary">
-                    Sign in
+                    {% translate 'Sign in' %}
                 </a>
             </nav>
         </div>
@@ -58,29 +83,31 @@
             <div class="landing-container landing-hero-inner">
                 <div class="landing-hero-content">
                     <p class="landing-eyebrow">
-                        Natural language data exploration
+                        {% translate "Natural language data exploration" %}
                     </p>
 
                     <h1 class="landing-hero-title">
-                        Ask questions. Get answers from your data.
+                        {% translate "Ask questions. Get answers from your data." %}
                     </h1>
 
                     <p class="landing-hero-description">
-                        Connect your data, define what AskMyData can access,
-                        and explore it using natural language.
+                        {% blocktranslate trimmed %}
+                            Connect your data, define what AskMyData can access,
+                            and explore it using natural language.
+                        {% endblocktranslate %}
                     </p>
 
                     <div class="landing-hero-actions">
                         <span
                             class="btn btn-primary"
                             aria-disabled="true"
-                            title="Public demo access is coming soon"
+                            title="{% translate 'Public demo access is coming soon' %}"
                         >
-                            Try the demo
+                            {% translate "Try the demo" %}
                         </span>
 
                         <a href="{% url 'login' %}" class="btn btn-secondary">
-                            Sign in
+                            {% translate 'Sign in' %}
                         </a>
                     </div>
                 </div>
@@ -89,7 +116,7 @@
                     <div class="landing-product-preview-inner">
                         <img
                             src="{% static 'images/landing/conversation-preview.png' %}"
-                            alt="AskMyData conversation showing rental revenue analysis and a contextual follow-up question"
+                            alt="{% translate 'AskMyData conversation showing rental revenue analysis and a contextual follow-up question' %}"
                             class="landing-product-preview-image"
                         >
                     </div>
@@ -100,15 +127,17 @@
         <section id="how-it-works" class="landing-section landing-how-it-works">
             <div class="landing-container">
                 <header class="landing-section-header">
-                    <p class="landing-eyebrow">How it works</p>
+                    <p class="landing-eyebrow">{% translate "How it works" %}</p>
 
                     <h2 class="landing-section-title">
-                        From your data to an answer
+                        {% translate "From your data to an answer" %}
                     </h2>
 
                     <p class="landing-section-description">
-                        AskMyData turns natural language questions into a controlled
-                        query workflow.
+                            {% blocktranslate trimmed %}
+                                AskMyData turns natural language questions into a controlled
+                                query workflow.
+                            {% endblocktranslate %}
                     </p>
                 </header>
 
@@ -133,10 +162,10 @@
                             </div>
                         </div>
 
-                        <h3>Connect your data</h3>
+                        <h3>{% translate "Connect your data" %}</h3>
 
                         <p>
-                            Connect a supported data source to your project.
+                            {% translate "Connect a supported data source to your project." %}
                         </p>
                     </article>
 
@@ -161,10 +190,10 @@
                             </div>
                         </div>
 
-                        <h3>Define the scope</h3>
+                        <h3>{% translate "Define the scope" %}</h3>
 
                         <p>
-                            Choose the tables AskMyData is allowed to use for exploration.
+                            {% translate "Choose the tables AskMyData is allowed to use for exploration." %}
                         </p>
                     </article>
 
@@ -188,10 +217,10 @@
                             </div>
                         </div>
 
-                        <h3>Ask questions</h3>
+                        <h3>{% translate "Ask questions" %}</h3>
 
                         <p>
-                            Explore your data using natural language instead of writing SQL.
+                            {% translate "Explore your data using natural language instead of writing SQL." %}
                         </p>
                     </article>
 
@@ -216,11 +245,13 @@
                             </div>
                         </div>
 
-                        <h3>Get answers</h3>
+                        <h3>{% translate "Get answers" %}</h3>
 
                         <p>
-                            AskMyData validates and executes read-only SQL before producing
-                            an answer.
+                            {% blocktranslate trimmed %}
+                                AskMyData validates and executes read-only SQL before producing
+                                an answer.
+                            {% endblocktranslate %}
                         </p>
                     </article>
                 </div>
@@ -228,22 +259,24 @@
             </div>
             <a href="#top" class="landing-back-to-top">
                 <span aria-hidden="true">↑</span>
-                Back to top
+                {% translate "Back to top" %}
             </a>
         </section>
 
         <section id="safety" class="landing-section landing-controls">
             <div class="landing-container">
                 <header class="landing-section-header">
-                    <p class="landing-eyebrow">Controlled by design</p>
+                    <p class="landing-eyebrow">{% translate "Controlled by design" %}</p>
 
                     <h2 class="landing-section-title">
-                        Built for controlled data exploration
+                        {% translate "Built for controlled data exploration" %}
                     </h2>
 
                     <p class="landing-section-description">
-                        AskMyData keeps the query pipeline constrained from question
-                        to execution.
+                        {% blocktranslate trimmed %}
+                            AskMyData keeps the query pipeline constrained from question
+                            to execution.
+                        {% endblocktranslate %}
                     </p>
                 </header>
 
@@ -264,10 +297,12 @@
                         </div>
 
                         <div>
-                            <h3>Read-only by design</h3>
+                            <h3>{% translate "Read-only by design" %}</h3>
                             <p>
-                                Queries are restricted to read-only operations.
-                                AskMyData cannot modify the connected data.
+                                {% blocktranslate trimmed %}
+                                    Queries are restricted to read-only operations.
+                                    AskMyData cannot modify the connected data.
+                                {% endblocktranslate %}
                             </p>
                         </div>
                     </article>
@@ -290,10 +325,12 @@
                         </div>
 
                         <div>
-                            <h3>Controlled data scope</h3>
+                            <h3>{% translate "Controlled data scope" %}</h3>
                             <p>
-                                You choose which tables belong to the Catalog Scope.
-                                Generated queries are restricted to that scope.
+                                {% blocktranslate trimmed %}
+                                    You choose which tables belong to the Catalog Scope.
+                                    Generated queries are restricted to that scope.
+                                {% endblocktranslate %}
                             </p>
                         </div>
                     </article>
@@ -316,10 +353,12 @@
                         </div>
 
                         <div>
-                            <h3>SQL validation before execution</h3>
+                            <h3>{% translate "SQL validation before execution" %}</h3>
                             <p>
-                                Generated SQL is validated before it can reach the
-                                database.
+                                {% blocktranslate trimmed %}
+                                    Generated SQL is validated before it can reach the
+                                    database.
+                                {% endblocktranslate %}
                             </p>
                         </div>
                     </article>
@@ -341,10 +380,12 @@
                         </div>
 
                         <div>
-                            <h3>Clarifies instead of guessing</h3>
+                            <h3>{% translate "Clarifies instead of guessing" %}</h3>
                             <p>
-                                Ambiguous questions can trigger clarification, while
-                                questions outside the available data are rejected.
+                                {% blocktranslate trimmed %}
+                                    Ambiguous questions can trigger clarification, while
+                                    questions outside the available data are rejected.
+                                {% endblocktranslate %}
                             </p>
                         </div>
                     </article>
@@ -352,28 +393,32 @@
             </div>
             <a href="#top" class="landing-back-to-top">
                 <span aria-hidden="true">↑</span>
-                Back to top
+                {% translate "Back to top" %}
             </a>
         </section>
 
         <section class="landing-section landing-scope">
             <div class="landing-container landing-scope-inner">
                 <div class="landing-scope-content">
-                    <p class="landing-eyebrow">Your data, your scope</p>
+                    <p class="landing-eyebrow">{% translate "Your data, your scope" %}</p>
 
                     <h2 class="landing-section-title">
-                        Decide what AskMyData can explore
+                        {% translate "Decide what AskMyData can explore" %}
                     </h2>
 
                     <p class="landing-scope-description">
-                        Select the tables that belong to your project's Catalog Scope.
-                        AskMyData uses that scope to build contextual knowledge and
-                        constrain generated queries.
+                        {% blocktranslate trimmed %}
+                            Select the tables that belong to your project's Catalog Scope.
+                            AskMyData uses that scope to build contextual knowledge and
+                            constrain generated queries.
+                        {% endblocktranslate %}
                     </p>
 
                     <p class="landing-scope-description">
-                        The result is a query environment grounded in the data you
-                        explicitly selected.
+                        {% blocktranslate trimmed %}
+                            The result is a query environment grounded in the data you
+                            explicitly selected.
+                        {% endblocktranslate %}
                     </p>
                 </div>
 
@@ -381,7 +426,7 @@
                     <div class="landing-scope-preview-inner">
                         <img
                             src="{% static 'images/landing/catalog-scope-preview.png' %}"
-                            alt="AskMyData project creation showing the selection of tables included in the project's data scope"
+                            alt="{% translate "AskMyData project creation showing the selection of tables included in the project's data scope" %}"
                             class="landing-scope-preview-image"
                         >
                     </div>
@@ -389,79 +434,87 @@
             </div>
             <a href="#top" class="landing-back-to-top">
                 <span aria-hidden="true">↑</span>
-                Back to top
+                {% translate "Back to top" %}
             </a>
         </section>
 
         <section id="technology"class="landing-section landing-technology">
             <div class="landing-container">
                 <header class="landing-section-header">
-                    <p class="landing-eyebrow">Current technology</p>
+                    <p class="landing-eyebrow">{% translate "Current technology" %}</p>
 
                     <h2 class="landing-section-title">
-                        Built to evolve
+                        {% translate "Built to evolve" %}
                     </h2>
 
                     <p class="landing-section-description">
-                        AskMyData currently uses PostgreSQL and OpenAI models, with
-                        extensible interfaces designed for additional integrations.
+                        {% blocktranslate trimmed %}
+                            AskMyData currently uses PostgreSQL and OpenAI models, with
+                            extensible interfaces designed for additional integrations.
+                        {% endblocktranslate %}
                     </p>
                 </header>
 
                 <div class="landing-technology-grid">
                     <article class="landing-technology-item">
                         <p class="landing-technology-label">
-                            Data source
+                            {% translate "Data source" %}
                         </p>
 
                         <h3>PostgreSQL</h3>
 
                         <p>
-                            Currently supported. Additional data source connectors
-                            are planned.
+                            {% blocktranslate trimmed %}
+                                Currently supported. Additional data source connectors
+                                are planned.
+                            {% endblocktranslate %}
                         </p>
                     </article>
 
                     <article class="landing-technology-item">
                         <p class="landing-technology-label">
-                            AI model provider
+                            {% translate "AI model provider" %}
                         </p>
 
                         <h3>OpenAI</h3>
 
                         <p>
-                            Currently supported. Additional model providers are
-                            planned.
+                            {% blocktranslate trimmed %}
+                                Currently supported. Additional model providers are
+                                planned.
+                            {% endblocktranslate %}
                         </p>
                     </article>
                 </div>
             </div>
             <a href="#top" class="landing-back-to-top">
                 <span aria-hidden="true">↑</span>
-                Back to top
+                {% translate "Back to top" %}
             </a>
         </section>
 
         <section class="landing-section landing-final-cta">
             <div class="landing-container landing-final-cta-inner">
-                <p class="landing-eyebrow">Explore with AskMyData</p>
+                <p class="landing-eyebrow">{% translate "Explore with AskMyData" %}</p>
 
                 <h2 class="landing-final-cta-title">
-                    Ask your data, not your database.
+                    {% translate "Ask your data, not your database." %}
                 </h2>
 
                 <p class="landing-final-cta-description">
-                    Explore your project's data using natural language through a
-                    controlled, read-only query workflow.
+                    {% blocktranslate trimmed %}
+                        Explore your project's data using natural language through a
+                        controlled, read-only query workflow.
+                    {% endblocktranslate %}
                 </p>
 
                 <div class="landing-final-cta-actions">
                     <span
                         class="btn btn-primary"
                         aria-disabled="true"
-                        title="Public demo access is coming soon"
+                        title="{% translate "Public demo access is coming soon" %}"
                     >
-                        Try the demo
+                        {% translate "Try the demo" %}
                     </span>
                 </div>
             </div>
@@ -473,7 +526,7 @@
             <a
                 href="{% url 'landing' %}"
                 class="landing-brand"
-                aria-label="AskMyData home"
+                aria-label="{% translate "AskMyData home" %}"
             >
                 <img
                     src="{% static 'images/askmydata-logo.png' %}"
@@ -501,7 +554,7 @@
                         <rect x="3" y="5" width="18" height="14" rx="2" />
                         <path d="m3 7 9 6 9-6" />
                     </svg>
-                    <span>Contact</span>
+                    <span>{% translate "Contact" %}</span>
                 </a>
 
                 <a

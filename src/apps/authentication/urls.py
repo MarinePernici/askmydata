@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from .views import dashboard
+from .views import set_interface_language, user_preferences
 
 urlpatterns = [
     path(
@@ -15,8 +15,13 @@ urlpatterns = [
         name="logout",
     ),
     path(
-        "dashboard/",
-        dashboard,
-        name="dashboard",
+        "language/",
+        set_interface_language,
+        name="set-interface-language",
+    ),
+    path(
+        "preferences/",
+        user_preferences,
+        name="user-preferences",
     ),
 ]

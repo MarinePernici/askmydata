@@ -71,4 +71,5 @@ class ClarificationResult:
 class CannotAnswerResult:
     """The question cannot be answered from the available project data."""
 
+    message: str
     usages: tuple[LLMUsage, ...] = ()

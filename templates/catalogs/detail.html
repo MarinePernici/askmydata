@@ -1,18 +1,19 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Catalog · AskMyData{% endblock %}
+{% block title %}{% translate "Catalog" %} · AskMyData{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Catalog</h1>
+    <h1>{% translate "Catalog" %}</h1>
 </div>
 
 <section class="catalog-summary">
     <div class="catalog-summary-header">
         <div>
-            <h2>Knowledge catalog</h2>
+            <h2>{% translate "Knowledge catalog" %}</h2>
             <p class="text-secondary">
-                Semantic information used by AskMyData to understand your data
+                {% translate "Semantic information used by AskMyData to understand your data" %}
             </p>
         </div>
     </div>
@@ -28,13 +29,13 @@
         <div class="catalog-status">
             {% if catalog_model %}
                 {% if catalog_model.status == "ready" %}
-                    <span class="status-badge status-badge-success">Ready</span>
+                    <span class="status-badge status-badge-success">{% translate "Ready" %}</span>
                 {% elif catalog_model.status == "building" %}
-                    <span class="status-badge status-badge-info">Building</span>
+                    <span class="status-badge status-badge-info">{% translate "Building" %}</span>
                 {% elif catalog_model.status == "failed" %}
-                    <span class="status-badge status-badge-error">Failed</span>
+                    <span class="status-badge status-badge-error">{% translate "Failed" %}</span>
                 {% elif catalog_model.status == "stale" %}
-                    <span class="status-badge status-badge-warning">Stale</span>
+                    <span class="status-badge status-badge-warning">{% translate "Stale" %}</span>
                 {% else %}
                     <span class="status-badge status-badge-neutral">
                         {{ catalog_model.get_status_display }}
@@ -46,13 +47,13 @@
 
                     {% if catalog_model.last_regenerated_at %}
                         <span>
-                            Last generated
-                            {{ catalog_model.last_regenerated_at|date:"M j, Y H:i" }} UTC
+                            {% translate "Last generated" %}
+                            {{ catalog_model.last_regenerated_at|date:"DATETIME_FORMAT" }} UTC
                         </span>
                     {% endif %}
                 </div>
             {% else %}
-                <span class="status-badge status-badge-neutral">Not built</span>
+                <span class="status-badge status-badge-neutral">{% translate "Not built" %}</span>
             {% endif %}
         </div>
 
@@ -72,7 +73,7 @@
                     {% if catalog_model.status == "building" or project.is_archived %}disabled{% endif %}
                 >
                     <!-- garde ton SVG actuel ici -->
-                    <span>Regenerate catalog</span>
+                    <span>{% translate "Regenerate catalog" %}</span>
                 </button>
             </form>
 
@@ -84,10 +85,10 @@
                 aria-live="polite"
             >
                 <span class="operation-progress-title">
-                    Regenerating catalog
+                    {% translate "Regenerating catalog" %}
                 </span>
                 <span class="operation-progress-description">
-                    Updating your Knowledge Catalog. This may take a moment.
+                    {% translate "Updating your Knowledge Catalog. This may take a moment." %}
                 </span>
             </div>
         </div>
@@ -97,21 +98,21 @@
 
 {% if catalog %}
     <section class="catalog-coverage">
-        <h2>Catalog coverage</h2>
+        <h2>{% translate "Catalog coverage" %}</h2>
 
         <div class="catalog-metrics">
             <div class="catalog-metric">
-                <span class="catalog-metric-label">Tables</span>
+                <span class="catalog-metric-label">{% translate "Tables" %}</span>
                 <strong>{{ tables_count }}</strong>
             </div>
 
             <div class="catalog-metric">
-                <span class="catalog-metric-label">Columns</span>
+                <span class="catalog-metric-label">{% translate "Columns" %}</span>
                 <strong>{{ columns_count }}</strong>
             </div>
 
             <div class="catalog-metric">
-                <span class="catalog-metric-label">Business synonyms</span>
+                <span class="catalog-metric-label">{% translate "Business synonyms" %}</span>
                 <strong>{{ business_synonyms_count }}</strong>
             </div>
         </div>
@@ -120,7 +121,7 @@
     <section class="catalog-browser">
         <aside class="catalog-table-list">
             <div class="catalog-table-list-header">
-                <span>Tables</span>
+                <span>{% translate "Tables" %}</span>
                 <span>{{ tables_count }}</span>
             </div>
 
@@ -153,7 +154,7 @@
                 <h2>{{ selected_table.name }}</h2>
 
                 <div class="catalog-semantic-section">
-                    <h3>Business description</h3>
+                    <h3>{% translate "Business description" %}</h3>
 
                     {% if selected_table.semantic_metadata and selected_table.semantic_metadata.description %}
                         <p>
@@ -161,13 +162,13 @@
                         </p>
                     {% else %}
                         <p class="text-secondary">
-                            No business description available.
+                            {% translate "No business description available." %}
                         </p>
                     {% endif %}
                 </div>
 
                 <div class="catalog-semantic-section">
-                    <h3>Business synonyms</h3>
+                    <h3>{% translate "Business synonyms" %}</h3>
 
                     {% if selected_table.semantic_metadata and selected_table.semantic_metadata.business_synonyms %}
                         <div class="catalog-synonyms">
@@ -179,7 +180,7 @@
                         </div>
                     {% else %}
                         <p class="text-secondary">
-                            No business synonyms available.
+                            {% translate "No business synonyms available." %}
                         </p>
                     {% endif %}
                 </div>
@@ -190,27 +191,27 @@
 {% else %}
     <section class="catalog-empty-state">
         {% if catalog_model and catalog_model.status == "building" %}
-            <h2>Catalog is being generated</h2>
+            <h2>{% translate "Catalog is being generated" %}</h2>
             <p class="text-secondary">
-                Semantic information will be available when generation is complete.
+                {% translate "Semantic information will be available when generation is complete." %}
             </p>
 
         {% elif catalog_model and catalog_model.status == "failed" %}
-            <h2>Catalog generation failed</h2>
+            <h2>{% translate "Catalog generation failed" %}</h2>
             <p class="text-secondary">
-                The knowledge catalog could not be generated.
+                {% translate "The knowledge catalog could not be generated." %}
             </p>
 
         {% elif catalog_model and catalog_model.status == "stale" %}
-            <h2>Catalog needs to be regenerated</h2>
+            <h2>{% translate "Catalog needs to be regenerated" %}</h2>
             <p class="text-secondary">
-                The current catalog is no longer synchronized with the project configuration.
+                {% translate "The current catalog is no longer synchronized with the project configuration." %}
             </p>
 
         {% else %}
-            <h2>Catalog not available</h2>
+            <h2>{% translate "Catalog not available" %}</h2>
             <p class="text-secondary">
-                The knowledge catalog has not been generated yet.
+                {% translate "The knowledge catalog has not been generated yet." %}
             </p>
         {% endif %}
     </section>

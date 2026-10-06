@@ -149,6 +149,10 @@ class CannotAnswerGenerator:
         history=(),
     ):
         return CannotAnswerResult(
+            message=(
+                "I can't answer this question using the data available "
+                "in this project. Please ask a question related to the project's data."
+            ),
             usages=(SQL_USAGE,),
         )
 
@@ -922,6 +926,10 @@ class QuestionRunServiceTests(TestCase):
         self.assertEqual(
             result,
             CannotAnswerResult(
+                message=(
+                    "I can't answer this question using the data available "
+                    "in this project. Please ask a question related to the project's data."
+                ),
                 usages=(SQL_USAGE,),
             ),
         )

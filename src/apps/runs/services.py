@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from apps.conversations.models import Conversation, Message
 from apps.projects.models import Project
-from apps.runs.error_messages import get_safe_error_message
+from apps.runs.error_messages import get_safe_conversation_error_message
 from apps.runs.exceptions import ProjectNotReadyError
 from apps.runs.models import QuestionRun
 from apps.runs.tracer import DjangoQueryTracer
@@ -155,11 +155,7 @@ class QuestionRunService:
                 assistant_message = self._conversation_service.add_message(
                     conversation=conversation,
                     role=Message.Role.ASSISTANT,
-                    content=(
-                        "I can't answer this question using the data available "
-                        "in this project. Please ask a question related to the "
-                        "project's data."
-                    ),
+                    content=result.message,
                 )
 
                 question_run.assistant_message = assistant_message
@@ -210,7 +206,7 @@ class QuestionRunService:
             raise
 
         except Exception as exc:
-            safe_message = get_safe_error_message(exc)
+            safe_message = get_safe_conversation_error_message(exc)
 
             assistant_message = self._conversation_service.add_message(
                 conversation=conversation,

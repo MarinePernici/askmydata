@@ -1,3 +1,5 @@
+{% load i18n %}
+
 <div
     class="conversation-panel"
     data-conversation-panel
@@ -24,14 +26,14 @@
                 <path d="M5 12h14" />
                 <path d="M12 5v14" />
             </svg>
-            <span>New conversation</span>
+            <span>{% translate "New conversation" %}</span>
         </button>
     </form>
 
     {% if conversations %}
         <div class="conversation-panel-group">
             <p class="conversation-panel-label">
-                Conversations
+                {% translate "Conversations" %}
             </p>
 
             <nav class="conversation-panel-list">
@@ -44,7 +46,7 @@
                             {% if item.title %}
                                 {{ item.title }}
                             {% else %}
-                                Untitled conversation
+                                {% translate "Untitled conversation" %}
                             {% endif %}
                         </span>
                     </a>

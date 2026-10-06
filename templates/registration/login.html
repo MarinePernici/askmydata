@@ -1,12 +1,13 @@
-{% load static %}
+{% load i18n static %}
+{% get_current_language as LANGUAGE_CODE %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Log in · AskMyData</title>
+    <title>{% translate "Log in" %} · AskMyData</title>
 
     <link
         rel="stylesheet"
@@ -32,9 +33,9 @@
 
             <section class="card auth-card">
                 <header class="auth-header">
-                    <h1 class="auth-title">Welcome back</h1>
+                    <h1 class="auth-title">{% translate "Welcome back" %}</h1>
                     <p class="auth-description">
-                        Sign in to continue to AskMyData.
+                        {% translate "Sign in to continue to AskMyData." %}
                     </p>
                 </header>
 
@@ -54,7 +55,7 @@
                             for="{{ form.username.id_for_label }}"
                             class="form-label"
                         >
-                            Username
+                            {% translate "Username" %}
                         </label>
 
                         <input
@@ -79,7 +80,7 @@
                             for="{{ form.password.id_for_label }}"
                             class="form-label"
                         >
-                            Password
+                            {% translate "Password" %}
                         </label>
 
                         <input
@@ -105,7 +106,7 @@
                         type="submit"
                         class="btn btn-primary auth-submit"
                     >
-                        Log in
+                        {% translate "Log in" %}
                     </button>
                 </form>
             </section>

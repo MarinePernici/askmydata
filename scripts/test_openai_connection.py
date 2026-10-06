@@ -12,7 +12,6 @@ sys.path.insert(0, str(SRC_DIR))
 from llm.openai import OpenAIProvider
 from llm.types import LLMMessage
 
-
 environ.Env.read_env(ROOT_DIR / ".env")
 
 

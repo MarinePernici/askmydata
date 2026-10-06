@@ -91,6 +91,21 @@ class CannotAnswerProvider(LLMProvider):
         messages: list[LLMMessage],
     ) -> LLMResponse:
         return LLMResponse(
+            content=(
+                '{"cannot_answer": true, '
+                '"message": "I can\'t answer this question using the data available '
+                "in this project. Please ask a question related to the project's data.\"}"
+            ),
+            usage=make_usage(),
+        )
+
+
+class CannotAnswerWithoutMessageProvider(LLMProvider):
+    def generate(
+        self,
+        messages: list[LLMMessage],
+    ) -> LLMResponse:
+        return LLMResponse(
             content='{"cannot_answer": true}',
             usage=make_usage(),
         )
@@ -327,9 +342,23 @@ class SQLGeneratorTests(unittest.TestCase):
         self.assertEqual(
             result,
             CannotAnswerResult(
+                message=(
+                    "I can't answer this question using the data available "
+                    "in this project. Please ask a question related to the project's data."
+                ),
                 usages=(make_usage(),),
             ),
         )
+
+    def test_generate_rejects_cannot_answer_without_message(self):
+        provider = CannotAnswerWithoutMessageProvider()
+        generator = SQLGenerator(provider)
+
+        with self.assertRaises(SQLGenerationError):
+            generator.generate(
+                question="What is the capital of Italy?",
+                catalog=KnowledgeCatalog(tables=()),
+            )
 
     def test_generate_instructs_model_to_reject_unanswerable_questions(self):
         provider = FakeLLMProvider()
@@ -352,6 +381,14 @@ class SQLGeneratorTests(unittest.TestCase):
         )
         self.assertIn(
             '"cannot_answer"',
+            system_message.content,
+        )
+        self.assertIn(
+            '"message"',
+            system_message.content,
+        )
+        self.assertIn(
+            "same language as the user's question",
             system_message.content,
         )
 
@@ -382,6 +419,10 @@ class SQLGeneratorTests(unittest.TestCase):
         )
         self.assertIn(
             '"clarification"',
+            system_message.content,
+        )
+        self.assertIn(
+            "Write clarification questions in the same language as the user's question.",
             system_message.content,
         )
 

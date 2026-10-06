@@ -140,7 +140,7 @@ if (
 
         const userAuthor = document.createElement("p");
         userAuthor.className = "conversation-message-author";
-        userAuthor.textContent = "You";
+        userAuthor.textContent = conversationMessages.dataset.userLabel;
 
         const userContent = document.createElement("div");
         userContent.className = "conversation-message-content";
@@ -162,7 +162,7 @@ if (
 
         const thinkingIndicator = document.createElement("span");
         thinkingIndicator.className = "conversation-thinking";
-        thinkingIndicator.textContent = "Thinking";
+        thinkingIndicator.textContent = conversationMessages.dataset.thinkingLabel;
 
         thinkingContent.append(thinkingIndicator);
         thinkingMessage.append(assistantAuthor, thinkingContent);
@@ -259,12 +259,18 @@ if (
         const allSelected =
             selectedCount === tableSelectionCheckboxes.length;
 
+        const selectedLabel =
+            selectedCount === 1
+                ? tableSelectionCount.dataset.selectedSingular
+                : tableSelectionCount.dataset.selectedPlural;
+
         tableSelectionCount.textContent =
-            `${selectedCount} / ${tableSelectionCheckboxes.length} ` +
-            "tables selected";
+            `${selectedCount} / ${tableSelectionCheckboxes.length} ${selectedLabel}`;
+
         tableSelectionToggle.textContent = allSelected
-            ? "Deselect all"
-            : "Select all";
+            ? tableSelectionToggle.dataset.deselectAllLabel
+            : tableSelectionToggle.dataset.selectAllLabel;
+
         tableSelectionSubmit.disabled = selectedCount === 0;
     };
 

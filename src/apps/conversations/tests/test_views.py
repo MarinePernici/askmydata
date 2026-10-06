@@ -97,6 +97,10 @@ class HTTPFakeClarificationGenerator:
 class HTTPFakeCannotAnswerGenerator:
     def generate(self, question, catalog, history=()):
         return CannotAnswerResult(
+            message=(
+                "I can't answer this question using the data available "
+                "in this project. Please ask a question related to the project's data."
+            ),
             usages=(SQL_USAGE,),
         )
 

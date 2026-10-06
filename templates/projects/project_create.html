@@ -1,44 +1,45 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Create project · AskMyData{% endblock %}
+{% block title %}{% translate "Create project" %} · AskMyData{% endblock %}
 
 {% block content %}
     <header class="page-header">
         <div class="page-header-content">
-            <h1 class="page-header-title">Create project</h1>
+            <h1 class="page-header-title">{% translate "Create project" %}</h1>
             <p class="page-header-description">
-                Set up a new project to explore your data with AskMyData.
+                {% translate "Set up a new project to explore your data with AskMyData." %}
             </p>
         </div>
     </header>
 
     <div class="wizard">
-        <div class="wizard-steps" aria-label="Project creation progress">
+        <div class="wizard-steps" aria-label="{% translate "Project creation progress" %}">
             <div class="wizard-step wizard-step-active">
                 <div class="wizard-step-indicator">1</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Project info</span>
+                    <span class="wizard-step-title">{% translate "Project info" %}</span>
                 </div>
             </div>
 
             <div class="wizard-step">
                 <div class="wizard-step-indicator">2</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Data source</span>
+                    <span class="wizard-step-title">{% translate "Data source" %}</span>
                 </div>
             </div>
 
             <div class="wizard-step">
                 <div class="wizard-step-indicator">3</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Data selection</span>
+                    <span class="wizard-step-title">{% translate "Data selection" %}</span>
                 </div>
             </div>
 
             <div class="wizard-step">
                 <div class="wizard-step-indicator">4</div>
                 <div class="wizard-step-content">
-                    <span class="wizard-step-title">Confirmation</span>
+                    <span class="wizard-step-title">{% translate "Confirmation" %}</span>
                 </div>
             </div>
         </div>
@@ -46,9 +47,9 @@
         <section class="card wizard-card">
             <div class="section-header">
                 <div class="section-header-content">
-                    <h2 class="section-header-title">Project info</h2>
+                    <h2 class="section-header-title">{% translate "Project info" %}</h2>
                     <p class="section-header-description">
-                        Give your project a name and an optional description.
+                        {% translate "Give your project a name and an optional description." %}
                     </p>
                 </div>
             </div>
@@ -64,7 +65,7 @@
 
                 <div class="form-field">
                     <label for="{{ form.name.id_for_label }}" class="form-label">
-                        Project name
+                        {% translate "Project name" %}
                     </label>
 
                     <input
@@ -84,7 +85,7 @@
 
                 <div class="form-field">
                     <label for="{{ form.description.id_for_label }}" class="form-label">
-                        Description
+                        {% translate "Description" %}
                     </label>
 
                     <textarea
@@ -101,11 +102,11 @@
 
                 <div class="wizard-actions">
                     <a href="{% url 'project-list' %}" class="btn btn-secondary">
-                        Cancel
+                        {% translate "Cancel" %}
                     </a>
 
                     <button type="submit" class="btn btn-primary">
-                        Continue
+                        {% translate "Continue" %}
                     </button>
                 </div>
             </form>
