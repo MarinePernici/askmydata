@@ -50,7 +50,13 @@ def user_preferences(request):
 
         if form.is_valid():
             preferences.language = form.cleaned_data["language"]
-            preferences.save(update_fields=["language"])
+            preferences.developer_mode = form.cleaned_data["developer_mode"]
+            preferences.save(
+                update_fields=[
+                    "language",
+                    "developer_mode",
+                ]
+            )
 
             translation.activate(preferences.language)
             request.LANGUAGE_CODE = preferences.language
@@ -69,7 +75,10 @@ def user_preferences(request):
             return response
     else:
         form = UserPreferencesForm(
-            initial={"language": preferences.language},
+            initial={
+                "language": preferences.language,
+                "developer_mode": preferences.developer_mode,
+            },
         )
 
     return render(

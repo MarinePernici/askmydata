@@ -229,3 +229,67 @@ class LanguageViewTests(TestCase):
         self.assertContains(response, "Nom d’utilisateur")
         self.assertContains(response, "Mot de passe")
         self.assertContains(response, "Se connecter")
+
+    def test_preferences_page_displays_developer_mode_field(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("user-preferences"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("developer_mode", response.context["form"].fields)
+        self.assertFalse(response.context["form"]["developer_mode"].value())
+
+    def test_preferences_page_enables_developer_mode(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("user-preferences"),
+            {
+                "language": "en",
+                "developer_mode": "on",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("user-preferences"),
+            fetch_redirect_response=False,
+        )
+
+        preferences = UserPreferences.objects.get(user=user)
+        self.assertTrue(preferences.developer_mode)
+
+    def test_preferences_page_disables_developer_mode(self):
+        user = get_user_model().objects.create_user(
+            username="marine",
+            password="test-password",
+        )
+        UserPreferences.objects.create(
+            user=user,
+            developer_mode=True,
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("user-preferences"),
+            {
+                "language": "en",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("user-preferences"),
+            fetch_redirect_response=False,
+        )
+
+        user.preferences.refresh_from_db()
+        self.assertFalse(user.preferences.developer_mode)

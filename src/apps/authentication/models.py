@@ -17,6 +17,9 @@ class UserPreferences(models.Model):
         choices=Language.choices,
         default=Language.ENGLISH,
     )
+    developer_mode = models.BooleanField(
+        default=False,
+    )
 
     def __str__(self) -> str:
         return f"{self.user} preferences"
