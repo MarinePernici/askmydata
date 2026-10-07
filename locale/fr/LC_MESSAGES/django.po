@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: AskMyData\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 12:53+0000\n"
+"POT-Creation-Date: 2026-10-06 16:33+0000\n"
 "PO-Revision-Date: 2026-10-05\n"
 "Last-Translator: Marine Pernici\n"
 "Language-Team: French\n"
@@ -12,7 +12,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/apps/catalogs/models.py:50
+#: src/apps/catalogs/models.py:50 src/apps/runs/models.py:13
+#: src/apps/runs/models.py:97
 msgid "Pending"
 msgstr "En attente"
 
@@ -29,6 +30,7 @@ msgid "Stale"
 msgstr "Obsolète"
 
 #: src/apps/catalogs/models.py:54 src/apps/data_sources/models.py:20
+#: src/apps/runs/models.py:17 src/apps/runs/models.py:100
 #: templates/catalogs/detail.html:36
 msgid "Failed"
 msgstr "Échec"
@@ -49,7 +51,27 @@ msgstr "Impossible de générer le catalogue."
 msgid "Unable to regenerate the catalog."
 msgstr "Impossible de régénérer le catalogue."
 
-#: src/apps/conversations/views.py:207 templates/conversations/detail.html:319
+#: src/apps/conversations/views.py:32
+msgid "SQL generation"
+msgstr "Génération SQL"
+
+#: src/apps/conversations/views.py:33
+msgid "SQL validation"
+msgstr "Validation SQL"
+
+#: src/apps/conversations/views.py:34
+msgid "Query execution"
+msgstr "Exécution de la requête"
+
+#: src/apps/conversations/views.py:35
+msgid "Result validation"
+msgstr "Validation du résultat"
+
+#: src/apps/conversations/views.py:36
+msgid "Answer generation"
+msgstr "Génération de la réponse"
+
+#: src/apps/conversations/views.py:292 templates/conversations/detail.html:404
 msgid "Project is not ready."
 msgstr "Le projet n’est pas prêt."
 
@@ -87,6 +109,26 @@ msgstr ""
 msgid "Unable to process your question. Please try again."
 msgstr "Impossible de traiter votre question. Veuillez réessayer."
 
+#: src/apps/runs/models.py:14 src/apps/runs/models.py:98
+msgid "Running"
+msgstr "En cours"
+
+#: src/apps/runs/models.py:15
+msgid "Needs clarification"
+msgstr "Clarification nécessaire"
+
+#: src/apps/runs/models.py:16 src/apps/runs/models.py:99
+msgid "Completed"
+msgstr "Terminé"
+
+#: src/apps/runs/models.py:18
+msgid "Rejected"
+msgstr "Rejeté"
+
+#: src/apps/runs/models.py:19
+msgid "Abandoned"
+msgstr "Abandonné"
+
 #: templates/authentication/user_preferences.html:4
 #: templates/authentication/user_preferences.html:10
 msgid "User preferences"
@@ -105,7 +147,23 @@ msgstr "Langue"
 msgid "Choose the language used by the AskMyData interface."
 msgstr "Choisissez la langue utilisée par l’interface AskMyData."
 
-#: templates/authentication/user_preferences.html:69
+#: templates/authentication/user_preferences.html:72
+msgid "Developer mode"
+msgstr "Mode développeur"
+
+#: templates/authentication/user_preferences.html:84
+msgid "Show technical details for AskMyData responses"
+msgstr "Afficher les détails techniques des réponses AskMyData"
+
+#: templates/authentication/user_preferences.html:89
+msgid ""
+"Display generated SQL, execution metrics, and pipeline details alongside "
+"responses."
+msgstr ""
+"Afficher le SQL généré, les métriques d’exécution et les détails du pipeline "
+"avec les réponses."
+
+#: templates/authentication/user_preferences.html:99
 #: templates/projects/project_update.html:81
 msgid "Save changes"
 msgstr "Enregistrer les modifications"
@@ -512,36 +570,72 @@ msgstr "AskMyData · Réponse impossible"
 msgid "AskMyData · Error"
 msgstr "AskMyData · Erreur"
 
-#: templates/conversations/detail.html:254
+#: templates/conversations/detail.html:253
+msgid "Technical details"
+msgstr "Détails techniques"
+
+#: templates/conversations/detail.html:259
+msgid "Status"
+msgstr "Statut"
+
+#: templates/conversations/detail.html:269
+msgid "Total latency"
+msgstr "Latence totale"
+
+#: templates/conversations/detail.html:276
+msgid "Model"
+msgstr "Modèle"
+
+#: templates/conversations/detail.html:283
+msgid "Prompt tokens"
+msgstr "Tokens du prompt"
+
+#: templates/conversations/detail.html:290
+msgid "Completion tokens"
+msgstr "Tokens de complétion"
+
+#: templates/conversations/detail.html:297
+msgid "Rows returned"
+msgstr "Lignes retournées"
+
+#: templates/conversations/detail.html:305
+msgid "Generated SQL"
+msgstr "SQL généré"
+
+#: templates/conversations/detail.html:312
+msgid "Pipeline"
+msgstr "Pipeline"
+
+#: templates/conversations/detail.html:339
 msgid "No messages"
 msgstr "Aucun message"
 
-#: templates/conversations/detail.html:256
+#: templates/conversations/detail.html:341
 msgid "This conversation has no messages."
 msgstr "Cette conversation ne contient aucun message."
 
-#: templates/conversations/detail.html:259
+#: templates/conversations/detail.html:344
 msgid "Ask your first question"
 msgstr "Posez votre première question"
 
-#: templates/conversations/detail.html:261
+#: templates/conversations/detail.html:346
 msgid "Ask a question about your data using natural language."
 msgstr "Posez une question sur vos données en langage naturel."
 
-#: templates/conversations/detail.html:270
+#: templates/conversations/detail.html:355
 msgid "This project is archived and read-only."
 msgstr "Ce projet est archivé et accessible en lecture seule."
 
-#: templates/conversations/detail.html:282
+#: templates/conversations/detail.html:367
 msgid "Ask a question"
 msgstr "Poser une question"
 
-#: templates/conversations/detail.html:289
+#: templates/conversations/detail.html:374
 msgid "Ask a question about your data..."
 msgstr "Posez une question sur vos données..."
 
-#: templates/conversations/detail.html:299
-#: templates/conversations/detail.html:300
+#: templates/conversations/detail.html:384
+#: templates/conversations/detail.html:385
 msgid "Ask question"
 msgstr "Poser la question"
 

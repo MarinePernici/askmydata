@@ -1,8 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.shortcuts import redirect, render
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
@@ -18,6 +19,72 @@ from query_engine.exceptions import (
 
 from .models import Conversation
 from .services import ConversationService
+
+
+def _get_message_question_run(message):
+    try:
+        return message.generated_by_run
+    except ObjectDoesNotExist:
+        return None
+
+
+DEVELOPER_STEP_LABELS = {
+    "sql_generation": _("SQL generation"),
+    "sql_validation": _("SQL validation"),
+    "query_execution": _("Query execution"),
+    "result_validation": _("Result validation"),
+    "answer_generation": _("Answer generation"),
+}
+
+
+def _get_developer_status_badge(status):
+    return {
+        "completed": "success",
+        "failed": "error",
+        "rejected": "warning",
+        "needs_clarification": "info",
+        "running": "info",
+        "pending": "neutral",
+        "abandoned": "neutral",
+    }.get(status, "neutral")
+
+
+def _build_developer_details(message):
+    run = _get_message_question_run(message)
+
+    if run is None:
+        return None
+
+    traces = list(run.execution_traces.all())
+
+    generated_sql = None
+    for trace in traces:
+        if trace.step == "sql_validation":
+            generated_sql = trace.technical_metadata.get("sql")
+            break
+
+    return {
+        "status": run.get_status_display(),
+        "status_badge": _get_developer_status_badge(run.status),
+        "latency_ms": run.latency_ms,
+        "model_name": run.model_name,
+        "prompt_tokens": run.prompt_tokens,
+        "completion_tokens": run.completion_tokens,
+        "row_count": run.row_count,
+        "generated_sql": generated_sql,
+        "steps": [
+            {
+                "name": DEVELOPER_STEP_LABELS.get(
+                    trace.step,
+                    trace.step.replace("_", " ").capitalize(),
+                ),
+                "status": trace.get_status_display(),
+                "status_badge": _get_developer_status_badge(trace.status),
+                "duration_ms": trace.duration_ms,
+            }
+            for trace in traces
+        ],
+    }
 
 
 @login_required
@@ -97,7 +164,25 @@ def conversation_detail(
     except Conversation.DoesNotExist:
         raise Http404
 
+    developer_mode = getattr(
+        getattr(request.user, "preferences", None),
+        "developer_mode",
+        False,
+    )
+
     conversation_messages = conversation.messages.order_by("sequence_number")
+
+    if developer_mode:
+        conversation_messages = conversation_messages.select_related(
+            "generated_by_run",
+        ).prefetch_related(
+            "generated_by_run__execution_traces",
+        )
+
+        conversation_messages = list(conversation_messages)
+
+        for message in conversation_messages:
+            message.developer_details = _build_developer_details(message)
 
     conversations = ConversationService().list_conversations(project)
 
@@ -109,6 +194,7 @@ def conversation_detail(
             "conversation": conversation,
             "conversation_messages": conversation_messages,
             "conversations": conversations,
+            "developer_mode": developer_mode,
         },
     )
 

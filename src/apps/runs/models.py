@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from apps.projects.models import Project
 
@@ -9,13 +10,13 @@ class QuestionRun(models.Model):
     """Persistent record of one AI query pipeline execution."""
 
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        RUNNING = "running", "Running"
-        NEEDS_CLARIFICATION = "needs_clarification", "Needs clarification"
-        COMPLETED = "completed", "Completed"
-        FAILED = "failed", "Failed"
-        REJECTED = "rejected", "Rejected"
-        ABANDONED = "abandoned", "Abandoned"
+        PENDING = "pending", _("Pending")
+        RUNNING = "running", _("Running")
+        NEEDS_CLARIFICATION = "needs_clarification", _("Needs clarification")
+        COMPLETED = "completed", _("Completed")
+        FAILED = "failed", _("Failed")
+        REJECTED = "rejected", _("Rejected")
+        ABANDONED = "abandoned", _("Abandoned")
 
     id = models.UUIDField(
         primary_key=True,
@@ -93,10 +94,10 @@ class ExecutionTrace(models.Model):
     """Persistent trace of one query pipeline step."""
 
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        RUNNING = "running", "Running"
-        COMPLETED = "completed", "Completed"
-        FAILED = "failed", "Failed"
+        PENDING = "pending", _("Pending")
+        RUNNING = "running", _("Running")
+        COMPLETED = "completed", _("Completed")
+        FAILED = "failed", _("Failed")
 
     id = models.UUIDField(
         primary_key=True,

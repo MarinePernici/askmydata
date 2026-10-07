@@ -247,6 +247,91 @@
                         <div class="conversation-message-content">
                             {{ message.content|linebreaksbr }}
                         </div>
+                        {% if developer_mode and message.developer_details %}
+                            <details class="developer-details">
+                                <summary class="developer-details-summary">
+                                    {% translate "Technical details" %}
+                                </summary>
+
+                                <div class="developer-details-content">
+                                    <dl class="developer-details-metrics">
+                                        <div>
+                                            <dt>{% translate "Status" %}</dt>
+                                            <dd>
+                                                <span class="status-badge status-badge-{{ message.developer_details.status_badge }}">
+                                                    {{ message.developer_details.status }}
+                                                </span>
+                                            </dd>
+                                        </div>
+
+                                        {% if message.developer_details.latency_ms is not None %}
+                                            <div>
+                                                <dt>{% translate "Total latency" %}</dt>
+                                                <dd>{{ message.developer_details.latency_ms }} ms</dd>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if message.developer_details.model_name %}
+                                            <div>
+                                                <dt>{% translate "Model" %}</dt>
+                                                <dd>{{ message.developer_details.model_name }}</dd>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if message.developer_details.prompt_tokens is not None %}
+                                            <div>
+                                                <dt>{% translate "Prompt tokens" %}</dt>
+                                                <dd>{{ message.developer_details.prompt_tokens }}</dd>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if message.developer_details.completion_tokens is not None %}
+                                            <div>
+                                                <dt>{% translate "Completion tokens" %}</dt>
+                                                <dd>{{ message.developer_details.completion_tokens }}</dd>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if message.developer_details.row_count is not None %}
+                                            <div>
+                                                <dt>{% translate "Rows returned" %}</dt>
+                                                <dd>{{ message.developer_details.row_count }}</dd>
+                                            </div>
+                                        {% endif %}
+                                    </dl>
+
+                                    {% if message.developer_details.generated_sql %}
+                                        <div class="developer-details-section">
+                                            <h4>{% translate "Generated SQL" %}</h4>
+                                            <pre><code>{{ message.developer_details.generated_sql }}</code></pre>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if message.developer_details.steps %}
+                                        <div class="developer-details-section">
+                                            <h4>{% translate "Pipeline" %}</h4>
+
+                                            <ul class="developer-details-steps">
+                                                {% for step in message.developer_details.steps %}
+                                                    <li>
+                                                        <span>{{ step.name }}</span>
+                                                        <span>
+                                                            <span class="status-badge status-badge-{{ step.status_badge }}">
+                                                                {{ step.status }}
+                                                            </span>
+                                                        </span>
+
+                                                        {% if step.duration_ms is not None %}
+                                                            <span>{{ step.duration_ms }} ms</span>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </details>
+                        {% endif %}
                     </article>
                 {% empty %}
                     <div class="conversation-empty" data-conversation-empty>

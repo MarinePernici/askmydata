@@ -7,3 +7,6 @@ class UserPreferencesForm(forms.Form):
     language = forms.ChoiceField(
         choices=UserPreferences.Language.choices,
     )
+    developer_mode = forms.BooleanField(
+        required=False,
+    )

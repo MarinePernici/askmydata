@@ -80,11 +80,15 @@ const conversationQuestionInput = document.querySelector(
 const conversationQuestionSubmit = document.querySelector(
     "[data-conversation-question-submit]",
 );
+const conversationMessages = document.querySelector(
+    "[data-conversation-messages]",
+);
 
 if (
     conversationQuestionForm &&
     conversationQuestionInput &&
-    conversationQuestionSubmit
+    conversationQuestionSubmit &&
+    conversationMessages
 ) {
     const updateQuestionSubmitState = () => {
         conversationQuestionSubmit.disabled =
@@ -126,14 +130,6 @@ if (
             emptyState.remove();
         }
 
-        const messagesContainer = document.querySelector(
-            "[data-conversation-messages]",
-        );
-
-        if (!messagesContainer) {
-            return;
-        }
-
         const userMessage = document.createElement("article");
         userMessage.className =
             "conversation-message conversation-message-user";
@@ -167,7 +163,7 @@ if (
         thinkingContent.append(thinkingIndicator);
         thinkingMessage.append(assistantAuthor, thinkingContent);
 
-        messagesContainer.append(userMessage, thinkingMessage);
+        conversationMessages.append(userMessage, thinkingMessage);
 
         requestAnimationFrame(() => {
             thinkingMessage.scrollIntoView({

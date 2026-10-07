@@ -3,12 +3,14 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
+from apps.authentication.models import UserPreferences
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
-from apps.runs.models import QuestionRun
+from apps.runs.models import ExecutionTrace, QuestionRun
 from apps.runs.services import QuestionRunService
 from catalog.types import KnowledgeCatalog
 from llm.types import LLMUsage
@@ -522,6 +524,241 @@ class ConversationViewTests(TestCase):
             last_message_marker,
             content.index("There are 42 customers."),
         )
+
+    def test_conversation_detail_hides_developer_details_when_disabled(self):
+        user = get_user_model().objects.create_user(
+            username="developer-mode-disabled",
+            password="test-password",
+        )
+        UserPreferences.objects.create(
+            user=user,
+            developer_mode=False,
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are 42 customers.",
+            sequence_number=1,
+        )
+        run = QuestionRun.objects.create(
+            project=project,
+            conversation=conversation,
+            assistant_message=assistant_message,
+            status=QuestionRun.Status.COMPLETED,
+            latency_ms=1284,
+            model_name="fake-model",
+            prompt_tokens=150,
+            completion_tokens=30,
+            row_count=1,
+        )
+        ExecutionTrace.objects.create(
+            question_run=run,
+            step="sql_validation",
+            status=ExecutionTrace.Status.COMPLETED,
+            duration_ms=8,
+            technical_metadata={
+                "sql": "SELECT COUNT(*) FROM customers;",
+                "validation_error": "sensitive-validation-detail",
+            },
+            error_message="sensitive-error-message",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        message = response.context["conversation_messages"][0]
+
+        self.assertFalse(hasattr(message, "developer_details"))
+        self.assertNotContains(response, "Technical details")
+        self.assertNotContains(response, "SELECT COUNT(*) FROM customers;")
+        self.assertNotContains(response, "sensitive-validation-detail")
+        self.assertNotContains(response, "sensitive-error-message")
+
+    def test_conversation_detail_builds_safe_developer_details_when_enabled(self):
+        user = get_user_model().objects.create_user(
+            username="developer-mode-enabled",
+            password="test-password",
+        )
+        UserPreferences.objects.create(
+            user=user,
+            developer_mode=True,
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are 42 customers.",
+            sequence_number=1,
+        )
+        run = QuestionRun.objects.create(
+            project=project,
+            conversation=conversation,
+            assistant_message=assistant_message,
+            status=QuestionRun.Status.COMPLETED,
+            latency_ms=1284,
+            model_name="fake-model",
+            prompt_tokens=150,
+            completion_tokens=30,
+            row_count=1,
+        )
+        ExecutionTrace.objects.create(
+            question_run=run,
+            step="sql_validation",
+            status=ExecutionTrace.Status.COMPLETED,
+            duration_ms=8,
+            technical_metadata={
+                "sql": "SELECT COUNT(*) FROM customers;",
+                "validation_error": "sensitive-validation-detail",
+                "secret": "sensitive-secret",
+            },
+            error_message="sensitive-error-message",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "conversation-detail",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        message = response.context["conversation_messages"][0]
+        details = message.developer_details
+
+        self.assertEqual(
+            details,
+            {
+                "status": "Completed",
+                "status_badge": "success",
+                "latency_ms": 1284,
+                "model_name": "fake-model",
+                "prompt_tokens": 150,
+                "completion_tokens": 30,
+                "row_count": 1,
+                "generated_sql": "SELECT COUNT(*) FROM customers;",
+                "steps": [
+                    {
+                        "name": "SQL validation",
+                        "status": "Completed",
+                        "status_badge": "success",
+                        "duration_ms": 8,
+                    }
+                ],
+            },
+        )
+        self.assertNotIn("technical_metadata", details)
+        self.assertNotIn("error_message", details)
+        self.assertNotIn("error_code", details)
+        self.assertContains(response, "Technical details")
+        self.assertContains(response, "Completed")
+        self.assertContains(response, "1284 ms")
+        self.assertContains(response, "fake-model")
+        self.assertContains(response, "150")
+        self.assertContains(response, "30")
+        self.assertContains(response, "SELECT COUNT(*) FROM customers;")
+        self.assertContains(response, "SQL validation")
+        self.assertContains(response, "8 ms")
+
+        self.assertNotContains(response, "sensitive-validation-detail")
+        self.assertNotContains(response, "sensitive-secret")
+        self.assertNotContains(response, "sensitive-error-message")
+
+        content = response.content.decode()
+        details_start = content.index('<details class="developer-details">')
+        details_end = content.index("</details>", details_start)
+        details = content[details_start:details_end]
+
+        self.assertNotIn(" open", details)
+
+    def test_conversation_detail_translates_developer_details_in_french(self):
+        user = get_user_model().objects.create_user(
+            username="developer-mode-french",
+            password="test-password",
+        )
+        UserPreferences.objects.create(
+            user=user,
+            language=UserPreferences.Language.FRENCH,
+            developer_mode=True,
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.ASSISTANT,
+            content="There are 42 customers.",
+            sequence_number=1,
+        )
+        run = QuestionRun.objects.create(
+            project=project,
+            conversation=conversation,
+            assistant_message=assistant_message,
+            status=QuestionRun.Status.COMPLETED,
+        )
+        ExecutionTrace.objects.create(
+            question_run=run,
+            step="sql_validation",
+            status=ExecutionTrace.Status.COMPLETED,
+            duration_ms=8,
+        )
+
+        self.client.force_login(user)
+
+        with translation.override("fr"):
+            response = self.client.get(
+                reverse(
+                    "conversation-detail",
+                    kwargs={
+                        "project_id": project.id,
+                        "conversation_id": conversation.id,
+                    },
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Détails techniques")
+        self.assertContains(response, "Terminé")
+        self.assertContains(response, "Validation SQL")
+        self.assertNotContains(response, ">Completed<")
+        self.assertNotContains(response, ">SQL validation<")
 
     def test_user_can_rename_own_conversation(self):
         user = get_user_model().objects.create_user(

@@ -64,6 +64,36 @@
                 {% endfor %}
             </div>
 
+            <div class="form-field">
+                <label
+                    for="{{ form.developer_mode.id_for_label }}"
+                    class="form-label"
+                >
+                    {% translate "Developer mode" %}
+                </label>
+
+                <label class="checkbox-field">
+                    <input
+                        type="checkbox"
+                        name="{{ form.developer_mode.html_name }}"
+                        id="{{ form.developer_mode.id_for_label }}"
+                        class="checkbox-input"
+                        {% if form.developer_mode.value %}checked{% endif %}
+                    >
+                    <span class="checkbox-label">
+                        {% translate "Show technical details for AskMyData responses" %}
+                    </span>
+                </label>
+
+                <p class="form-help">
+                    {% translate "Display generated SQL, execution metrics, and pipeline details alongside responses." %}
+                </p>
+
+                {% for error in form.developer_mode.errors %}
+                    <span class="form-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
             <div class="settings-actions">
                 <button type="submit" class="btn btn-primary">
                     {% translate "Save changes" %}
