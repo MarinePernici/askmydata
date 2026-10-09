@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: AskMyData\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 16:33+0000\n"
+"POT-Creation-Date: 2026-10-09 16:33+0000\n"
 "PO-Revision-Date: 2026-10-05\n"
 "Last-Translator: Marine Pernici\n"
 "Language-Team: French\n"
@@ -11,6 +11,38 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/apps/authentication/forms.py:31
+msgid "First name"
+msgstr "Prénom"
+
+#: src/apps/authentication/forms.py:32
+msgid "Last name"
+msgstr "Nom"
+
+#: src/apps/authentication/forms.py:33
+msgid "Email"
+msgstr "Adresse e-mail"
+
+#: src/apps/authentication/forms.py:34
+msgid "Why would you like access?"
+msgstr "Pourquoi souhaitez-vous accéder à AskMyData ?"
+
+#: src/apps/authentication/forms.py:49 src/apps/authentication/views.py:119
+msgid "An access request is already pending for this email."
+msgstr "Une demande d'accès est déjà en attente pour cette adresse e-mail."
+
+#: src/apps/authentication/views.py:124
+msgid "An active invitation already exists for this email."
+msgstr "Une invitation valide existe déjà pour cette adresse e-mail."
+
+#: src/apps/authentication/views.py:129
+msgid "An account already exists for this email."
+msgstr "Un compte existe déjà pour cette adresse e-mail."
+
+#: src/apps/authentication/views.py:172
+msgid "Your account has been created."
+msgstr "Votre compte a été créé."
 
 #: src/apps/catalogs/models.py:50 src/apps/runs/models.py:13
 #: src/apps/runs/models.py:97
@@ -71,7 +103,7 @@ msgstr "Validation du résultat"
 msgid "Answer generation"
 msgstr "Génération de la réponse"
 
-#: src/apps/conversations/views.py:292 templates/conversations/detail.html:404
+#: src/apps/conversations/views.py:293 templates/conversations/detail.html:404
 msgid "Project is not ready."
 msgstr "Le projet n’est pas prêt."
 
@@ -128,6 +160,109 @@ msgstr "Rejeté"
 #: src/apps/runs/models.py:19
 msgid "Abandoned"
 msgstr "Abandonné"
+
+#: templates/authentication/access_request_success.html:10
+#: templates/authentication/access_request_success.html:34
+msgid "Request received"
+msgstr "Demande reçue"
+
+#: templates/authentication/access_request_success.html:38
+msgid ""
+"Your access request has been submitted successfully. It will be reviewed "
+"before an invitation is issued."
+msgstr ""
+"Votre demande d'accès a bien été envoyée. Elle sera examinée avant l'envoi "
+"d'une invitation."
+
+#: templates/authentication/access_request_success.html:49
+msgid "Back to home"
+msgstr "Retour à l'accueil"
+
+#: templates/authentication/register.html:7
+#: templates/authentication/register.html:28
+msgid "Create your account"
+msgstr "Créez votre compte"
+
+#: templates/authentication/register.html:30
+msgid "Choose a username and password to activate your invitation."
+msgstr ""
+"Choisissez un nom d'utilisateur et un mot de passe pour activer votre "
+"invitation."
+
+#: templates/authentication/register.html:56
+msgid "Requirements and guidance"
+msgstr "Conditions et recommandations"
+
+#: templates/authentication/register.html:75
+msgid "Create account"
+msgstr "Créer un compte"
+
+#: templates/authentication/request_access.html:10
+#: templates/authentication/request_access.html:34
+msgid "Request access"
+msgstr "Demandez un accès"
+
+#: templates/authentication/request_access.html:38
+msgid ""
+"Tell us a little about yourself and why you would like to try AskMyData. "
+"Requests are reviewed before an invitation is issued."
+msgstr ""
+"Présentez-vous brièvement et expliquez pourquoi vous souhaitez essayer "
+"AskMyData. Chaque demande est examinée avant l'envoi d'une invitation."
+
+#: templates/authentication/request_access.html:49
+msgid "What can you do in the demo?"
+msgstr "Que pouvez-vous faire dans la démo ?"
+
+#: templates/authentication/request_access.html:52
+msgid "Explore AskMyData using preconfigured datasets."
+msgstr "Découvrez AskMyData à partir de jeux de données préconfigurés."
+
+#: templates/authentication/request_access.html:58
+msgid "Create a project using a preconfigured data source."
+msgstr "Créez un projet à partir d'une source de données préconfigurée."
+
+#: templates/authentication/request_access.html:59
+msgid "Choose which tables to explore."
+msgstr "Choisissez les tables à explorer."
+
+#: templates/authentication/request_access.html:60
+msgid "Ask questions in natural language and explore the results."
+msgstr "Posez des questions en langage naturel et explorez les résultats."
+
+#: templates/authentication/request_access.html:61
+msgid "View generated SQL in Developer Mode."
+msgstr "Consultez le SQL généré en mode développeur."
+
+#: templates/authentication/request_access.html:62
+msgid "Review your conversation history."
+msgstr "Consultez votre historique de conversations."
+
+#: templates/authentication/request_access.html:67
+msgid "Demo limitations"
+msgstr "Limites de la démo"
+
+#: templates/authentication/request_access.html:70
+msgid "Access is granted by invitation."
+msgstr "L'accès se fait uniquement sur invitation."
+
+#: templates/authentication/request_access.html:71
+msgid "Only preconfigured data sources are available."
+msgstr "Seules les sources de données préconfigurées sont disponibles."
+
+#: templates/authentication/request_access.html:72
+msgid "Queries are restricted to read-only operations."
+msgstr "Les requêtes sont limitées aux opérations en lecture seule."
+
+#: templates/authentication/request_access.html:73
+msgid "Usage limits apply to keep the demo available to everyone."
+msgstr ""
+"Des limites d'utilisation sont appliquées afin de préserver l'accès à la "
+"démo pour tous."
+
+#: templates/authentication/request_access.html:132
+msgid "Submit request"
+msgstr "Envoyer ma demande"
 
 #: templates/authentication/user_preferences.html:4
 #: templates/authentication/user_preferences.html:10
@@ -214,7 +349,7 @@ msgstr "Informations du projet"
 #: templates/catalogs/confirmation.html:88 templates/catalogs/scope.html:28
 #: templates/data_sources/configure.html:28
 #: templates/data_sources/configure.html:50
-#: templates/data_sources/overview.html:33 templates/landing.html:461
+#: templates/data_sources/overview.html:33 templates/landing.html:460
 #: templates/projects/project_create.html:28
 msgid "Data source"
 msgstr "Source de données"
@@ -771,11 +906,11 @@ msgstr ""
 "Posez des questions en langage naturel et obtenez des réponses à partir de "
 "vos données grâce à un pipeline de requêtes contrôlé et en lecture seule."
 
-#: templates/landing.html:25 templates/landing.html:529
+#: templates/landing.html:25 templates/landing.html:527
 msgid "AskMyData home"
 msgstr "Accueil AskMyData"
 
-#: templates/landing.html:38 templates/landing.html:130
+#: templates/landing.html:38 templates/landing.html:129
 msgid "How it works"
 msgstr "Comment ça marche"
 
@@ -787,7 +922,7 @@ msgstr "Sécurité"
 msgid "Technology"
 msgstr "Technologie"
 
-#: templates/landing.html:75 templates/landing.html:110
+#: templates/landing.html:75 templates/landing.html:109
 msgid "Sign in"
 msgstr "Se connecter"
 
@@ -807,15 +942,11 @@ msgstr ""
 "Connectez vos données, définissez ce à quoi AskMyData peut accéder et "
 "explorez-les en langage naturel."
 
-#: templates/landing.html:104 templates/landing.html:515
-msgid "Public demo access is coming soon"
-msgstr "L'accès à la démo publique sera bientôt disponible"
-
-#: templates/landing.html:106 templates/landing.html:517
+#: templates/landing.html:105 templates/landing.html:515
 msgid "Try the demo"
 msgstr "Essayer la démo"
 
-#: templates/landing.html:119
+#: templates/landing.html:118
 msgid ""
 "AskMyData conversation showing rental revenue analysis and a contextual "
 "follow-up question"
@@ -823,79 +954,79 @@ msgstr ""
 "Conversation AskMyData présentant une analyse des revenus locatifs et une "
 "question de suivi contextuelle"
 
-#: templates/landing.html:133
+#: templates/landing.html:132
 msgid "From your data to an answer"
 msgstr "De vos données à une réponse"
 
-#: templates/landing.html:137
+#: templates/landing.html:136
 msgid ""
 "AskMyData turns natural language questions into a controlled query workflow."
 msgstr ""
 "AskMyData transforme vos questions en langage naturel en un processus de "
 "requête contrôlé."
 
-#: templates/landing.html:165
+#: templates/landing.html:164
 msgid "Connect your data"
 msgstr "Connectez vos données"
 
-#: templates/landing.html:168
+#: templates/landing.html:167
 msgid "Connect a supported data source to your project."
 msgstr "Connectez une source de données prise en charge à votre projet."
 
-#: templates/landing.html:193
+#: templates/landing.html:192
 msgid "Define the scope"
 msgstr "Définissez le périmètre"
 
-#: templates/landing.html:196
+#: templates/landing.html:195
 msgid "Choose the tables AskMyData is allowed to use for exploration."
 msgstr ""
 "Choisissez les tables qu'AskMyData est autorisé à utiliser pour "
 "l'exploration."
 
-#: templates/landing.html:220
+#: templates/landing.html:219
 msgid "Ask questions"
 msgstr "Posez vos questions"
 
-#: templates/landing.html:223
+#: templates/landing.html:222
 msgid "Explore your data using natural language instead of writing SQL."
 msgstr "Explorez vos données en langage naturel plutôt que d'écrire du SQL."
 
-#: templates/landing.html:248
+#: templates/landing.html:247
 msgid "Get answers"
 msgstr "Obtenez des réponses"
 
-#: templates/landing.html:251
+#: templates/landing.html:250
 msgid ""
 "AskMyData validates and executes read-only SQL before producing an answer."
 msgstr ""
 "AskMyData valide et exécute des requêtes SQL en lecture seule avant de "
 "produire une réponse."
 
-#: templates/landing.html:262 templates/landing.html:396
-#: templates/landing.html:437 templates/landing.html:492
+#: templates/landing.html:261 templates/landing.html:395
+#: templates/landing.html:436 templates/landing.html:491
 msgid "Back to top"
 msgstr "Retour en haut"
 
-#: templates/landing.html:269
+#: templates/landing.html:268
 msgid "Controlled by design"
 msgstr "Contrôlé par conception"
 
-#: templates/landing.html:272
+#: templates/landing.html:271
 msgid "Built for controlled data exploration"
 msgstr "Conçu pour une exploration contrôlée des données"
 
-#: templates/landing.html:276
+#: templates/landing.html:275
 msgid ""
 "AskMyData keeps the query pipeline constrained from question to execution."
 msgstr ""
 "AskMyData maintient le pipeline de requêtes sous contrôle, de la question "
 "jusqu'à l'exécution."
 
-#: templates/landing.html:300
+#: templates/landing.html:299
 msgid "Read-only by design"
 msgstr "Lecture seule par conception"
 
-#: templates/landing.html:302
+#: templates/landing.html:301
 msgid ""
 "Queries are restricted to read-only operations. AskMyData cannot modify the "
 "connected data."
@@ -903,11 +1034,11 @@ msgstr ""
 "Les requêtes sont limitées aux opérations en lecture seule. AskMyData ne "
 "peut pas modifier les données connectées."
 
-#: templates/landing.html:328
+#: templates/landing.html:327
 msgid "Controlled data scope"
 msgstr "Périmètre de données contrôlé"
 
-#: templates/landing.html:330
+#: templates/landing.html:329
 msgid ""
 "You choose which tables belong to the Catalog Scope. Generated queries are "
 "restricted to that scope."
@@ -915,20 +1046,20 @@ msgstr ""
 "Vous choisissez les tables incluses dans le Catalog Scope. Les requêtes "
 "générées sont limitées à ce périmètre."
 
-#: templates/landing.html:356
+#: templates/landing.html:355
 msgid "SQL validation before execution"
 msgstr "Validation du SQL avant exécution"
 
-#: templates/landing.html:358
+#: templates/landing.html:357
 msgid "Generated SQL is validated before it can reach the database."
 msgstr ""
 "Le SQL généré est validé avant de pouvoir atteindre la base de données."
 
-#: templates/landing.html:383
+#: templates/landing.html:382
 msgid "Clarifies instead of guessing"
 msgstr "Demande des précisions plutôt que de supposer"
 
-#: templates/landing.html:385
+#: templates/landing.html:384
 msgid ""
 "Ambiguous questions can trigger clarification, while questions outside the "
 "available data are rejected."
@@ -936,15 +1067,15 @@ msgstr ""
 "Les questions ambiguës peuvent déclencher une demande de clarification, "
 "tandis que celles qui dépassent les données disponibles sont rejetées."
 
-#: templates/landing.html:403
+#: templates/landing.html:402
 msgid "Your data, your scope"
 msgstr "Vos données, votre périmètre"
 
-#: templates/landing.html:406
+#: templates/landing.html:405
 msgid "Decide what AskMyData can explore"
 msgstr "Décidez de ce qu'AskMyData peut explorer"
 
-#: templates/landing.html:410
+#: templates/landing.html:409
 msgid ""
 "Select the tables that belong to your project's Catalog Scope. AskMyData "
 "uses that scope to build contextual knowledge and constrain generated "
@@ -954,7 +1085,7 @@ msgstr ""
 "AskMyData utilise ce périmètre pour construire les connaissances "
 "contextuelles et limiter les requêtes générées."
 
-#: templates/landing.html:418
+#: templates/landing.html:417
 msgid ""
 "The result is a query environment grounded in the data you explicitly "
 "selected."
@@ -962,7 +1093,7 @@ msgstr ""
 "Vous obtenez ainsi un environnement de requête fondé sur les données que "
 "vous avez explicitement sélectionnées."
 
-#: templates/landing.html:429
+#: templates/landing.html:428
 msgid ""
 "AskMyData project creation showing the selection of tables included in the "
 "project's data scope"
@@ -970,15 +1101,15 @@ msgstr ""
 "Création d'un projet AskMyData montrant la sélection des tables incluses "
 "dans le périmètre de données du projet"
 
-#: templates/landing.html:444
+#: templates/landing.html:443
 msgid "Current technology"
 msgstr "Technologies actuelles"
 
-#: templates/landing.html:447
+#: templates/landing.html:446
 msgid "Built to evolve"
 msgstr "Conçu pour évoluer"
 
-#: templates/landing.html:451
+#: templates/landing.html:450
 msgid ""
 "AskMyData currently uses PostgreSQL and OpenAI models, with extensible "
 "interfaces designed for additional integrations."
@@ -986,30 +1117,30 @@ msgstr ""
 "AskMyData utilise actuellement PostgreSQL et les modèles OpenAI, avec des "
 "interfaces extensibles conçues pour accueillir de nouvelles intégrations."
 
-#: templates/landing.html:467
+#: templates/landing.html:466
 msgid "Currently supported. Additional data source connectors are planned."
 msgstr ""
 "Actuellement pris en charge. D'autres connecteurs de sources de données sont "
 "prévus."
 
-#: templates/landing.html:476
+#: templates/landing.html:475
 msgid "AI model provider"
 msgstr "Fournisseur de modèles d'IA"
 
-#: templates/landing.html:482
+#: templates/landing.html:481
 msgid "Currently supported. Additional model providers are planned."
 msgstr ""
 "Actuellement pris en charge. D'autres fournisseurs de modèles sont prévus."
 
-#: templates/landing.html:498
+#: templates/landing.html:497
 msgid "Explore with AskMyData"
 msgstr "Explorez avec AskMyData"
 
-#: templates/landing.html:501
+#: templates/landing.html:500
 msgid "Ask your data, not your database."
 msgstr "Interrogez vos données, pas votre base de données."
 
-#: templates/landing.html:505
+#: templates/landing.html:504
 msgid ""
 "Explore your project's data using natural language through a controlled, "
 "read-only query workflow."
@@ -1017,7 +1148,7 @@ msgstr ""
 "Explorez les données de votre projet en langage naturel grâce à un processus "
 "de requête contrôlé et en lecture seule."
 
-#: templates/landing.html:557
+#: templates/landing.html:555
 msgid "Contact"
 msgstr "Contact"
 
@@ -1121,3 +1252,6 @@ msgstr "Bon retour parmi nous"
 #: templates/registration/login.html:38
 msgid "Sign in to continue to AskMyData."
 msgstr "Connectez-vous pour continuer sur AskMyData."
+
+#~ msgid "Public demo access is coming soon"
+#~ msgstr "L'accès à la démo publique sera bientôt disponible"

@@ -298,7 +298,7 @@ The system shall provide an administration interface for application management.
 
 ### FR-ADMIN-002
 
-The system shall allow administrators to create, review and revoke invitations granting access to the public demonstration platform.
+The system shall allow any visitor to submit an access request containing their first name, last name, email address and reason for requesting access.
 
 **Release:** Production-ready Portfolio
 
@@ -306,11 +306,29 @@ The system shall allow administrators to create, review and revoke invitations g
 
 ### FR-ADMIN-003
 
-The system shall allow a person holding a valid invitation to create an individual user account.
+The system shall allow administrators to review, approve and reject access requests.
 
 **Release:** Production-ready Portfolio
 
 ---
+
+### FR-ADMIN-004
+
+The system shall allow administrators to create, review and revoke invitations granting access to the public demonstration platform.
+
+Invitations may be created from an approved access request or directly by an administrator.
+
+**Release:** Production-ready Portfolio
+
+---
+
+### FR-ADMIN-005
+
+The system shall allow a person holding a valid invitation to create an individual user account.
+
+Public account registration without a valid invitation shall not be available.
+
+**Release:** Production-ready Portfolio
 
 ## 5.9 Public Demo
 

@@ -191,7 +191,8 @@ Provides restricted administrative capabilities through Django Admin.
 ### Responsibilities
 
 * manage application users;
-* manage invitations when enabled;
+* review, approve and reject access requests;
+* create, review and revoke invitations;
 * inspect projects;
 * inspect failed executions;
 * support demonstration platform operations.
@@ -222,12 +223,15 @@ Manages user identity, authentication and access to the application.
 * activate and deactivate accounts;
 * enforce account-level access rules;
 * manage user preferences when enabled;
-* support invitation-based registration when enabled.
+* receive public access requests;
+* support administrator review of access requests;
+* support invitation-only registration.
 
 ### Domain Concepts
 
 * User;
 * UserPreferences;
+* AccessRequest;
 * Invitation.
 
 ### Application Services
@@ -238,8 +242,11 @@ Examples:
 * `LogoutUser`
 * `GetCurrentUser`
 * `UpdateUserPreferences`
+* `SubmitAccessRequest`
+* `ReviewAccessRequest`
 * `CreateInvitation`
 * `AcceptInvitation`
+* `RevokeInvitation`
 * `DeactivateUser`
 
 ### Interfaces Exposed
@@ -252,7 +259,6 @@ Examples:
 
 * Django authentication infrastructure;
 * application database;
-* email delivery infrastructure when invitations are enabled.
 
 ### Does Not
 

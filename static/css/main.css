@@ -2651,6 +2651,85 @@ a {
     width: 100%;
 }
 
+/* Public demo information */
+
+.demo-information {
+    display: grid;
+    gap: 28px;
+    margin-bottom: 0;
+    padding: var(--space-6);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-100);
+    border-radius: var(--radius-lg);
+}
+
+.demo-information section {
+    display: grid;
+    gap: 12px;
+}
+
+.demo-information h2 {
+    color: var(--color-primary-800);
+    font-size: var(--text-body-size);
+    font-weight: 600;
+    line-height: var(--text-body-line-height);
+}
+
+.demo-information p,
+.demo-information li {
+    color: var(--color-neutral-700);
+    font-size: var(--text-small-size);
+    line-height: var(--text-small-line-height);
+}
+
+.demo-information ul {
+    margin: 0;
+    padding-left: var(--space-5);
+}
+
+.demo-information li + li {
+    margin-top: var(--space-1);
+}
+
+@media (max-width: 480px) {
+    .demo-information {
+        padding: 16px;
+    }
+}
+
+/* Demo feature checklist */
+
+.demo-feature-list {
+    list-style: none;
+    padding-left: 0 !important;
+}
+
+.demo-feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.demo-feature-list li::before {
+    content: "✓";
+    display: grid;
+    place-items: center;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    color: var(--color-primary-700, #087f78);
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.demo-feature-list li + li {
+    margin-top: 12px;
+}
+
 /* Responsive */
 
 @media (max-width: 1024px) {
@@ -3704,4 +3783,76 @@ html {
         border-top: var(--border-default);
         border-left: 0;
     }
+}
+
+/* Public access request */
+
+.access-request-container {
+    width: min(100% - 32px, 1040px);
+    max-width: 1040px;
+}
+
+.access-request-card {
+    width: 100%;
+}
+
+.access-request-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+}
+
+.access-request-grid .demo-information {
+    margin-bottom: 0;
+}
+
+.access-request-form {
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .access-request-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-6);
+    }
+}
+
+/* Registration form help text */
+.auth-form .form-help {
+    color: var(--color-neutral-500);
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+.auth-form .form-help ul {
+    margin: 4px 0 0;
+    padding-left: 16px;
+}
+
+.auth-form .form-help li {
+    margin-bottom: 2px;
+}
+
+/* Collapsible registration field guidance */
+.form-help-details {
+    margin-top: -8px;
+}
+
+.form-help-details summary {
+    width: fit-content;
+    color: var(--color-neutral-500);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.form-help-details summary:hover {
+    color: var(--color-primary-700);
+}
+
+.form-help-details .form-help {
+    margin-top: 8px;
 }

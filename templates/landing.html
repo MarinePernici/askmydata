@@ -98,13 +98,12 @@
                     </p>
 
                     <div class="landing-hero-actions">
-                        <span
+                        <a
+                            href="{% url 'request-access' %}"
                             class="btn btn-primary"
-                            aria-disabled="true"
-                            title="{% translate 'Public demo access is coming soon' %}"
                         >
                             {% translate "Try the demo" %}
-                        </span>
+                        </a>
 
                         <a href="{% url 'login' %}" class="btn btn-secondary">
                             {% translate 'Sign in' %}
@@ -509,13 +508,12 @@
                 </p>
 
                 <div class="landing-final-cta-actions">
-                    <span
+                    <a
+                        href="{% url 'request-access' %}"
                         class="btn btn-primary"
-                        aria-disabled="true"
-                        title="{% translate "Public demo access is coming soon" %}"
                     >
                         {% translate "Try the demo" %}
-                    </span>
+                    </a>
                 </div>
             </div>
         </section>
