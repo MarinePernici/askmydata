@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <div class="form-row">
+      {{ form.email.label_tag }}
+      {{ form.email.errors }}
+      {{ form.email }}
+    </div>
+
+    <div class="submit-row">
+      <input type="submit" class="default" value="Create invitation">
+      <a href="{% url 'admin:authentication_invitation_changelist' %}"
+         class="closelink">
+        Cancel
+      </a>
+    </div>
+  </form>
+{% endblock %}

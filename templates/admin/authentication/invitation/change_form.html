@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+  {% if show_revoke_button %}
+    <div class="submit-row">
+      <button
+        type="submit"
+        class="default"
+        formaction="{% url 'admin:authentication_invitation_revoke' original.pk %}"
+        formmethod="post"
+      >
+        Revoke
+      </button>
+    </div>
+  {% endif %}
+
+  {{ block.super }}
+{% endblock %}

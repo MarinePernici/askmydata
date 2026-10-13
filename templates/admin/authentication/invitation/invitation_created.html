@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>Invitation created</h1>
+
+  <p>
+    An invitation has been created for
+    <strong>{{ invitation.email }}</strong>.
+  </p>
+
+  <p>
+    <strong>Registration link:</strong>
+  </p>
+
+  <p>
+    <input
+      type="text"
+      value="{{ registration_url }}"
+      readonly
+      style="width: 100%; max-width: 800px;"
+      aria-label="Registration link"
+      onclick="this.select();"
+    >
+  </p>
+
+  <p>
+    <strong>
+      Copy this link now. It cannot be retrieved later.
+    </strong>
+  </p>
+
+  <p>
+    <a href="{% url 'admin:authentication_invitation_changelist' %}">
+      Back to invitations
+    </a>
+  </p>
+{% endblock %}

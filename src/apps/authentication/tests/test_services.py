@@ -53,6 +53,40 @@ class InvitationServiceTests(TestCase):
             delta=timedelta(seconds=1),
         )
 
+    def test_create_rejects_existing_user_email(self):
+        User = get_user_model()
+        User.objects.create_user(
+            username="existing_user",
+            email="invitee@example.com",
+            password="test-password",
+        )
+
+        with self.assertRaises(AccountAlreadyExistsError):
+            self.service.create("INVITEE@example.com")
+
+        self.assertEqual(Invitation.objects.count(), 0)
+
+    def test_create_rejects_active_invitation(self):
+        self.service.create("invitee@example.com")
+
+        with self.assertRaises(ActiveInvitationExistsError):
+            self.service.create("INVITEE@example.com")
+
+        self.assertEqual(Invitation.objects.count(), 1)
+
+    def test_create_rejects_pending_access_request(self):
+        AccessRequest.objects.create(
+            first_name="Test",
+            last_name="User",
+            email="invitee@example.com",
+            reason="Testing access requests",
+        )
+
+        with self.assertRaises(PendingAccessRequestExistsError):
+            self.service.create("INVITEE@example.com")
+
+        self.assertEqual(Invitation.objects.count(), 0)
+
     def test_get_valid_by_token_returns_invitation(self):
         invitation, raw_token = self.service.create("invitee@example.com")
 
@@ -222,6 +256,28 @@ class InvitationServiceTests(TestCase):
             )
 
         self.assertFalse(get_user_model().objects.filter(username="invitee").exists())
+
+    def test_create_allows_new_invitation_after_expiration(self):
+        previous, _ = self.service.create("invitee@example.com")
+
+        previous.expires_at = timezone.now() - timedelta(days=1)
+        previous.save(update_fields=["expires_at"])
+
+        new_invitation, _ = self.service.create("INVITEE@example.com")
+
+        self.assertNotEqual(new_invitation.pk, previous.pk)
+        self.assertEqual(new_invitation.email, "invitee@example.com")
+        self.assertEqual(Invitation.objects.count(), 2)
+
+    def test_create_allows_new_invitation_after_revocation(self):
+        previous, _ = self.service.create("invitee@example.com")
+        self.service.revoke(previous)
+
+        new_invitation, _ = self.service.create("INVITEE@example.com")
+
+        self.assertNotEqual(new_invitation.pk, previous.pk)
+        self.assertEqual(new_invitation.email, "invitee@example.com")
+        self.assertEqual(Invitation.objects.count(), 2)
 
 
 class AccessRequestServiceTests(TestCase):

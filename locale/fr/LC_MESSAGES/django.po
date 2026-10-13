@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: AskMyData\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 16:33+0000\n"
+"POT-Creation-Date: 2026-10-13 09:33+0000\n"
 "PO-Revision-Date: 2026-10-05\n"
 "Last-Translator: Marine Pernici\n"
 "Language-Team: French\n"
@@ -642,7 +642,7 @@ msgstr "Paramètres"
 msgid "Preferences"
 msgstr "Préférences"
 
-#: templates/components/sidebar.html:226
+#: templates/components/sidebar.html:249
 msgid "Log out"
 msgstr "Se déconnecter"
 

@@ -26,12 +26,41 @@ class InvitationService:
         email: str,
         *,
         expiration_days: int = DEFAULT_EXPIRATION_DAYS,
+        access_request: AccessRequest | None = None,
     ) -> tuple[Invitation, str]:
+        normalized_email = email.strip().lower()
+        User = get_user_model()
+
+        if User.objects.filter(email__iexact=normalized_email).exists():
+            raise AccountAlreadyExistsError("An account already exists for this email.")
+
+        if Invitation.objects.filter(
+            email__iexact=normalized_email,
+            status=Invitation.Status.PENDING,
+            expires_at__gt=timezone.now(),
+        ).exists():
+            raise ActiveInvitationExistsError(
+                "An active invitation already exists for this email."
+            )
+
+        pending_requests = AccessRequest.objects.filter(
+            email__iexact=normalized_email,
+            status=AccessRequest.Status.PENDING,
+        )
+
+        if access_request is not None:
+            pending_requests = pending_requests.exclude(pk=access_request.pk)
+
+        if pending_requests.exists():
+            raise PendingAccessRequestExistsError(
+                "A pending access request already exists for this email."
+            )
+
         raw_token = secrets.token_urlsafe(32)
         token_hash = self._hash_token(raw_token)
 
         invitation = Invitation.objects.create(
-            email=email,
+            email=normalized_email,
             token_hash=token_hash,
             expires_at=timezone.now() + timedelta(days=expiration_days),
         )
@@ -179,7 +208,10 @@ class AccessRequestService:
                     "Only pending access requests can be approved."
                 )
 
-            invitation, raw_token = InvitationService().create(access_request.email)
+            invitation, raw_token = InvitationService().create(
+                access_request.email,
+                access_request=access_request,
+            )
 
             access_request.status = AccessRequest.Status.APPROVED
             access_request.reviewed_at = timezone.now()
