@@ -1,0 +1,26 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+  {% if show_approve_button %}
+    <div class="submit-row">
+      <button
+        type="submit"
+        class="default"
+        formaction="{% url 'admin:authentication_accessrequest_approve' original.pk %}"
+        formmethod="post"
+      >
+        Approve
+      </button>
+
+      <button
+        type="submit"
+        formaction="{% url 'admin:authentication_accessrequest_reject' original.pk %}"
+        formmethod="post"
+      >
+        Reject
+      </button>
+    </div>
+  {% endif %}
+
+  {{ block.super }}
+{% endblock %}

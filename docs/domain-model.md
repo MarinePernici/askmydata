@@ -136,6 +136,55 @@ Production-ready Portfolio
 
 ---
 
+## AccessRequest
+
+### Definition
+
+Represents a request submitted by a person who wants access to the public demonstration platform.
+
+An access request does not grant access by itself. It must be reviewed by an administrator.
+
+### Main Attributes
+
+- id
+- first_name
+- last_name
+- email
+- reason
+- status
+- created_at
+- reviewed_at
+
+### Status Values
+
+- pending
+- approved
+- rejected
+
+### Relationships
+
+An approved AccessRequest may result in an Invitation.
+
+An Invitation may also be created directly by an administrator without an AccessRequest.
+
+### Business Rules
+
+- Anyone may submit an access request from the public demonstration interface.
+- Submitting an access request does not create a user account.
+- New access requests have `pending` status.
+- Administrators review access requests.
+- An administrator may approve or reject a pending access request.
+- Approving an access request may create an Invitation for the request email address.
+- Rejecting an access request does not create an Invitation.
+- Direct administrator-created invitations do not require an AccessRequest.
+- Access requests do not contain credentials or passwords.
+
+### Release
+
+Production-ready Portfolio
+
+---
+
 ## Invitation
 
 ### Definition
@@ -161,6 +210,10 @@ Invitations are intended for the public demonstration platform.
 - accepted
 - expired
 - revoked
+
+### Relationships
+
+An Invitation may originate from an approved AccessRequest or may be created directly by an administrator.
 
 ### Business Rules
 

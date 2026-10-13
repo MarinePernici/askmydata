@@ -1,0 +1,140 @@
+{% load i18n static %}
+{% get_current_language as LANGUAGE_CODE %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% translate "Request access" %} · AskMyData</title>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="auth-page">
+    <main class="auth-layout">
+        <div class="auth-container access-request-container">
+            <a
+                href="{% url 'landing' %}"
+                class="auth-brand"
+                aria-label="AskMyData"
+            >
+                <img
+                    src="{% static 'images/askmydata-logo.png' %}"
+                    alt=""
+                    class="auth-brand-logo"
+                >
+                <span>AskMyData</span>
+            </a>
+
+            <section class="card auth-card access-request-card">
+                <header class="auth-header">
+                    <h1 class="auth-title">
+                        {% translate "Request access" %}
+                    </h1>
+
+                    <p class="auth-description">
+                        {% blocktranslate trimmed %}
+                            Tell us a little about yourself and why you would
+                            like to try AskMyData. Requests are reviewed
+                            before an invitation is issued.
+                        {% endblocktranslate %}
+                    </p>
+                </header>
+
+                <div class="access-request-grid">
+                    <div class="demo-information">
+                        <section>
+                            <h2>{% translate "What can you do in the demo?" %}</h2>
+
+                            <p>
+                                {% blocktranslate trimmed %}
+                                    Explore AskMyData using preconfigured datasets.
+                                {% endblocktranslate %}
+                            </p>
+
+                            <ul class="demo-feature-list">
+                                <li>{% translate "Create a project using a preconfigured data source." %}</li>
+                                <li>{% translate "Choose which tables to explore." %}</li>
+                                <li>{% translate "Ask questions in natural language and explore the results." %}</li>
+                                <li>{% translate "View generated SQL in Developer Mode." %}</li>
+                                <li>{% translate "Review your conversation history." %}</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h2>{% translate "Demo limitations" %}</h2>
+
+                            <ul>
+                                <li>{% translate "Access is granted by invitation." %}</li>
+                                <li>{% translate "Only preconfigured data sources are available." %}</li>
+                                <li>{% translate "Queries are restricted to read-only operations." %}</li>
+                                <li>{% translate "Usage limits apply to keep the demo available to everyone." %}</li>
+                            </ul>
+                        </section>
+                    </div>
+
+                    <form method="post" class="auth-form access-request-form">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-error">
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                            <div class="form-field">
+                                <label
+                                    for="{{ field.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    {{ field.label }}
+                                </label>
+
+                                {% if field.name == "reason" %}
+                                    <textarea
+                                        name="{{ field.html_name }}"
+                                        id="{{ field.id_for_label }}"
+                                        class="form-textarea"
+                                        rows="5"
+                                        required
+                                        {% if field.errors %}aria-invalid="true"{% endif %}
+                                    >{{ field.value|default_if_none:'' }}</textarea>
+                                {% else %}
+                                    <input
+                                        type="{% if field.name == 'email' %}email{% else %}text{% endif %}"
+                                        name="{{ field.html_name }}"
+                                        id="{{ field.id_for_label }}"
+                                        value="{{ field.value|default_if_none:'' }}"
+                                        class="form-input"
+                                        {% if field.name == "first_name" %}autocomplete="given-name"{% endif %}
+                                        {% if field.name == "last_name" %}autocomplete="family-name"{% endif %}
+                                        {% if field.name == "email" %}autocomplete="email"{% endif %}
+                                        required
+                                        {% if field.errors %}aria-invalid="true"{% endif %}
+                                    >
+                                {% endif %}
+
+                                {% for error in field.errors %}
+                                    <span class="form-error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary auth-submit"
+                        >
+                            {% translate "Submit request" %}
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

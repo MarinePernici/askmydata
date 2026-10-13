@@ -1,0 +1,55 @@
+{% load i18n static %}
+{% get_current_language as LANGUAGE_CODE %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% translate "Request received" %} · AskMyData</title>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="auth-page">
+    <main class="auth-layout">
+        <div class="auth-container">
+            <a
+                href="{% url 'landing' %}"
+                class="auth-brand"
+                aria-label="AskMyData"
+            >
+                <img
+                    src="{% static 'images/askmydata-logo.png' %}"
+                    alt=""
+                    class="auth-brand-logo"
+                >
+                <span>AskMyData</span>
+            </a>
+
+            <section class="card auth-card">
+                <header class="auth-header">
+                    <h1 class="auth-title">
+                        {% translate "Request received" %}
+                    </h1>
+
+                    <p class="auth-description">
+                        {% blocktranslate trimmed %}
+                            Your access request has been submitted successfully.
+                            It will be reviewed before an invitation is issued.
+                        {% endblocktranslate %}
+                    </p>
+                </header>
+
+                <a
+                    href="{% url 'landing' %}"
+                    class="btn btn-primary auth-submit"
+                >
+                    {% translate "Back to home" %}
+                </a>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

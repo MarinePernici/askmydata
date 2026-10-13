@@ -293,3 +293,36 @@ class LanguageViewTests(TestCase):
 
         user.preferences.refresh_from_db()
         self.assertFalse(user.preferences.developer_mode)
+
+
+class SidebarAdminLinkTests(TestCase):
+    def test_superuser_can_see_admin_link(self):
+        user = get_user_model().objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("user-preferences"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'href="{reverse("admin:index")}"',
+        )
+
+    def test_regular_user_cannot_see_admin_link(self):
+        user = get_user_model().objects.create_user(
+            username="regular",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("user-preferences"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            f'href="{reverse("admin:index")}"',
+        )

@@ -727,33 +727,48 @@ Production-ready Portfolio
 
 Administrator
 
+### Secondary Actor
+
+Access requester or invitation recipient
+
 ### Goal
 
-Control access to the demonstration platform.
+Control access to the demonstration platform through reviewed access requests or direct administrator invitations.
 
 ### Preconditions
 
-- The administrator is authenticated.
-- The administrator has administrative privileges.
+- The administration interface is restricted to users with administrative privileges.
+- Public account registration is disabled.
 
 ### Main Success Scenario
 
-1. The administrator opens the administration interface.
-2. The administrator reviews users, invitations and access status.
-3. The administrator creates an invitation for a person they choose to authorize.
-4. The application generates a unique invitation link.
-5. The administrator retrieves the invitation link and transmits it outside AskMyData.
-6. A recipient holding a valid invitation opens the invitation link.
-7. The recipient creates an individual account.
-8. The invitation becomes accepted and cannot be reused.
-9. The new user can authenticate and access the demonstration platform.
+1. A person submits an access request with their first name, last name, email address and reason for requesting access.
+2. The application records the access request as pending.
+3. An administrator opens the administration interface and reviews pending access requests.
+4. The administrator approves an access request.
+5. The application marks the access request as approved and creates an invitation for its email address.
+6. The application generates a unique invitation link.
+7. The administrator retrieves the invitation link and transmits it outside AskMyData.
+8. The recipient opens the valid invitation link.
+9. The recipient creates an individual account.
+10. The invitation becomes accepted and cannot be reused.
+11. The new user can authenticate and access the demonstration platform.
 
 ### Alternative Flows
 
-#### Unauthorized access attempt
+#### Direct administrator invitation
 
-1. The application denies access.
-2. The attempt is logged.
+1. The administrator creates an invitation directly for an email address without an AccessRequest.
+2. The application generates a unique invitation link.
+3. The administrator retrieves and transmits the invitation link outside AskMyData.
+4. The recipient follows the normal invitation acceptance flow.
+
+#### Access request rejected
+
+1. The administrator reviews a pending access request.
+2. The administrator rejects the request.
+3. The application marks the request as rejected.
+4. No invitation or user account is created.
 
 #### Invitation revoked or expired
 
@@ -767,15 +782,22 @@ Control access to the demonstration platform.
 2. The administrator activates or disables access as required.
 3. The updated access status is applied.
 
+#### Unauthorized administrative access attempt
+
+1. A non-administrator attempts to access an administrative function.
+2. The application denies access.
+
 ### Success Result
 
-Only authorized users can access the platform.
+Only users authorized through a valid invitation can create an account and access the platform.
 
 ### Related Requirements
 
 - `FR-ADMIN-001`
 - `FR-ADMIN-002`
 - `FR-ADMIN-003`
+- `FR-ADMIN-004`
+- `FR-ADMIN-005`
 
 ---
 
