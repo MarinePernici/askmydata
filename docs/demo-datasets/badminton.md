@@ -6,6 +6,7 @@ Relational PostgreSQL dataset containing international badminton match results f
 
 The dataset is used to demonstrate natural-language querying, SQL generation, relational joins, and schema exploration in AskMyData.
 
+
 ## Data provenance
 
 - Source repository: https://github.com/SahilMotyar/bwf-match-data
@@ -13,9 +14,21 @@ The dataset is used to demonstrate natural-language querying, SQL generation, re
 - Records: 105,147 matches
 - Disciplines: MS, WS, MD, WD, XD
 
-The source repository does not specify an explicit reuse license. The dataset must not be described as openly licensed. Its use in the restricted demonstration does not establish redistribution rights.
+## Licensing and public demo usage
 
-Raw source files and PostgreSQL database dumps are excluded from the public Git repository.
+The source repository does not specify an explicit license granting reuse or redistribution rights. The dataset must not be described as openly licensed.
+
+The project has decided to include this dataset in the invitation-only AskMyData Public Demo, acknowledging and accepting the associated legal uncertainty.
+
+The following precautions apply:
+
+- Original source files and PostgreSQL database dumps are excluded from the public GitHub repository.
+- Demo access is restricted to invited users.
+- Database access uses a dedicated read-only PostgreSQL role.
+- Dataset provenance and licensing uncertainty remain documented.
+- The dataset can be disabled or removed if necessary.
+
+These precautions limit exposure but do not establish legal authorization to reuse or redistribute the data.
 
 ## Relational model
 
