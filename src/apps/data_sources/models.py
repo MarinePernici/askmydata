@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.data_sources.encryption import CredentialCipher
 from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.projects.models import Project
+from config.demo_datasets import get_demo_dataset_connection
 from connectors.postgresql import PostgreSQLConnectionConfig
 
 
@@ -35,6 +36,13 @@ class DataSource(models.Model):
         max_length=32,
         choices=SourceType.choices,
         default=SourceType.POSTGRESQL,
+    )
+
+    demo_dataset_key = models.CharField(
+        max_length=32,
+        null=True,
+        blank=True,
+        default=None,
     )
 
     connection_status = models.CharField(
@@ -97,6 +105,25 @@ class DataSource(models.Model):
         )
 
     def to_connection_config(self) -> PostgreSQLConnectionConfig:
+        if settings.PUBLIC_DEMO_MODE:
+            if not self.demo_dataset_key:
+                raise DataSourceConfigurationError(
+                    "Demo data source has no dataset assigned."
+                )
+
+            try:
+                connection = get_demo_dataset_connection(self.demo_dataset_key)
+            except ValueError as exc:
+                raise DataSourceConfigurationError("Invalid demo dataset.") from exc
+
+            return PostgreSQLConnectionConfig(
+                host=connection["host"],
+                port=connection["port"],
+                database=connection["database"],
+                user=connection["username"],
+                password=connection["password"],
+            )
+
         if not self.is_configured():
             raise DataSourceConfigurationError("Data source is not fully configured.")
 

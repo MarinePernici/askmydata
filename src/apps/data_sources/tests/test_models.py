@@ -1,5 +1,7 @@
+from unittest.mock import patch
+
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
@@ -129,6 +131,65 @@ class DataSourceModelTests(TestCase):
 
         data_source = DataSource.objects.create(
             project=project,
+        )
+
+        with self.assertRaises(DataSourceConfigurationError):
+            data_source.to_connection_config()
+
+    @override_settings(PUBLIC_DEMO_MODE=True)
+    @patch("apps.data_sources.models.get_demo_dataset_connection")
+    def test_demo_connection_uses_server_configuration(self, resolver):
+        resolver.return_value = {
+            "host": "trusted-demo-host",
+            "port": 5432,
+            "database": "trusted-demo-db",
+            "username": "trusted-readonly",
+            "password": "server-secret",
+        }
+
+        project = create_test_project(name="Demo project")
+
+        data_source = DataSource(
+            project=project,
+            demo_dataset_key="eeg",
+            host="untrusted-host",
+            port=9999,
+            database="untrusted-db",
+            username="untrusted-user",
+        )
+        data_source.set_password("untrusted-password")
+
+        config = data_source.to_connection_config()
+
+        resolver.assert_called_once_with("eeg")
+        self.assertEqual(config.host, "trusted-demo-host")
+        self.assertEqual(config.port, 5432)
+        self.assertEqual(config.database, "trusted-demo-db")
+        self.assertEqual(config.user, "trusted-readonly")
+        self.assertEqual(config.password, "server-secret")
+
+    @override_settings(PUBLIC_DEMO_MODE=True)
+    def test_demo_connection_rejects_missing_dataset(self):
+        project = create_test_project(name="Demo project")
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            database="arbitrary-db",
+            username="readonly",
+        )
+        data_source.set_password("secret")
+
+        with self.assertRaises(DataSourceConfigurationError):
+            data_source.to_connection_config()
+
+    @override_settings(PUBLIC_DEMO_MODE=True)
+    def test_demo_connection_rejects_unknown_dataset(self):
+        project = create_test_project(name="Demo project")
+
+        data_source = DataSource(
+            project=project,
+            demo_dataset_key="unknown",
         )
 
         with self.assertRaises(DataSourceConfigurationError):

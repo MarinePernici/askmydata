@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.utils import timezone
 
 from apps.catalogs.services import CatalogService
@@ -7,6 +8,7 @@ from apps.data_sources.exceptions import DataSourceConnectionError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
+from config.demo_datasets import get_demo_dataset_connection
 from connectors.postgresql import (
     PostgreSQLConnectionConfig,
     PostgreSQLConnector,
@@ -70,7 +72,25 @@ class DataSourceService:
         database: str,
         username: str,
         password: str,
+        demo_dataset_key: str | None = None,
     ) -> DataSource:
+        if settings.PUBLIC_DEMO_MODE:
+            if not demo_dataset_key:
+                raise DataSourceConnectionError("A demo dataset must be selected.")
+
+            try:
+                connection = get_demo_dataset_connection(demo_dataset_key)
+            except ValueError as exc:
+                raise DataSourceConnectionError("Invalid demo dataset.") from exc
+
+            host = connection["host"]
+            port = connection["port"]
+            database = connection["database"]
+            username = connection["username"]
+            password = connection["password"]
+        else:
+            demo_dataset_key = None
+
         data_source, _ = DataSource.objects.get_or_create(
             project=project,
         )
@@ -79,6 +99,7 @@ class DataSourceService:
         data_source.port = port
         data_source.database = database
         data_source.username = username
+        data_source.demo_dataset_key = demo_dataset_key
         data_source.connection_status = DataSource.ConnectionStatus.NOT_TESTED
         data_source.set_password(password)
 
@@ -88,6 +109,7 @@ class DataSourceService:
                 "port",
                 "database",
                 "username",
+                "demo_dataset_key",
                 "connection_status",
                 "encrypted_password",
                 "updated_at",
@@ -107,7 +129,23 @@ class DataSourceService:
         database: str,
         username: str,
         password: str,
+        demo_dataset_key: str | None = None,
     ) -> DataSource:
+        if settings.PUBLIC_DEMO_MODE:
+            if not demo_dataset_key:
+                raise DataSourceConnectionError("A demo dataset must be selected.")
+
+            try:
+                connection = get_demo_dataset_connection(demo_dataset_key)
+            except ValueError as exc:
+                raise DataSourceConnectionError("Invalid demo dataset.") from exc
+
+            host = connection["host"]
+            port = connection["port"]
+            database = connection["database"]
+            username = connection["username"]
+            password = connection["password"]
+
         config = PostgreSQLConnectionConfig(
             host=host,
             port=port,
@@ -133,6 +171,7 @@ class DataSourceService:
             database=database,
             username=username,
             password=password,
+            demo_dataset_key=demo_dataset_key,
         )
 
         data_source.connection_status = DataSource.ConnectionStatus.CONNECTED

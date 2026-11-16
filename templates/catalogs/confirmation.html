@@ -96,12 +96,24 @@
 
                         <div class="confirmation-detail">
                             <dt>{% translate "Host" %}</dt>
-                            <dd>{{ data_source.host }}</dd>
+                            <dd>
+                                {% if demo_mode %}
+                                    demo-postgresql
+                                {% else %}
+                                    {{ data_source.host }}
+                                {% endif %}
+                            </dd>
                         </div>
 
                         <div class="confirmation-detail">
                             <dt>{% translate "Database" %}</dt>
-                            <dd>{{ data_source.database }}</dd>
+                            <dd>
+                                {% if demo_mode %}
+                                    {% translate "Demo dataset" %}
+                                {% else %}
+                                    {{ data_source.database }}
+                                {% endif %}
+                            </dd>
                         </div>
                     </dl>
                 </section>

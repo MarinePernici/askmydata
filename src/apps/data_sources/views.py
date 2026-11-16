@@ -1,4 +1,8 @@
+import logging
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
 from django.shortcuts import redirect, render
 
@@ -11,11 +15,14 @@ from apps.projects.exceptions import (
 )
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
+from config.demo_datasets import get_demo_dataset_connection
 
 from .exceptions import DataSourceConnectionError
-from .forms import DataSourceForm
+from .forms import DataSourceForm, DemoDataSourceForm
 from .models import DataSource
 from .services import DataSourceService
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -38,40 +45,73 @@ def data_source_configure(request, project_id):
             project_id=project.id,
         )
 
+    demo_mode = settings.PUBLIC_DEMO_MODE
+    form_class = DemoDataSourceForm if demo_mode else DataSourceForm
+
     if request.method == "POST":
-        form = DataSourceForm(request.POST)
+        form = form_class(request.POST)
 
         if form.is_valid():
             try:
+                if demo_mode:
+                    dataset_key = form.cleaned_data["dataset"]
+                    connection = get_demo_dataset_connection(dataset_key)
+                    connection["demo_dataset_key"] = dataset_key
+                else:
+                    connection = {
+                        field: form.cleaned_data[field]
+                        for field in (
+                            "host",
+                            "port",
+                            "database",
+                            "username",
+                            "password",
+                        )
+                    }
+
                 DataSourceService().configure_and_test(
                     project=project,
-                    host=form.cleaned_data["host"],
-                    port=form.cleaned_data["port"],
-                    database=form.cleaned_data["database"],
-                    username=form.cleaned_data["username"],
-                    password=form.cleaned_data["password"],
+                    **connection,
                 )
+
+            except ImproperlyConfigured:
+                logger.exception(
+                    "Demo dataset configuration is incomplete.",
+                    extra={
+                        "event": "demo_dataset.configuration_error",
+                        "project_id": str(project.id),
+                    },
+                )
+                form.add_error(
+                    None,
+                    "The selected demo dataset is temporarily unavailable.",
+                )
+
             except DataSourceConnectionError as exc:
                 form.add_error(None, str(exc))
+
             else:
                 return redirect(
                     "catalog-scope",
                     project_id=project.id,
                 )
     else:
-        try:
-            data_source = project.data_source
-        except DataSource.DoesNotExist:
-            form = DataSourceForm()
+        if demo_mode:
+            form = DemoDataSourceForm()
         else:
-            form = DataSourceForm(
-                initial={
-                    "host": data_source.host,
-                    "port": data_source.port,
-                    "database": data_source.database,
-                    "username": data_source.username,
-                }
-            )
+            try:
+                data_source = project.data_source
+            except DataSource.DoesNotExist:
+                form = DataSourceForm()
+            else:
+                form = DataSourceForm(
+                    initial={
+                        "host": data_source.host,
+                        "port": data_source.port,
+                        "database": data_source.database,
+                        "username": data_source.username,
+                    }
+                )
 
     return render(
         request,
@@ -80,6 +120,7 @@ def data_source_configure(request, project_id):
             "project": project,
             "form": form,
             "creation_mode": True,
+            "demo_mode": demo_mode,
         },
     )
 
@@ -111,6 +152,7 @@ def data_overview(request, project_id):
             "project": project,
             "data_source": data_source,
             "selected_tables_count": selected_tables_count,
+            "demo_mode": settings.PUBLIC_DEMO_MODE,
         },
     )
 
@@ -118,6 +160,9 @@ def data_overview(request, project_id):
 @login_required
 def data_test_connection(request, project_id):
     if request.method != "POST":
+        raise Http404
+
+    if settings.PUBLIC_DEMO_MODE:
         raise Http404
 
     try:

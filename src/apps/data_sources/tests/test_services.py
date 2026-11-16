@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase, override_settings
 
 from apps.catalogs.models import KnowledgeCatalog, SchemaSnapshot
 from apps.data_sources.exceptions import DataSourceConnectionError
@@ -395,6 +396,119 @@ class DataSourceServiceTests(TestCase):
                 database="sales",
                 username="writable",
                 password="secret",
+            )
+
+        self.assertFalse(DataSource.objects.filter(project=project).exists())
+
+    @override_settings(PUBLIC_DEMO_MODE=True)
+    @patch("apps.data_sources.services.get_demo_dataset_connection")
+    def test_demo_configuration_rejects_missing_server_password(self, resolver):
+        resolver.side_effect = ImproperlyConfigured(
+            "Missing password configuration for demo dataset: pagila"
+        )
+
+        service = DataSourceService(
+            connector_class=SuccessfulConnector,
+        )
+
+        original_host = self.data_source.host
+        original_database = self.data_source.database
+        original_password = self.data_source.encrypted_password
+
+        with self.assertRaises(ImproperlyConfigured):
+            service.configure_and_test(
+                project=self.project,
+                host="attacker.example.com",
+                port=9999,
+                database="attacker_db",
+                username="attacker",
+                password="attacker-secret",
+                demo_dataset_key="pagila",
+            )
+
+        resolver.assert_called_once_with("pagila")
+
+        self.data_source.refresh_from_db()
+
+        self.assertEqual(self.data_source.host, original_host)
+        self.assertEqual(self.data_source.database, original_database)
+        self.assertEqual(self.data_source.encrypted_password, original_password)
+        self.assertIsNone(self.data_source.demo_dataset_key)
+
+
+@override_settings(PUBLIC_DEMO_MODE=True)
+class DemoDataSourceServiceTests(TestCase):
+    @patch("apps.data_sources.services.get_demo_dataset_connection")
+    def test_demo_configuration_ignores_arbitrary_connection_parameters(
+        self,
+        resolver,
+    ):
+        resolver.return_value = {
+            "host": "trusted-demo-host",
+            "port": 5432,
+            "database": "pagila",
+            "username": "pagila_readonly",
+            "password": "server-secret",
+        }
+
+        project = create_test_project(name="Demo project")
+        service = DataSourceService(connector_class=SuccessfulConnector)
+
+        data_source = service.configure_and_test(
+            project=project,
+            host="attacker-host",
+            port=9999,
+            database="attacker-db",
+            username="attacker",
+            password="attacker-password",
+            demo_dataset_key="pagila",
+        )
+
+        data_source.refresh_from_db()
+
+        self.assertEqual(data_source.demo_dataset_key, "pagila")
+        self.assertEqual(data_source.host, "trusted-demo-host")
+        self.assertEqual(data_source.port, 5432)
+        self.assertEqual(data_source.database, "pagila")
+        self.assertEqual(data_source.username, "pagila_readonly")
+        self.assertEqual(data_source.get_password(), "server-secret")
+        self.assertEqual(
+            data_source.connection_status, DataSource.ConnectionStatus.CONNECTED
+        )
+
+    @patch("apps.data_sources.services.get_demo_dataset_connection")
+    def test_demo_configuration_rejects_missing_dataset(self, resolver):
+        project = create_test_project(name="Demo project")
+        service = DataSourceService(connector_class=SuccessfulConnector)
+
+        with self.assertRaises(DataSourceConnectionError):
+            service.configure_and_test(
+                project=project,
+                host="attacker-host",
+                port=5432,
+                database="attacker-db",
+                username="attacker",
+                password="attacker-password",
+            )
+
+        resolver.assert_not_called()
+        self.assertFalse(DataSource.objects.filter(project=project).exists())
+
+    @patch("apps.data_sources.services.get_demo_dataset_connection")
+    def test_demo_configuration_rejects_unknown_dataset(self, resolver):
+        resolver.side_effect = ValueError("Unknown demo dataset.")
+        project = create_test_project(name="Demo project")
+        service = DataSourceService(connector_class=SuccessfulConnector)
+
+        with self.assertRaises(DataSourceConnectionError):
+            service.configure_and_test(
+                project=project,
+                host="attacker-host",
+                port=5432,
+                database="attacker-db",
+                username="attacker",
+                password="attacker-password",
+                demo_dataset_key="unknown",
             )
 
         self.assertFalse(DataSource.objects.filter(project=project).exists())

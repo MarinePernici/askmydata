@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.catalogs.exceptions import (
@@ -853,6 +853,108 @@ class CatalogConfirmationViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+    @override_settings(PUBLIC_DEMO_MODE=True)
+    @patch(
+        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
+        return_value={"public": ["customers"]},
+    )
+    def test_demo_confirmation_hides_connection_details(
+        self,
+        discover_available_tables,
+    ):
+        user = get_user_model().objects.create_user(
+            username="demo-confirmation-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Demo project",
+        )
+
+        DataSource.objects.create(
+            project=project,
+            demo_dataset_key="pagila",
+            host="internal-secret-host",
+            database="internal-secret-database",
+            username="pagila_readonly",
+        )
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {"schema": "public", "table": "customers"},
+            ],
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["demo_mode"])
+        self.assertContains(response, "demo-postgresql")
+        self.assertContains(response, "Demo dataset")
+        self.assertNotContains(response, "internal-secret-host")
+        self.assertNotContains(response, "internal-secret-database")
+
+        discover_available_tables.assert_called_once_with(project)
+
+    @override_settings(PUBLIC_DEMO_MODE=False)
+    @patch(
+        "apps.catalogs.scope_service.CatalogScopeService.discover_available_tables",
+        return_value={"public": ["customers"]},
+    )
+    def test_standard_confirmation_displays_connection_details(
+        self,
+        discover_available_tables,
+    ):
+        user = get_user_model().objects.create_user(
+            username="standard-confirmation-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Standard project",
+        )
+
+        DataSource.objects.create(
+            project=project,
+            host="standard-db-host",
+            database="standard-database",
+            username="readonly",
+        )
+
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {"schema": "public", "table": "customers"},
+            ],
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["demo_mode"])
+        self.assertContains(response, "standard-db-host")
+        self.assertContains(response, "standard-database")
+        self.assertNotContains(response, "demo-postgresql")
+
+        discover_available_tables.assert_called_once_with(project)
 
 
 class CatalogDetailViewTests(TestCase):

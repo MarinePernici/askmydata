@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -242,6 +243,7 @@ def catalog_confirmation(request, project_id):
             "selected_tables": selected_tables,
             "available_tables_count": available_tables_count,
             "creation_mode": True,
+            "demo_mode": settings.PUBLIC_DEMO_MODE,
         },
     )
 

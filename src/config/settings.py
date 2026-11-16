@@ -21,6 +21,7 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     OTEL_ENABLED=(bool, False),
     OTEL_TRACES_SAMPLER_ARG=(float, 1.0),
+    PUBLIC_DEMO_MODE=(bool, False),
 )
 
 environ.Env.read_env(BASE_DIR / ".env")
@@ -46,6 +47,9 @@ OTEL_TRACES_SAMPLER_ARG = env("OTEL_TRACES_SAMPLER_ARG")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DJANGO_DEBUG")
+PUBLIC_DEMO_MODE = env("PUBLIC_DEMO_MODE")
+DEMO_DB_HOST = env("DEMO_DB_HOST", default="demo-db")
+DEMO_DB_PORT = env.int("DEMO_DB_PORT", default=5432)
 
 ALLOWED_HOSTS = []
 
