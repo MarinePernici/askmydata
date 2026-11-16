@@ -328,6 +328,7 @@ Detailed project documentation is available in [`docs/`](docs/):
 - [Design System](docs/design-system.md)
 - [Architecture Decision Records](docs/adrs/README.md)
 - [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md)
+- [Demo Datasets — EEG, Pagila, Olist, Badminton](docs/demo-datasets/README.md)
 - [PlantUML Diagrams](docs/diagrams/README.md)
 
 The documentation records the main product, domain, architectural, and technical decisions made throughout the project.
