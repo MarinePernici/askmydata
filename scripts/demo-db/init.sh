@@ -8,10 +8,11 @@ set -Eeuo pipefail
 : "${PAGILA_READONLY_PASSWORD:?PAGILA_READONLY_PASSWORD is required}"
 : "${EEG_DEMO_READONLY_PASSWORD:?EEG_DEMO_READONLY_PASSWORD is required}"
 : "${OLIST_READONLY_PASSWORD:?OLIST_READONLY_PASSWORD is required}"
+: "${BADMINTON_READONLY_PASSWORD:?BADMINTON_READONLY_PASSWORD is required}"
 
 DEMO_DATA_DIR="/demo-data"
 
-for dataset in pagila eeg_demo olist; do
+for dataset in pagila eeg_demo olist badminton; do
     archive="${DEMO_DATA_DIR}/${dataset}.sql.gz"
 
     if [[ ! -s "$archive" ]]; then
@@ -34,6 +35,9 @@ echo "Creating demo databases and read-only roles..."
     printf '\\set olist_password %s\n' \
         "$(printf '%s' "$OLIST_READONLY_PASSWORD" | base64 -w 0)"
 
+    printf '\\set badminton_password %s\n' \
+        "$(printf '%s' "$BADMINTON_READONLY_PASSWORD" | base64 -w 0)"
+
     cat <<'SQL'
 SELECT format(
     'CREATE ROLE pagila_readonly LOGIN PASSWORD %L',
@@ -50,9 +54,15 @@ SELECT format(
     convert_from(decode(:'olist_password', 'base64'), 'UTF8')
 ) \gexec
 
+SELECT format(
+    'CREATE ROLE badminton_readonly LOGIN PASSWORD %L',
+    convert_from(decode(:'badminton_password', 'base64'), 'UTF8')
+) \gexec
+
 CREATE DATABASE pagila;
 CREATE DATABASE askmydata_eeg_public_demo;
 CREATE DATABASE olist;
+CREATE DATABASE badminton;
 SQL
 } | psql -X -v ON_ERROR_STOP=1 \
     --username "$POSTGRES_USER" \
@@ -110,5 +120,6 @@ SQL
 restore_dataset "pagila" "pagila.sql.gz" "pagila_readonly"
 restore_dataset "askmydata_eeg_public_demo" "eeg_demo.sql.gz" "eeg_demo_readonly"
 restore_dataset "olist" "olist.sql.gz" "olist_readonly"
+restore_dataset "badminton" "badminton.sql.gz" "badminton_readonly"
 
 echo "Demo databases initialized successfully."
