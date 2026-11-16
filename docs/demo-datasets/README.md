@@ -28,6 +28,16 @@ Each database is intended to be configured as an independent data source in AskM
 
 The demonstration database environment is separate from the application's development database.
 
+## Public Demo dataset scope
+
+The four datasets listed above have been selected for the initial AskMyData Public Demo.
+
+The Badminton dataset is included despite the absence of an explicit reuse license. This is a documented project decision, not a claim of legal authorization.
+
+Access to the demo will be restricted to invited users. Original source files and database dumps will not be distributed through the public Git repository.
+
+See [Badminton](badminton.md) for provenance, limitations, and licensing considerations.
+
 ## Database initialization
 
 The initialization script is located at:
@@ -72,6 +82,10 @@ The absence of an archive from Git does not by itself establish permission to re
 
 ## Current status
 
-The four PostgreSQL demo datasets have been prepared and their initialization process has been tested.
+The four PostgreSQL demo datasets have been prepared, and their initialization process has been tested.
 
-The public demonstration environment is not yet deployed. Its final scope, access restrictions, and operational configuration will be established during the production-readiness phase.
+The dataset selection for the initial Public Demo is finalized.
+
+The dedicated demo database service has not yet been integrated into the production Docker configuration.
+
+The public demonstration environment is not yet deployed. Application integration, usage limits, production security configuration, and deployment validation remain to be completed.
