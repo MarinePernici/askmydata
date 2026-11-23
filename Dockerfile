@@ -24,4 +24,10 @@ RUN msgfmt locale/fr/LC_MESSAGES/django.po \
 
 WORKDIR /app/src
 
+RUN DJANGO_SECRET_KEY=build-only-not-for-runtime \
+    DATASOURCE_ENCRYPTION_KEY=build-only-not-for-runtime \
+    OPENAI_API_KEY=build-only-not-for-runtime \
+    DATABASE_URL=sqlite:////tmp/askmydata-build.sqlite3 \
+    python manage.py collectstatic --noinput
+
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
