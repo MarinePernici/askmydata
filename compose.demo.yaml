@@ -1,0 +1,40 @@
+# compose.demo.yaml
+services:
+  demo-db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: demo_admin
+      POSTGRES_PASSWORD: ${DEMO_DB_ADMIN_PASSWORD:?Required}
+      POSTGRES_DB: postgres
+      PAGILA_READONLY_PASSWORD: ${DEMO_PAGILA_PASSWORD:?Required}
+      EEG_DEMO_READONLY_PASSWORD: ${DEMO_EEG_PASSWORD:?Required}
+      OLIST_READONLY_PASSWORD: ${DEMO_OLIST_PASSWORD:?Required}
+      BADMINTON_READONLY_PASSWORD: ${DEMO_BADMINTON_PASSWORD:?Required}
+    volumes:
+      - demo_postgres_data:/var/lib/postgresql/data
+      - ./scripts/demo-db/init.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+      - ./backups/demo-db:/demo-data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo_admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    ports: !override
+      - "8001:8000"
+    environment:
+      PUBLIC_DEMO_MODE: "True"
+      DEMO_DB_HOST: demo-db
+      DEMO_DB_PORT: "5432"
+      DEMO_EEG_PASSWORD: ${DEMO_EEG_PASSWORD:?Required}
+      DEMO_PAGILA_PASSWORD: ${DEMO_PAGILA_PASSWORD:?Required}
+      DEMO_OLIST_PASSWORD: ${DEMO_OLIST_PASSWORD:?Required}
+      DEMO_BADMINTON_PASSWORD: ${DEMO_BADMINTON_PASSWORD:?Required}
+    depends_on:
+      demo-db:
+        condition: service_healthy
+
+volumes:
+  demo_postgres_data:

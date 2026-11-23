@@ -1,4 +1,5 @@
 import logging
+import time
 
 from django.utils import timezone
 
@@ -70,6 +71,7 @@ class QuestionRunService:
             question=question,
         )
 
+        started_perf_counter = time.perf_counter()
         question_run = QuestionRun.objects.create(
             project=project,
             conversation=conversation,
@@ -88,6 +90,7 @@ class QuestionRunService:
                 question=question,
                 history=history,
                 question_run=question_run,
+                started_perf_counter=started_perf_counter,
             )
 
     def _execute_run(
@@ -97,6 +100,7 @@ class QuestionRunService:
         question: str,
         history,
         question_run: QuestionRun,
+        started_perf_counter: float,
     ) -> QueryRunResult | ClarificationResult | CannotAnswerResult:
         try:
             catalog = self._catalog_reader.get_current(
@@ -135,7 +139,10 @@ class QuestionRunService:
                 question_run.assistant_message = assistant_message
                 question_run.status = QuestionRun.Status.NEEDS_CLARIFICATION
                 self._apply_llm_usage(question_run, result.usages)
-                self._complete_run_timing(question_run)
+                self._complete_run_timing(
+                    question_run,
+                    started_perf_counter=started_perf_counter,
+                )
 
                 question_run.save(
                     update_fields=[
@@ -161,7 +168,10 @@ class QuestionRunService:
                 question_run.assistant_message = assistant_message
                 question_run.status = QuestionRun.Status.REJECTED
                 self._apply_llm_usage(question_run, result.usages)
-                self._complete_run_timing(question_run)
+                self._complete_run_timing(
+                    question_run,
+                    started_perf_counter=started_perf_counter,
+                )
 
                 question_run.save(
                     update_fields=[
@@ -189,7 +199,10 @@ class QuestionRunService:
 
             question_run.assistant_message = assistant_message
             question_run.status = QuestionRun.Status.FAILED
-            self._complete_run_timing(question_run)
+            self._complete_run_timing(
+                question_run,
+                started_perf_counter=started_perf_counter,
+            )
             question_run.error_code = exc.__class__.__name__
             question_run.error_message = str(exc)
             question_run.save(
@@ -216,7 +229,10 @@ class QuestionRunService:
 
             question_run.assistant_message = assistant_message
             question_run.status = QuestionRun.Status.FAILED
-            self._complete_run_timing(question_run)
+            self._complete_run_timing(
+                question_run,
+                started_perf_counter=started_perf_counter,
+            )
             question_run.error_code = exc.__class__.__name__
             question_run.error_message = str(exc)
 
@@ -250,7 +266,10 @@ class QuestionRunService:
         question_run.assistant_message = assistant_message
         question_run.status = QuestionRun.Status.COMPLETED
         self._apply_llm_usage(question_run, result.usages)
-        self._complete_run_timing(question_run)
+        self._complete_run_timing(
+            question_run,
+            started_perf_counter=started_perf_counter,
+        )
         question_run.row_count = len(result.execution.rows)
         question_run.save(
             update_fields=[
@@ -268,10 +287,14 @@ class QuestionRunService:
         return result
 
     @staticmethod
-    def _complete_run_timing(question_run: QuestionRun) -> None:
+    def _complete_run_timing(
+        question_run: QuestionRun,
+        started_perf_counter: float,
+    ) -> None:
         question_run.completed_at = timezone.now()
-        question_run.latency_ms = int(
-            (question_run.completed_at - question_run.started_at).total_seconds() * 1000
+        question_run.latency_ms = max(
+            0,
+            int((time.perf_counter() - started_perf_counter) * 1000),
         )
 
         record_question_run_metrics(

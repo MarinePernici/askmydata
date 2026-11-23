@@ -41,6 +41,7 @@ class FailingConnector:
         return False
 
 
+@override_settings(PUBLIC_DEMO_MODE=False)
 class DataSourceServiceTests(TestCase):
     def setUp(self):
         self.project = create_test_project(

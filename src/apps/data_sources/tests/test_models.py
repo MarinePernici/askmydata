@@ -8,6 +8,7 @@ from apps.data_sources.models import DataSource
 from apps.projects.tests.factories import create_test_project
 
 
+@override_settings(PUBLIC_DEMO_MODE=False)
 class DataSourceModelTests(TestCase):
     def test_data_source_has_not_tested_status_by_default(self):
         project = create_test_project(
