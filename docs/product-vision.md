@@ -87,7 +87,19 @@ The first public deployment of AskMyData will provide a controlled demonstration
 
 The application root (`/`) serves as the public AskMyData landing page for both authenticated and unauthenticated visitors. The authenticated application remains accessible through its dedicated application routes, starting with the project dashboard.
 
-Users will be able to create their own projects and follow the standard project creation workflow. During data source configuration, they will choose from a predefined set of approximately four to five demonstration PostgreSQL databases, each accompanied by a short description.
+Access to the application will be restricted to invited users.
+Visitors may submit an access request, while administrators
+retain control over access approval and invitation management.
+
+The Public Demo will enforce configurable usage limits to protect
+application resources and control AI-related costs.
+
+Users will be able to create their own projects and follow the standard project creation workflow. During data source configuration,
+they will choose from four predefined demonstration PostgreSQL databases: EEG, Pagila, Olist, and Badminton, each accompanied by
+a short description.
+
+Dataset provenance, licensing conditions, and limitations are
+documented in [Demo Datasets](demo-datasets/README.md).
 
 The standard PostgreSQL connection fields will remain visible to illustrate how a real data source is configured. In demo mode, these fields will be populated automatically and displayed as read-only. Actual credentials and secrets will remain exclusively server-side.
 

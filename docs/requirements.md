@@ -356,6 +356,18 @@ After selecting a demonstration data source, users shall continue through the st
 
 ---
 
+### FR-DEMO-004
+
+The public demonstration shall automatically populate the database
+connection fields associated with the selected demonstration data source.
+
+These fields shall be displayed as read-only, and database credentials
+and other connection secrets shall remain exclusively server-side.
+
+**Release:** Production-ready Portfolio
+
+---
+
 # 6. Non-functional Requirements
 
 ## Security

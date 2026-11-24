@@ -335,12 +335,15 @@ A DataSource provides access to the database explored by AskMyData.
 ### Main Attributes
 
 - id
-- name
 - source_type
+- demo_dataset_key (optional)
 - connection_status
-- encrypted_connection_configuration
-- last_connection_test_at
-- last_successful_connection_at
+- host
+- port
+- database
+- username
+- encrypted_password
+- last_connection_at
 - created_at
 - updated_at
 
@@ -362,14 +365,9 @@ A DataSource provides access to the database explored by AskMyData.
 
 ### Connection Status
 
-- not_configured
-- testing
+- not_tested
 - connected
-- unreachable
-- invalid_credentials
-- insufficient_permissions
-- error
-- disabled
+- failed
 
 ### Relationships
 
@@ -379,16 +377,26 @@ A DataSource:
 
 ### Business Rules
 
-- A project contains at most one DataSource in the MVP.
-- Connection credentials are always encrypted.
+- A project contains at most one DataSource.
+- Stored database passwords are encrypted.
 - Only read-only database accounts are supported.
 - The connection must be validated before schema discovery.
 - The source database remains the single source of truth.
 - AskMyData never modifies the external database.
 
+#### Public Demo
+
+- A DataSource must reference a predefined demonstration dataset through `demo_dataset_key`.
+- The dataset key must correspond to a valid server-side dataset configuration.
+- Connection parameters and credentials are resolved from the server-side demonstration dataset configuration.
+- User-provided connection parameters are not used in Public Demo mode.
+- Missing or invalid demonstration dataset keys prevent database connections.
+- Outside Public Demo mode, `demo_dataset_key` is optional and the standard stored connection configuration is used.
+
 ### Release
 
-Foundation
+- Foundation: standard PostgreSQL data source.
+- Production-ready Portfolio: predefined demonstration data sources.
 
 ---
 

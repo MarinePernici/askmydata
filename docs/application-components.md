@@ -335,7 +335,7 @@ The Projects component coordinates the project lifecycle but does not implement:
 
 Manages the configuration and validation of external data sources associated with projects.
 
-This capability may initially live inside the Projects module or as a dedicated Django application depending on implementation size.
+This capability is implemented as a dedicated Django application (`apps.data_sources`).
 
 ### Responsibilities
 
@@ -343,7 +343,10 @@ This capability may initially live inside the Projects module or as a dedicated 
 * validate connection parameters;
 * test connectivity;
 * verify required permissions;
-* encrypt connection configuration;
+* encrypt stored database passwords;
+* support predefined PostgreSQL data sources in Public Demo mode;
+* resolve demonstration connection parameters from server-side configuration;
+* prevent arbitrary external database connections in Public Demo mode;
 * update connection status;
 * prevent use of source credentials while a project is archived.
 
@@ -364,13 +367,14 @@ Examples:
 
 * connection configuration service;
 * connection validation service;
-* encrypted credential retrieval for authorized infrastructure services.
+* secure connection configuration retrieval for authorized infrastructure services.
 
 ### Dependencies
 
 * Projects component;
 * Connector abstraction;
 * encryption service;
+* server-side demonstration dataset configuration (`config.demo_datasets`);
 * application database.
 
 ### Does Not
@@ -933,7 +937,7 @@ Implements the Connector abstraction for PostgreSQL.
 
 * PostgreSQL driver;
 * SQLAlchemy Core or equivalent database toolkit;
-* encrypted connection configuration.
+* resolved PostgreSQL connection configuration.
 
 ### Security Requirements
 
@@ -1091,7 +1095,8 @@ This database is separate from the external source database explored by users.
 
 * users;
 * projects;
-* encrypted data source configurations;
+* data source configurations with encrypted passwords;
+* demonstration dataset references;
 * catalog scopes;
 * schema snapshots;
 * semantic metadata;
@@ -1112,7 +1117,7 @@ This database is separate from the external source database explored by users.
 
 * store external source data as a replacement for the source database;
 * store plain-text credentials;
-* act as the database queried by the AI engine unless used explicitly as a demonstration source.
+* act as the database queried by the AI engine.
 
 ---
 
@@ -1143,6 +1148,23 @@ Examples:
 Contains the business data explored through natural language.
 
 The two roles must remain clearly separated even when both use PostgreSQL during local development.
+
+### Public Demo Databases
+
+The Public Demo uses predefined PostgreSQL databases hosted in a dedicated
+PostgreSQL service, separate from the application database.
+
+Each demonstration dataset has its own database and dedicated read-only
+database account.
+
+The application resolves demonstration database connections from server-side
+configuration using the dataset reference associated with each project.
+
+Demonstration databases use the same PostgreSQL Connector and AI-assisted
+exploration workflow as standard external data sources.
+
+Dataset descriptions, provenance, and limitations are documented in
+[Demo Datasets](demo-datasets/README.md).
 
 ---
 

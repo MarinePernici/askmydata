@@ -177,6 +177,18 @@ This stage focuses on maintainability, deployment and operational excellence.
 - public demonstration instance
 - production configuration
 - secret management
+- HTTPS and reverse proxy configuration
+
+### Public Demo
+
+- public landing page
+- access request submission and administrator review
+- predefined PostgreSQL demonstration datasets
+- automatic server-side data source configuration
+- prevention of arbitrary external database connections
+- dedicated read-only demonstration database accounts
+- isolation between application and demonstration databases
+- configurable usage limits for application and AI resources
 
 ### Advanced Platform Features
 
@@ -232,7 +244,8 @@ The following features are intentionally excluded from the current portfolio roa
 - SSO
 - OAuth providers
 - billing
-- quotas
+- commercial subscription quotas
+- advanced usage accounting
 
 ## Advanced Catalog Management
 
@@ -281,4 +294,8 @@ The application demonstrates:
 - monitoring
 - structured logging
 - cloud deployment
+- secure public demonstration environment
+- controlled platform access
+- predefined read-only demonstration data sources
+- application and AI resource protection
 - production-inspired engineering practices

@@ -207,9 +207,11 @@ Create a new data exploration project connected to a PostgreSQL database and ini
 #### Public demonstration data source
 
 1. In the public demonstration, the user selects a PostgreSQL data source from the predefined demonstration data sources.
-2. The application uses the server-side connection configuration associated with the selected demonstration data source.
-3. Arbitrary external database connection parameters cannot be configured by the user.
-4. The application continues with connection validation, schema discovery and the standard project initialization workflow.
+2. The application automatically populates the connection fields associated with the selected demonstration data source.
+3. The connection fields are displayed as read-only, while database credentials and other connection secrets remain exclusively server-side.
+4. Arbitrary external database connection parameters cannot be configured by the user.
+5. The application uses the server-side connection configuration associated with the selected demonstration data source.
+6. The application continues with connection validation, schema discovery and the standard project initialization workflow.
 
 ### Success Result
 
@@ -234,6 +236,7 @@ The project contains:
 - `FR-DEMO-001`
 - `FR-DEMO-002`
 - `FR-DEMO-003`
+- `FR-DEMO-004`
 - `FR-KCAT-001`
 - `FR-KCAT-002`
 - `FR-KCAT-003`
