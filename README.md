@@ -171,14 +171,17 @@ At the latest recorded benchmark validation point, the full Docker test suite co
 
 See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
 
-The current automated Django test suite contains **430 passing tests** and is executed by GitHub Actions together with Ruff linting and formatting checks.
+The current automated Django test suite contains **more than 550 tests** and is executed by GitHub Actions together with Ruff linting and formatting checks.
 
 ## Local Development
 
 ### Prerequisites
 
+- Git
 - Docker
-- Docker Compose
+- Docker Compose v2.24.4 or later
+
+Python 3.13 and uv are additionally required for development activities outside Docker.
 
 ### Setup
 
@@ -190,33 +193,43 @@ cd AskMyData
 cp .env.example .env
 ```
 
-Review `.env` and configure the required values, including the LLM provider credentials.
+Review `.env` and configure the required values, including:
 
-OpenTelemetry is disabled by default. To export traces and metrics to an OTLP-compatible observability backend, configure:
+- Django secret key.
+- Data source encryption key.
+- PostgreSQL credentials and connection URLs.
+- OpenAI API key.
 
-```dotenv
-OTEL_ENABLED=True
-OTEL_SERVICE_NAME=askmydata
-OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otlp-endpoint
-OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20your-credentials
-OTEL_TRACES_SAMPLER_ARG=1.0
-```
+Secret generation and detailed environment configuration are documented in the [Deployment Guide](docs/deployment.md#4-environment-configuration).
 
-Telemetry is optional and must not affect application execution if the observability backend is unavailable.
+OpenTelemetry is optional and disabled by default. Configuration instructions are available in the [Observability](docs/deployment.md#9-observability) section of the Deployment Guide.
 
 Build and start the application:
 
 ```bash
-docker compose build
-docker compose up -d
+docker compose up -d --build
 docker compose exec web python manage.py migrate
+```
+
+Create the initial administrator account:
+
+```bash
+docker compose exec web python manage.py createsuperuser
 ```
 
 The application is then available at:
 
 ```text
-http://localhost:8000/projects/
+http://localhost:8000/
 ```
+
+The Django administration interface is available at:
+
+```text
+http://localhost:8000/admin/
+```
+
+For Local Public Demo and production deployment instructions, see the [Deployment Guide](docs/deployment.md).
 
 ### Tests
 
@@ -225,6 +238,8 @@ Run the complete test suite inside the application container:
 ```bash
 docker compose exec web python manage.py test
 ```
+
+The complete test suite requires a dedicated PostgreSQL integration test database configured as described below.
 
 ### Code Quality
 
@@ -247,11 +262,17 @@ uv run ruff format .
 docker compose down
 ```
 
+Persistent database volumes are preserved.
+
 ### Integration Test Database
 
-Tests that exercise a real external PostgreSQL source use dedicated `TEST_SOURCE_DB_*` environment variables.
+Tests that exercise a real external PostgreSQL source use dedicated `TEST_SOURCE_DB_*` environment variables and additional test database credentials.
 
-When the test database runs on the Docker host, the application container can access it through `host.docker.internal`.
+The integration test database and its dedicated roles must be initialized before running the complete test suite.
+
+The database initialization script is available at [`scripts/setup_test_database.sql`](scripts/setup_test_database.sql).
+
+When the test database runs on the Docker host, the application container can access it through `host.docker.internal`, provided that the host name is resolvable and PostgreSQL accepts the connection.
 
 The integration test database must use dedicated credentials and must not point to a production or personal database.
 
@@ -299,17 +320,29 @@ Already implemented:
 - OpenTelemetry metrics for Question Run throughput and duration, LLM token usage, and Query Engine step duration
 - optional OTLP export to an external observability backend, with telemetry disabled by default
 - application liveness and readiness health checks
-- Docker health monitoring for the application and internal PostgreSQL database
+- Docker health monitoring for the application and PostgreSQL services
+- public landing page
+- access request management and invitation-based registration
+- administration tools for controlled user access
+- Public Demo mode restricting data source configuration to predefined datasets
+- four demonstration datasets: EEG, Pagila, Olist, and Badminton
+- dedicated demonstration PostgreSQL service with dataset-specific read-only accounts
+- automated demonstration database initialization
+- production-oriented Docker configuration with Gunicorn, WhiteNoise, and Caddy
+- local validation of the Public Demo environment and production deployment components
+- deployment and operational documentation
 
 Remaining production-readiness work includes:
 
+- configurable application and LLM resource protection mechanisms
+- final security and telemetry privacy validation
+- review of dataset reuse and public exposure conditions
+- cloud hosting selection and server sizing
+- remote deployment and public HTTPS validation
+- production observability validation, error tracking, and alerting
+- database backup and recovery validation
 - continuous deployment
-- production error tracking and alerting
-- production-oriented Docker configuration
-- cloud deployment
-- secure public demo environment
-- predefined demonstration datasets
-- invitation-based access and administration tools
+- final end-to-end validation before opening the Public Demo to invited users
 
 ### Future Extensions
 
@@ -329,6 +362,7 @@ Detailed project documentation is available in [`docs/`](docs/):
 - [Architecture Decision Records](docs/adrs/README.md)
 - [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md)
 - [Demo Datasets — EEG, Pagila, Olist, Badminton](docs/demo-datasets/README.md)
+- [Deployment Guide](docs/deployment.md)
 - [PlantUML Diagrams](docs/diagrams/README.md)
 
 The documentation records the main product, domain, architectural, and technical decisions made throughout the project.

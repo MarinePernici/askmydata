@@ -171,14 +171,17 @@ Au dernier point de validation documenté dans le benchmark, la suite de tests c
 
 Voir le [benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md) pour la méthodologie complète, les scénarios, les résultats, les problèmes identifiés et leurs résolutions.
 
-La suite automatisée actuelle contient **430 tests Django réussis** et est exécutée par GitHub Actions avec les contrôles de linting et de formatage Ruff.
+La suite automatisée actuelle contient **plus de 550 tests** et est exécutée par GitHub Actions avec les contrôles de linting et de formatage Ruff.
 
 ## Développement local
 
 ### Prérequis
 
+- Git
 - Docker
-- Docker Compose
+- Docker Compose v2.24.4 ou ultérieur
+
+Python 3.13 et uv sont également nécessaires pour les activités de développement réalisées en dehors de Docker.
 
 ### Installation
 
@@ -190,33 +193,43 @@ cd AskMyData
 cp .env.example .env
 ```
 
-Vérifiez le fichier `.env` et configurez les valeurs nécessaires, notamment les identifiants du fournisseur LLM.
+Vérifiez le fichier `.env` et configurez les valeurs nécessaires, notamment :
 
-OpenTelemetry est désactivé par défaut. Pour exporter les traces et les métriques vers un backend d'observabilité compatible OTLP, configurez :
+- La clé secrète Django.
+- La clé de chiffrement des identifiants des sources de données.
+- Les identifiants PostgreSQL et les URL de connexion.
+- La clé API OpenAI.
 
-```dotenv
-OTEL_ENABLED=True
-OTEL_SERVICE_NAME=askmydata
-OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otlp-endpoint
-OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20your-credentials
-OTEL_TRACES_SAMPLER_ARG=1.0
-```
+La génération des secrets et la configuration détaillée de l'environnement sont documentées dans le [Guide de déploiement](docs/deployment.md#4-environment-configuration).
 
-La télémétrie est optionnelle et ne doit pas affecter l'exécution de l'application si le backend d'observabilité est indisponible.
+OpenTelemetry est optionnel et désactivé par défaut. Les instructions de configuration sont disponibles dans la section [Observabilité](docs/deployment.md#9-observability) du guide de déploiement.
 
 Construisez et démarrez l'application :
 
 ```bash
-docker compose build
-docker compose up -d
+docker compose up -d --build
 docker compose exec web python manage.py migrate
+```
+
+Créez le compte administrateur initial :
+
+```bash
+docker compose exec web python manage.py createsuperuser
 ```
 
 L'application est ensuite accessible à l'adresse :
 
 ```text
-http://localhost:8000/projects/
+http://localhost:8000/
 ```
+
+L'interface d'administration Django est accessible à l'adresse :
+
+```text
+http://localhost:8000/admin/
+```
+
+Pour les instructions de déploiement de la démonstration publique en local et du déploiement en production, consultez le [Guide de déploiement](docs/deployment.md).
 
 ### Tests
 
@@ -225,6 +238,8 @@ Exécutez la suite de tests complète dans le conteneur de l'application :
 ```bash
 docker compose exec web python manage.py test
 ```
+
+La suite de tests complète nécessite une base PostgreSQL dédiée aux tests d'intégration, configurée comme décrit ci-dessous.
 
 ### Qualité du code
 
@@ -235,7 +250,7 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-Formatez le code si c'est nécessaire :
+Formatez le code si nécessaire :
 
 ```bash
 uv run ruff format .
@@ -247,11 +262,17 @@ uv run ruff format .
 docker compose down
 ```
 
+Les volumes persistants des bases de données sont conservés.
+
 ### Base PostgreSQL pour les tests d'intégration
 
-Les tests utilisant une véritable source PostgreSQL externe s'appuient sur des variables d'environnement `TEST_SOURCE_DB_*` dédiées.
+Les tests utilisant une véritable source PostgreSQL externe s'appuient sur des variables d'environnement `TEST_SOURCE_DB_*` et des identifiants de test supplémentaires dédiés.
 
-Lorsque la base de test s'exécute sur l'hôte Docker, le conteneur de l'application peut y accéder via `host.docker.internal`.
+La base de tests d'intégration et ses rôles dédiés doivent être initialisés avant l'exécution de la suite de tests complète.
+
+Le script d'initialisation de la base est disponible dans [`scripts/setup_test_database.sql`](scripts/setup_test_database.sql).
+
+Lorsque la base de test s'exécute sur l'hôte Docker, le conteneur de l'application peut y accéder via `host.docker.internal`, à condition que ce nom d'hôte soit résolu et que PostgreSQL accepte la connexion.
 
 La base d'intégration doit utiliser des identifiants dédiés et ne doit pas pointer vers une base de production ou une base personnelle.
 
@@ -299,17 +320,29 @@ Déjà implémenté :
 - métriques OpenTelemetry pour le nombre et la durée des Question Runs, l'utilisation des tokens LLM et la durée des étapes du Query Engine
 - export OTLP optionnel vers un backend d'observabilité externe, avec télémétrie désactivée par défaut
 - health checks de liveness et de readiness de l'application
-- surveillance de l'état des conteneurs Docker pour l'application et la base PostgreSQL interne
+- surveillance de l'état des conteneurs Docker pour l'application et les services PostgreSQL
+- page d'accueil publique
+- gestion des demandes d'accès et inscription sur invitation
+- outils d'administration pour le contrôle des accès utilisateurs
+- mode Public Demo limitant la configuration des sources de données aux jeux de données prédéfinis
+- quatre jeux de données de démonstration : EEG, Pagila, Olist et Badminton
+- service PostgreSQL de démonstration dédié avec des comptes en lecture seule propres à chaque jeu de données
+- initialisation automatisée des bases de données de démonstration
+- configuration Docker orientée production avec Gunicorn, WhiteNoise et Caddy
+- validation locale de l'environnement Public Demo et des composants de déploiement en production
+- documentation de déploiement et d'exploitation
 
 Travaux d'industrialisation restants :
 
+- mécanismes configurables de protection des ressources applicatives et LLM
+- validation finale de la sécurité et de la confidentialité de la télémétrie
+- vérification des conditions de réutilisation et d'exposition publique des jeux de données
+- sélection de l'hébergement cloud et dimensionnement du serveur
+- déploiement distant et validation de l'accès HTTPS public
+- validation de l'observabilité, suivi des erreurs et alerting en production
+- validation des procédures de sauvegarde et de restauration des bases de données
 - déploiement continu
-- suivi des erreurs et alerting en production
-- configuration Docker orientée production
-- déploiement cloud
-- environnement de démonstration public sécurisé
-- jeux de données de démonstration prédéfinis
-- accès par invitation et outils d'administration
+- validation finale de bout en bout avant l'ouverture de la Public Demo aux utilisateurs invités
 
 ### Extensions futures
 
@@ -329,6 +362,7 @@ La documentation détaillée du projet est disponible dans [`docs/`](docs/) :
 - [Architecture Decision Records](docs/adrs/README.md)
 - [Benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md)
 - [Jeux de données de démonstration — EEG, Pagila, Olist, Badminton](docs/demo-datasets/README.md)
+- [Guide de déploiement](docs/deployment.md)
 - [Diagrammes PlantUML](docs/diagrams/README.md)
 
 Cette documentation retrace les principales décisions produit, métier, architecturales et techniques prises au cours du projet.
