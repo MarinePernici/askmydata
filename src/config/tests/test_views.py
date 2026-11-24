@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import OperationalError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.authentication.models import UserPreferences
@@ -110,3 +110,35 @@ class HealthCheckViewTests(TestCase):
 
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json(), {"status": "unavailable"})
+
+    @override_settings(
+        ALLOWED_HOSTS=["demo.example.com"],
+        SECURE_SSL_REDIRECT=True,
+        SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"),
+    )
+    def test_readiness_redirects_insecure_requests(self):
+        response = self.client.get(
+            reverse("health-ready"),
+            HTTP_HOST="demo.example.com",
+        )
+
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(
+            response["Location"],
+            "https://demo.example.com/health/ready/",
+        )
+
+    @override_settings(
+        ALLOWED_HOSTS=["demo.example.com"],
+        SECURE_SSL_REDIRECT=True,
+        SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"),
+    )
+    def test_readiness_accepts_secure_forwarded_requests(self):
+        response = self.client.get(
+            reverse("health-ready"),
+            HTTP_HOST="demo.example.com",
+            HTTP_X_FORWARDED_PROTO="https",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})

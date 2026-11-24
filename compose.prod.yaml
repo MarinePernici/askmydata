@@ -16,6 +16,14 @@ services:
     environment:
       DJANGO_DEBUG: "False"
       APP_ENV: production
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; request = urllib.request.Request('http://localhost:8000/health/ready/', headers={'Host': '${APP_DOMAIN:?APP_DOMAIN must be defined}', 'X-Forwarded-Proto': 'https'}); urllib.request.urlopen(request, timeout=2)",
+        ]
   caddy:
     image: caddy:2
     restart: unless-stopped
