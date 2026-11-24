@@ -1,12 +1,42 @@
 .git
 .gitignore
-.venv
-__pycache__
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Environment configuration and secrets
 .env
-.pytest_cache
+.env.*
+!.env.example
+.local/
+
+# Database backups and persistent data
+backups/
+docker-data/
+
+# Testing and code quality
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 .coverage
-htmlcov
+coverage.xml
+htmlcov/
+
+# Logs
+logs/
+*.log
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated static files
 staticfiles/
