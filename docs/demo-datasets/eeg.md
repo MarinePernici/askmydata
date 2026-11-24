@@ -20,14 +20,38 @@ It contains synthetic data and is not intended to represent actual patients or c
 
 The database is restored from a compressed PostgreSQL SQL dump.
 
+## Relational model
+
+The PostgreSQL schema contains six tables:
+
+- `users`: demographic and clinical characteristics.
+- `evaluations`: evaluation records and dates.
+- `diagnostics`: diagnostic categories.
+- `schoollevels`: educational levels.
+- `alpha_peak`: alpha peak measurements by electrode and value type.
+- `power_spectral_density`: spectral power measurements by electrode and frequency.
+
+The relational structure supports analyses combining participant
+characteristics, evaluation records, and electrophysiological measurements.
+
 ## Demonstration use cases
 
-The dataset is intended to support:
+Examples of natural-language questions include:
 
-- Exploration of scientific data structures.
-- Natural-language questions about measurements and associated records.
-- SQL generation involving filters, aggregations, and joins where supported by the schema.
-- Interpretation of query results in natural language.
+- How many participants are included in the dataset?
+- What is the distribution of participants by gender and laterality?
+- How many evaluations have been performed per participant?
+- What is the distribution of participants by diagnostic category?
+- What is the average alpha peak value by electrode and value type?
+- How does average power spectral density vary across frequencies
+  and electrodes?
+- How does average alpha peak value vary across diagnostic categories
+  for each value type?
+
+These questions demonstrate potential analytical use cases,
+including aggregations, relational joins, and scientific data exploration.
+
+They are illustrative examples, not validated benchmark results.
 
 ## Initialization
 

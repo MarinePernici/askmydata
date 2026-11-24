@@ -11,11 +11,21 @@ It is used to demonstrate AskMyData's ability to explore relational data, genera
 - **Source:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 - **Platform:** Kaggle
 - **Domain:** E-commerce
-- **License:** CC BY-NC-SA 4.0
+- **Author:** Olist
+- **License:** [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 The license permits reuse under specific conditions, including attribution, noncommercial use, and share-alike requirements.
 
 Any public demonstration using this dataset must comply with these conditions.
+
+AskMyData uses a PostgreSQL representation of the original dataset
+for portfolio and educational demonstration purposes.
+
+The original CSV files are imported into a relational PostgreSQL
+schema. The source dataset and its PostgreSQL backup archive are
+not distributed through the public AskMyData repository.
+
+The dataset remains subject to its original licensing conditions.
 
 ## Database
 

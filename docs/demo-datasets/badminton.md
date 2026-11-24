@@ -43,6 +43,22 @@ Player identities are derived from source names. Identical names may refer to di
 
 Match winners are preserved from the source data rather than inferred from game scores.
 
+## Demonstration use cases
+
+Examples of natural-language questions include:
+
+- How many matches are recorded for each discipline?
+- How has the number of recorded matches evolved over time?
+- Which players have won the most men's singles matches?
+- Which pairs have won the most mixed doubles matches?
+- How many matches have been played in each tournament category?
+- What proportion of recorded matches were played in three games?
+
+These questions illustrate potential analytical use cases,
+including aggregations, temporal analysis, and relational joins.
+
+They are illustrative examples, not validated benchmark results.
+
 ## Data preparation
 
 Source files are stored locally under `backups/demo-db/badminton/`.
@@ -96,3 +112,17 @@ Local validation completed successfully:
 - TCP password authentication verified
 
 These checks validate the technical import and access controls, not the completeness or accuracy of the original match records.
+
+## Limitations
+
+- The dataset covers historical match results from 2007 to July 2026
+  and is not updated in real time.
+- The completeness and accuracy of the original records are not guaranteed.
+- Player identification relies on source names rather than verified
+  unique player identifiers.
+- Historical changes in tournament categories and competition formats
+  may affect comparisons across years.
+- Match statistics reflect the available records and should not be
+  interpreted as exhaustive career statistics or official rankings.
+- The absence of an explicit reuse license remains a limitation
+  for public deployment.

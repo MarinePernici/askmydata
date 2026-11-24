@@ -24,9 +24,9 @@ The demo datasets are stored in four separate PostgreSQL databases.
 | `olist` | `olist_readonly` | `olist.sql.gz` |
 | `badminton` | `badminton_readonly` | `badminton.sql.gz` |
 
-Each database is intended to be configured as an independent data source in AskMyData.
+Each database is available as an independent, predefined data source in AskMyData when Public Demo mode is enabled.
 
-The demonstration database environment is separate from the application's development database.
+The demonstration databases are hosted in a dedicated PostgreSQL container, separate from the application database service.
 
 ## Public Demo dataset scope
 
@@ -57,7 +57,7 @@ The archives are expected under `/demo-data` inside the PostgreSQL container.
 
 The script requires the PostgreSQL administrator username and four environment variables containing the read-only role passwords.
 
-The dedicated demo database service has not yet been integrated into `compose.yaml`.
+The dedicated demo database service is defined in `compose.demo.yaml`, which extends the base Docker Compose configuration.
 
 ## Access restrictions
 
@@ -82,10 +82,14 @@ The absence of an archive from Git does not by itself establish permission to re
 
 ## Current status
 
-The four PostgreSQL demo datasets have been prepared, and their initialization process has been tested.
+- All four PostgreSQL demo datasets have been prepared and validated.
+- The dataset selection for the initial Public Demo is finalized.
+- Database initialization and read-only access have been validated.
+- The dedicated demo database service is integrated into the Docker Compose demo configuration.
+- Application-level dataset selection and Public Demo mode are implemented and tested.
+- A production Docker Compose configuration is available, including Gunicorn, WhiteNoise, and Caddy.
+- The production configuration has been validated locally.
 
-The dataset selection for the initial Public Demo is finalized.
+The Public Demo has not yet been deployed to a remote production environment.
 
-The dedicated demo database service has not yet been integrated into the production Docker configuration.
-
-The public demonstration environment is not yet deployed. Application integration, usage limits, production security configuration, and deployment validation remain to be completed.
+Production deployment, HTTPS validation, and final verification of usage limits and security controls remain to be completed.
