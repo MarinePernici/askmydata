@@ -84,4 +84,5 @@ jobs:
         run: uv run ruff format --check src
 
       - name: Run Django tests
-        run: uv run python src/manage.py test
+        working-directory: src
+        run: uv run python manage.py test
