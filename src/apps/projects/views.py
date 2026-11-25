@@ -1,6 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import redirect, render
+
+from apps.authentication.exceptions import UsageLimitExceededError
+from apps.authentication.usage_limits import UsageLimitService
 
 from .exceptions import (
     ArchivedProjectError,
@@ -61,16 +66,34 @@ def project_create(request):
         form = ProjectForm(request.POST)
 
         if form.is_valid():
-            project = ProjectService().create(
-                owner=request.user,
-                name=form.cleaned_data["name"],
-                description=form.cleaned_data["description"],
-            )
+            try:
+                with transaction.atomic():
+                    owner = (
+                        get_user_model()
+                        .objects.select_for_update()
+                        .get(
+                            pk=request.user.pk,
+                        )
+                    )
 
-            return redirect(
-                "data-source-configure",
-                project_id=project.id,
-            )
+                    UsageLimitService().ensure_project_creation_allowed(
+                        owner,
+                    )
+
+                    project = ProjectService().create(
+                        owner=owner,
+                        name=form.cleaned_data["name"],
+                        description=form.cleaned_data["description"],
+                    )
+
+            except UsageLimitExceededError as exc:
+                form.add_error(None, str(exc))
+
+            else:
+                return redirect(
+                    "data-source-configure",
+                    project_id=project.id,
+                )
     else:
         form = ProjectForm()
 

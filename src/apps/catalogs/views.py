@@ -7,6 +7,8 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
 
+from apps.authentication.exceptions import UsageLimitExceededError
+from apps.authentication.usage_limits import UsageLimitService
 from apps.data_sources.models import DataSource
 from apps.projects.exceptions import (
     ArchivedProjectError,
@@ -272,6 +274,20 @@ def catalog_build(request, project_id):
         )
 
     try:
+        UsageLimitService().reserve_catalog_build(request.user)
+
+    except UsageLimitExceededError as exc:
+        messages.error(
+            request,
+            str(exc),
+        )
+
+        return redirect(
+            "catalog-confirmation",
+            project_id=project.id,
+        )
+
+    try:
         create_catalog_service().build_for_project(project)
     except DataSourceNotConfiguredError:
         messages.error(
@@ -333,6 +349,20 @@ def catalog_regenerate(request, project_id):
     try:
         ProjectService().ensure_writable(project)
     except ArchivedProjectError:
+        return redirect(
+            "catalog-detail",
+            project_id=project.id,
+        )
+
+    try:
+        UsageLimitService().reserve_catalog_build(request.user)
+
+    except UsageLimitExceededError as exc:
+        messages.error(
+            request,
+            str(exc),
+        )
+
         return redirect(
             "catalog-detail",
             project_id=project.id,

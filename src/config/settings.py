@@ -50,6 +50,22 @@ DEBUG = env("DJANGO_DEBUG")
 PUBLIC_DEMO_MODE = env("PUBLIC_DEMO_MODE")
 DEMO_DB_HOST = env("DEMO_DB_HOST", default="demo-db")
 DEMO_DB_PORT = env.int("DEMO_DB_PORT", default=5432)
+DEMO_MAX_PROJECTS_PER_USER = env.int(
+    "DEMO_MAX_PROJECTS_PER_USER",
+    default=5,
+)
+DEMO_MAX_DAILY_QUESTIONS = env.int(
+    "DEMO_MAX_DAILY_QUESTIONS",
+    default=30,
+)
+DEMO_MAX_DAILY_CATALOG_BUILDS = env.int(
+    "DEMO_MAX_DAILY_CATALOG_BUILDS",
+    default=10,
+)
+DEMO_MAX_QUESTION_LENGTH = env.int(
+    "DEMO_MAX_QUESTION_LENGTH",
+    default=2000,
+)
 
 ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS",

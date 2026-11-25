@@ -1,11 +1,11 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
-from apps.authentication.models import UserPreferences
+from apps.authentication.models import DailyUsage, UserPreferences
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
 from apps.data_sources.models import DataSource
@@ -1894,3 +1894,149 @@ class ConversationViewTests(TestCase):
             "project's data.",
             html=True,
         )
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_QUESTION_LENGTH=10,
+    )
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_public_demo_rejects_oversized_question(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="demo-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Demo project",
+            status=Project.Status.READY,
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Demo conversation",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "a" * 11},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_question_run_service.assert_not_called()
+
+        self.assertFalse(DailyUsage.objects.filter(user=user).exists())
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_DAILY_QUESTIONS=1,
+    )
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_public_demo_enforces_daily_question_limit(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="demo-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Demo project",
+            status=Project.Status.READY,
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Demo conversation",
+        )
+
+        self.client.force_login(user)
+
+        url = reverse(
+            "conversation-ask",
+            kwargs={
+                "project_id": project.id,
+                "conversation_id": conversation.id,
+            },
+        )
+
+        response = self.client.post(
+            url,
+            data={"question": "How many customers?"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_question_run_service.assert_called_once()
+
+        response = self.client.post(
+            url,
+            data={"question": "How many orders?"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_question_run_service.assert_called_once()
+        create_question_run_service.return_value.run.assert_called_once()
+
+        usage = DailyUsage.objects.get(user=user)
+        self.assertEqual(usage.question_count, 1)
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_DAILY_QUESTIONS=1,
+    )
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_public_demo_counts_failed_question_attempt(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="demo-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Demo project",
+            status=Project.Status.READY,
+        )
+
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Demo conversation",
+        )
+
+        self.client.force_login(user)
+
+        create_question_run_service.return_value.run.side_effect = RuntimeError(
+            "Unexpected execution failure"
+        )
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_question_run_service.return_value.run.assert_called_once()
+
+        usage = DailyUsage.objects.get(user=user)
+        self.assertEqual(usage.question_count, 1)

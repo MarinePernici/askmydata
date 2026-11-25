@@ -13,7 +13,7 @@ from apps.authentication.exceptions import (
     PendingAccessRequestExistsError,
 )
 from apps.authentication.forms_admin import InvitationAdminForm
-from apps.authentication.models import AccessRequest, Invitation
+from apps.authentication.models import AccessRequest, DailyUsage, Invitation
 from apps.authentication.services import (
     AccessRequestService,
     InvitationService,
@@ -301,3 +301,39 @@ class InvitationAdmin(admin.ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_active and request.user.is_superuser
+
+
+@admin.register(DailyUsage)
+class DailyUsageAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "date",
+        "question_count",
+        "catalog_count",
+    )
+
+    list_filter = ("date",)
+    search_fields = ("user__username", "user__email")
+    ordering = ("-date",)
+
+    readonly_fields = (
+        "user",
+        "date",
+        "question_count",
+        "catalog_count",
+    )
+
+    def has_module_permission(self, request):
+        return request.user.is_active and request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_active and request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

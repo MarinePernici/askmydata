@@ -124,3 +124,34 @@ class AccessRequest(models.Model):
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name} <{self.email}>"
+
+
+class DailyUsage(models.Model):
+    """Daily resource usage counters for a Public Demo user."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="daily_usage",
+    )
+
+    date = models.DateField()
+
+    question_count = models.PositiveIntegerField(
+        default=0,
+    )
+
+    catalog_count = models.PositiveIntegerField(
+        default=0,
+    )
+
+    class Meta:
+        constraints = [  # noqa: RUF012
+            models.UniqueConstraint(
+                fields=["user", "date"],
+                name="unique_daily_usage_user_date",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user} - {self.date}"

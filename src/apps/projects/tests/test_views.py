@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.catalogs.models import CatalogScope
@@ -921,3 +921,33 @@ class ProjectListViewTests(TestCase):
         self.assertContains(response, "disabled")
         self.assertNotContains(response, "Save changes")
         self.assertNotContains(response, "Archive project")
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_PROJECTS_PER_USER=1,
+    )
+    def test_public_demo_enforces_project_limit(self):
+        user = get_user_model().objects.create_user(
+            username="demo-user",
+            password="test-password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("project-create"),
+            {"name": "First project"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(
+            reverse("project-create"),
+            {"name": "Second project"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].non_field_errors())
+        self.assertEqual(
+            Project.objects.filter(owner=user).count(),
+            1,
+        )

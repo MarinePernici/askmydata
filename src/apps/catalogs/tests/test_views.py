@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from apps.authentication.models import DailyUsage
 from apps.catalogs.exceptions import (
     CatalogNotReadyError,
     CatalogScopeNotConfiguredError,
@@ -665,6 +666,97 @@ class CatalogScopeViewTests(TestCase):
                 "project_id": project.id,
             },
         )
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_DAILY_CATALOG_BUILDS=1,
+    )
+    @patch("apps.catalogs.views.create_catalog_service")
+    def test_public_demo_shares_catalog_build_and_regeneration_limit(
+        self,
+        create_catalog_service_mock,
+    ):
+        user = get_user_model().objects.create_user(
+            username="demo-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Demo project",
+        )
+
+        self.client.force_login(user)
+
+        build_url = reverse(
+            "catalog-build",
+            kwargs={"project_id": project.id},
+        )
+
+        response = self.client.post(build_url)
+
+        self.assertEqual(response.status_code, 302)
+        create_catalog_service_mock.assert_called_once()
+
+        response = self.client.post(build_url)
+
+        self.assertEqual(response.status_code, 302)
+        create_catalog_service_mock.assert_called_once()
+
+        project.status = Project.Status.READY
+        project.save(update_fields=["status"])
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_catalog_service_mock.assert_called_once()
+        create_catalog_service_mock.return_value.build_for_project.assert_called_once()
+
+        usage = DailyUsage.objects.get(user=user)
+        self.assertEqual(usage.catalog_count, 1)
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_DAILY_CATALOG_BUILDS=1,
+    )
+    @patch("apps.catalogs.views.create_catalog_service")
+    def test_public_demo_counts_failed_catalog_build_attempt(
+        self,
+        create_catalog_service_mock,
+    ):
+        user = get_user_model().objects.create_user(
+            username="demo-user",
+            password="test-password",
+        )
+
+        project = Project.objects.create(
+            owner=user,
+            name="Demo project",
+        )
+
+        self.client.force_login(user)
+
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
+            RuntimeError("Unexpected catalog failure")
+        )
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_catalog_service_mock.return_value.build_for_project.assert_called_once()
+
+        usage = DailyUsage.objects.get(user=user)
+        self.assertEqual(usage.catalog_count, 1)
 
 
 class CatalogConfirmationViewTests(TestCase):
@@ -1426,3 +1518,29 @@ class CatalogRegenerateViewTests(TestCase):
                 "project_id": self.project.id,
             },
         )
+
+    @override_settings(
+        PUBLIC_DEMO_MODE=True,
+        DEMO_MAX_DAILY_CATALOG_BUILDS=1,
+    )
+    def test_public_demo_counts_catalog_regeneration(
+        self,
+        create_catalog_service_mock,
+    ):
+        self.project.status = Project.Status.READY
+        self.project.save(update_fields=["status"])
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        create_catalog_service_mock.return_value.build_for_project.assert_called_once_with(
+            self.project
+        )
+
+        usage = DailyUsage.objects.get(user=self.user)
+        self.assertEqual(usage.catalog_count, 1)

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: AskMyData\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 09:33+0000\n"
+"POT-Creation-Date: 2026-11-25 16:15+0000\n"
 "PO-Revision-Date: 2026-10-05\n"
 "Last-Translator: Marine Pernici\n"
 "Language-Team: French\n"
@@ -31,6 +31,28 @@ msgstr "Pourquoi souhaitez-vous accéder à AskMyData ?"
 #: src/apps/authentication/forms.py:49 src/apps/authentication/views.py:119
 msgid "An access request is already pending for this email."
 msgstr "Une demande d'accès est déjà en attente pour cette adresse e-mail."
+
+#: src/apps/authentication/usage_limits.py:27
+#, python-format
+msgid "You have reached the maximum number of projects (%(limit)s)."
+msgstr "Vous avez atteint le nombre maximal de projets (%(limit)s)."
+
+#: src/apps/authentication/usage_limits.py:37
+#, python-format
+msgid "Your question cannot exceed %(limit)s characters."
+msgstr "Votre question ne peut pas dépasser %(limit)s caractères."
+
+#: src/apps/authentication/usage_limits.py:49
+#, python-format
+msgid "You have reached your daily question limit (%(limit)s)."
+msgstr "Vous avez atteint votre limite quotidienne de questions (%(limit)s)."
+
+#: src/apps/authentication/usage_limits.py:62
+#, python-format
+msgid "You have reached your daily catalog generation limit (%(limit)s)."
+msgstr ""
+"Vous avez atteint votre limite quotidienne de générations de catalogue "
+"(%(limit)s)."
 
 #: src/apps/authentication/views.py:124
 msgid "An active invitation already exists for this email."
@@ -61,57 +83,57 @@ msgstr "Prêt"
 msgid "Stale"
 msgstr "Obsolète"
 
-#: src/apps/catalogs/models.py:54 src/apps/data_sources/models.py:20
+#: src/apps/catalogs/models.py:54 src/apps/data_sources/models.py:21
 #: src/apps/runs/models.py:17 src/apps/runs/models.py:100
 #: templates/catalogs/detail.html:36
 msgid "Failed"
 msgstr "Échec"
 
-#: src/apps/catalogs/views.py:277
+#: src/apps/catalogs/views.py:295
 msgid "Configure a data source before building the catalog."
 msgstr "Configurez une source de données avant de générer le catalogue."
 
-#: src/apps/catalogs/views.py:287
+#: src/apps/catalogs/views.py:305
 msgid "Select the project data before building the catalog."
 msgstr "Sélectionnez les données du projet avant de générer le catalogue."
 
-#: src/apps/catalogs/views.py:304
+#: src/apps/catalogs/views.py:322
 msgid "Unable to build the catalog."
 msgstr "Impossible de générer le catalogue."
 
-#: src/apps/catalogs/views.py:359
+#: src/apps/catalogs/views.py:391
 msgid "Unable to regenerate the catalog."
 msgstr "Impossible de régénérer le catalogue."
 
-#: src/apps/conversations/views.py:32
+#: src/apps/conversations/views.py:37
 msgid "SQL generation"
 msgstr "Génération SQL"
 
-#: src/apps/conversations/views.py:33
+#: src/apps/conversations/views.py:38
 msgid "SQL validation"
 msgstr "Validation SQL"
 
-#: src/apps/conversations/views.py:34
+#: src/apps/conversations/views.py:39
 msgid "Query execution"
 msgstr "Exécution de la requête"
 
-#: src/apps/conversations/views.py:35
+#: src/apps/conversations/views.py:40
 msgid "Result validation"
 msgstr "Validation du résultat"
 
-#: src/apps/conversations/views.py:36
+#: src/apps/conversations/views.py:41
 msgid "Answer generation"
 msgstr "Génération de la réponse"
 
-#: src/apps/conversations/views.py:293 templates/conversations/detail.html:404
+#: src/apps/conversations/views.py:298 templates/conversations/detail.html:404
 msgid "Project is not ready."
 msgstr "Le projet n’est pas prêt."
 
-#: src/apps/data_sources/models.py:18
+#: src/apps/data_sources/models.py:19
 msgid "Not tested"
 msgstr "Non testée"
 
-#: src/apps/data_sources/models.py:19
+#: src/apps/data_sources/models.py:20
 msgid "Connected"
 msgstr "Connectée"
 
@@ -320,7 +342,7 @@ msgid "Confirm project"
 msgstr "Confirmer le projet"
 
 #: templates/catalogs/confirmation.html:9
-#: templates/catalogs/confirmation.html:157 templates/catalogs/scope.html:9
+#: templates/catalogs/confirmation.html:169 templates/catalogs/scope.html:9
 #: templates/data_sources/configure.html:9
 #: templates/projects/project_create.html:4
 #: templates/projects/project_create.html:9
@@ -391,23 +413,31 @@ msgid "Type"
 msgstr "Type"
 
 #: templates/catalogs/confirmation.html:98
-#: templates/data_sources/configure.html:70
+#: templates/data_sources/configure.html:104
+#: templates/data_sources/configure.html:130
 #: templates/data_sources/overview.html:77
 msgid "Host"
 msgstr "Hôte"
 
-#: templates/catalogs/confirmation.html:103
-#: templates/data_sources/configure.html:112
-#: templates/data_sources/overview.html:82
+#: templates/catalogs/confirmation.html:109
+#: templates/data_sources/configure.html:114
+#: templates/data_sources/configure.html:172
+#: templates/data_sources/overview.html:88
 msgid "Database"
 msgstr "Base de données"
 
-#: templates/catalogs/confirmation.html:111
-#: templates/data_sources/overview.html:87
+#: templates/catalogs/confirmation.html:112
+#: templates/data_sources/configure.html:74
+#: templates/data_sources/overview.html:91
+msgid "Demo dataset"
+msgstr "Jeu de données de démonstration"
+
+#: templates/catalogs/confirmation.html:123
+#: templates/data_sources/overview.html:99
 msgid "Selected tables"
 msgstr "Tables sélectionnées"
 
-#: templates/catalogs/confirmation.html:115
+#: templates/catalogs/confirmation.html:127
 #, python-format
 msgid ""
 "\n"
@@ -430,20 +460,20 @@ msgstr[1] ""
 "%(available_count)s disponibles\n"
 "                        "
 
-#: templates/catalogs/confirmation.html:129
+#: templates/catalogs/confirmation.html:141
 msgid "No tables selected."
 msgstr "Aucune table sélectionnée."
 
-#: templates/catalogs/confirmation.html:142 templates/catalogs/scope.html:81
-#: templates/catalogs/scope.html:161 templates/data_sources/configure.html:171
+#: templates/catalogs/confirmation.html:154 templates/catalogs/scope.html:81
+#: templates/catalogs/scope.html:161 templates/data_sources/configure.html:231
 msgid "Back"
 msgstr "Retour"
 
-#: templates/catalogs/confirmation.html:170
+#: templates/catalogs/confirmation.html:182
 msgid "Creating project"
 msgstr "Création du projet"
 
-#: templates/catalogs/confirmation.html:173
+#: templates/catalogs/confirmation.html:185
 msgid "Generating your Knowledge Catalog. This may take a moment."
 msgstr ""
 "Génération de votre catalogue sémantique. Cette opération peut prendre "
@@ -806,26 +836,37 @@ msgstr "Configurer la source de données"
 msgid "Connect a PostgreSQL database to your project."
 msgstr "Connectez une base de données PostgreSQL à votre projet."
 
-#: templates/data_sources/configure.html:52
+#: templates/data_sources/configure.html:53
+msgid "Select a demo dataset. Connection settings are managed by AskMyData."
+msgstr "Sélectionnez un jeu de données de démonstration. Les paramètres de connexion sont gérés par AskMyData."
+
+#: templates/data_sources/configure.html:55
 msgid "Enter the connection details for your PostgreSQL database."
 msgstr ""
 "Saisissez les informations de connexion à votre base de données PostgreSQL."
 
-#: templates/data_sources/configure.html:90
+#: templates/data_sources/configure.html:100
+msgid "The connection details below are illustrative and cannot be modified."
+msgstr "Les informations de connexion ci-dessous sont fournies à titre indicatif et ne peuvent pas être modifiées."
+
+#: templates/data_sources/configure.html:109
+#: templates/data_sources/configure.html:150
 msgid "Port"
 msgstr "Port"
 
-#: templates/data_sources/configure.html:132
+#: templates/data_sources/configure.html:119
+#: templates/data_sources/configure.html:192
 #: templates/registration/login.html:58
 msgid "Username"
 msgstr "Nom d’utilisateur"
 
-#: templates/data_sources/configure.html:152
+#: templates/data_sources/configure.html:124
+#: templates/data_sources/configure.html:212
 #: templates/registration/login.html:83
 msgid "Password"
 msgstr "Mot de passe"
 
-#: templates/data_sources/configure.html:175
+#: templates/data_sources/configure.html:235
 msgid "Test and continue"
 msgstr "Tester et continuer"
 
@@ -844,15 +885,15 @@ msgstr "Vue d'ensemble"
 msgid "Schema"
 msgstr "Schéma"
 
-#: templates/data_sources/overview.html:92
+#: templates/data_sources/overview.html:104
 msgid "Last connection"
 msgstr "Dernière connexion"
 
-#: templates/data_sources/overview.html:97
+#: templates/data_sources/overview.html:109
 msgid "Never"
 msgstr "Jamais"
 
-#: templates/data_sources/overview.html:129
+#: templates/data_sources/overview.html:142
 msgid "Test connection"
 msgstr "Tester la connexion"
 

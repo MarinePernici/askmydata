@@ -20,3 +20,11 @@ class ActiveInvitationExistsError(Exception):
 
 class AccountAlreadyExistsError(Exception):
     pass
+
+
+class UsageLimitExceededError(Exception):
+    pass
+
+
+class QuestionTooLongError(Exception):
+    pass

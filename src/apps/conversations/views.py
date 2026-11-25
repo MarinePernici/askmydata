@@ -5,6 +5,11 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 
+from apps.authentication.exceptions import (
+    QuestionTooLongError,
+    UsageLimitExceededError,
+)
+from apps.authentication.usage_limits import UsageLimitService
 from apps.projects.exceptions import ArchivedProjectError
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
@@ -291,6 +296,25 @@ def conversation_ask(
         messages.error(
             request,
             _("Project is not ready."),
+        )
+
+        return redirect(
+            "conversation-detail",
+            project_id=project.id,
+            conversation_id=conversation.id,
+        )
+
+    usage_service = UsageLimitService()
+
+    try:
+        usage_service.ensure_question_length_allowed(question)
+        usage_service.reserve_question(request.user)
+
+    except (QuestionTooLongError, UsageLimitExceededError) as exc:
+        messages.error(
+            request,
+            str(exc),
+            extra_tags="question-error",
         )
 
         return redirect(
