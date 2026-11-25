@@ -21,10 +21,12 @@ The deployment architecture relies on Docker Compose, PostgreSQL,
 Gunicorn, WhiteNoise and Caddy. OpenTelemetry provides optional
 integration with an external observability backend.
 
-The local deployment configurations and individual production components
-have been validated locally. Remote deployment, public HTTPS access
-and final security and resource protection checks remain to be validated
-before opening the Public Demo to invited users.
+The local deployment configurations, individual production components
+and configurable Public Demo usage limits have been validated locally.
+
+Remote deployment, public HTTPS access, final security checks and
+production validation remain to be completed before opening the
+Public Demo to invited users.
 
 This guide focuses on operational procedures. Functional requirements,
 architectural decisions and dataset-specific documentation are maintained
@@ -353,6 +355,33 @@ Each account should use a distinct password.
 
 These credentials remain exclusively server-side.
 
+#### Public Demo Usage Limits
+
+The following environment variables configure application and LLM
+resource protection in Public Demo mode:
+
+| Variable | Default | Purpose |
+|---|---:|---|
+| `DEMO_MAX_PROJECTS_PER_USER` | `5` | Maximum number of projects per user |
+| `DEMO_MAX_DAILY_QUESTIONS` | `30` | Maximum daily question attempts per user |
+| `DEMO_MAX_DAILY_CATALOG_BUILDS` | `10` | Maximum daily catalog generation and regeneration attempts per user |
+| `DEMO_MAX_QUESTION_LENGTH` | `2000` | Maximum question length in characters |
+
+The default configuration is:
+
+```dotenv
+DEMO_MAX_PROJECTS_PER_USER=5
+DEMO_MAX_DAILY_QUESTIONS=30
+DEMO_MAX_DAILY_CATALOG_BUILDS=10
+DEMO_MAX_QUESTION_LENGTH=2000
+```
+
+These limits are enforced only when Public Demo mode is enabled.
+Standard application mode is not subject to these restrictions.
+
+See [Resource Protection](#116-resource-protection) for enforcement
+rules and operational considerations.
+
 ### 4.7. Observability Configuration
 
 | Variable | Default |
@@ -677,8 +706,9 @@ The procedures in this section describe the intended deployment
 process and must be validated on the selected server.
 
 The Public Demo must not be opened to invited users until the
-remaining security and resource protection requirements have
-been addressed.
+remaining security requirements have been addressed and the
+implemented resource protection mechanisms have been validated
+in the production environment.
 
 ### 7.2. Server Preparation
 
@@ -1247,13 +1277,26 @@ Before opening the Public Demo, verify:
 
 Run automated tests against a dedicated local test environment.
 
-For the standard application:
+For the complete standard application test suite:
 
 ```bash
 docker compose --env-file .env \
   -p askmydata \
   -f compose.yaml \
   exec web python manage.py test
+```
+
+The complete standard application test suite can also be executed
+from the local Public Demo environment by disabling Public Demo
+mode for the test process:
+
+```bash
+docker compose --env-file .env \
+  -p askmydata-public-demo \
+  -f compose.yaml \
+  -f compose.demo.yaml \
+  exec -e PUBLIC_DEMO_MODE=False web \
+  python manage.py test
 ```
 
 Tests requiring an external PostgreSQL source must use a
@@ -1268,8 +1311,29 @@ docker compose --env-file .env \
   -f compose.demo.yaml \
   exec web python manage.py test \
   config.tests.test_demo_datasets \
-  apps.data_sources.tests.test_demo_views
+  apps.data_sources.tests.test_demo_views \
+  apps.authentication.tests.test_usage_limits
 ```
+
+Usage limit integration tests are included in the complete test
+suite and explicitly enable Public Demo mode through Django
+test settings.
+
+The automated tests cover:
+
+- Public Demo dataset configuration and access restrictions.
+- Usage limit enforcement and daily counter persistence.
+- User-level quota isolation.
+- Daily quota renewal.
+- Standard mode compatibility.
+- Project creation restrictions.
+- Question length validation.
+- Question execution restrictions.
+- Catalog generation and regeneration restrictions.
+- Accounting for failed execution attempts.
+
+LLM services are mocked in usage limit integration tests to avoid
+external API calls and unnecessary token consumption.
 
 Do not execute the automated test suite against a production
 deployment.
@@ -1366,22 +1430,115 @@ from the public network.
 
 ### 11.6. Resource Protection
 
-The Public Demo must include configurable protections against
+The Public Demo implements configurable protections against
 excessive application and LLM resource consumption.
 
-Relevant protections include:
+#### Application Usage Limits
 
-- Controlled user access.
-- Request and execution limits.
-- Database query execution constraints.
-- LLM usage limits.
-- Monitoring of operational resource consumption.
+| Resource | Default limit | Scope |
+|---|---:|---|
+| Projects | 5 | Per user |
+| Questions | 30 | Per user, per day |
+| Catalog generations and regenerations | 10 | Per user, per day |
+| Question length | 2000 characters | Per question |
 
-The final limit values, enforcement mechanisms and validation
-procedures must be documented once implemented.
+All limits are configurable through environment variables.
 
-Public access must not be enabled before these protections
-have been reviewed and validated.
+See [Public Demo Configuration](#46-public-demo-configuration).
+
+#### Project Limit
+
+All existing projects owned by a user count towards the project
+limit, including incomplete, active and archived projects.
+
+Deleting an incomplete project releases a project slot.
+
+Archiving a project does not release a project slot.
+
+Project creation is protected by a database transaction and
+a user-level row lock to prevent concurrent requests from
+exceeding the configured project limit.
+
+#### Daily Usage Accounting
+
+Daily question and catalog usage counters are persisted in the
+application PostgreSQL database through the `DailyUsage` model.
+
+Each record is associated with a user and a calendar date.
+
+Daily quotas renew at midnight UTC. Historical usage records
+are retained.
+
+Catalog generation and regeneration share the same daily quota.
+
+Usage is counted across all projects and conversations owned
+by the user.
+
+Deleting an incomplete project does not reset daily usage.
+
+#### Enforcement
+
+Usage limits are checked server-side before invoking the
+corresponding execution services.
+
+Daily usage reservations use atomic database updates to prevent
+concurrent requests from exceeding the configured quotas.
+
+Execution attempts are counted even when the subsequent operation
+fails, as failed operations may already have consumed application
+or LLM resources.
+
+Questions exceeding the configured maximum length are rejected
+before reserving daily question usage.
+
+When a limit is reached, the operation is rejected and the user
+receives a localized error message.
+
+These restrictions apply exclusively to Public Demo mode.
+
+#### Database Query Constraints
+
+The existing SQL execution protections remain active:
+
+- SQL validation before execution.
+- Read-only database access.
+- Catalog scope enforcement.
+- Query execution timeout of 30 seconds.
+- Maximum returned result size of 1000 rows.
+
+#### Administration and Monitoring
+
+Daily usage records can be inspected through the Django
+administration interface by authorized superusers.
+
+The administration interface provides read-only access to
+question and catalog usage counters.
+
+OpenTelemetry metrics provide additional visibility into LLM
+token consumption and execution performance when enabled.
+
+#### OpenAI Cost Protection
+
+The production Public Demo should use a dedicated OpenAI project
+and API key, separate from development credentials.
+
+Budget alerts and provider-side usage monitoring should be
+configured before opening the demonstration to invited users.
+
+Application usage limits reduce the risk of excessive API
+consumption but do not guarantee a global monetary spending cap.
+
+OpenAI project budget alerts must not be treated as hard
+spending limits.
+
+#### Validation Status
+
+Usage limit enforcement has been validated locally through
+automated unit and integration tests.
+
+Final configuration and operational validation must be performed
+in the production environment before opening the Public Demo
+to invited users.
 
 ### 11.7. Dataset Governance
 

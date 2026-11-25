@@ -20,6 +20,12 @@ package "Identity and Access" {
     language
   }
 
+  class DailyUsage {
+    date
+    question_count
+    catalog_count
+  }
+
   class Invitation {
     status
     expires_at
@@ -86,6 +92,7 @@ package "Conversation and Execution" {
 }
 
 User "1" *-- "0..1" UserPreferences : preferences
+User "1" *-- "0..*" DailyUsage : daily usage
 User "1" -- "0..*" Project : owns
 
 User "1" <-- "0..*" Invitation : created by
@@ -139,6 +146,13 @@ end note
 note right of QuestionRun
   Represents one controlled
   execution of the AI pipeline.
+end note
+
+note right of DailyUsage
+  Public Demo only.
+  One record per user and UTC date.
+  Counts question and catalog attempts.
+  Independent of individual projects.
 end note
 
 @enduml

@@ -17,6 +17,7 @@ package "Presentation Layer" {
 package "Application Layer" {
 
     component "Accounts" as Accounts
+    component "Usage Limit\nService" as UsageLimits
     component "Projects" as Projects
     component "Data Source\nManagement\n(capability)" as DSM
     component "Catalog" as Catalog
@@ -61,6 +62,8 @@ WebUI --> Projects
 WebUI --> Conversations
 WebUI --> Catalog
 WebUI --> Orchestrator
+WebUI --> UsageLimits : usage checks
+Accounts ..> UsageLimits : owns
 
 Projects --> DSM
 Projects --> Catalog
@@ -98,6 +101,7 @@ PostgreSQLConnector --> ExternalDB
 LLMInterface --> LLM
 
 Accounts --> AppDB
+UsageLimits --> AppDB : daily usage
 Projects --> AppDB
 DSM --> AppDB
 Catalog --> AppDB
@@ -139,6 +143,14 @@ end note
 note right of LLMInterface
 Provider-independent
 LLM abstraction.
+end note
+
+note right of UsageLimits
+  Public Demo only.
+  Checks project and question limits.
+  Reserves daily question and
+  catalog usage before execution.
+  Uses persistent user-level counters.
 end note
 
 @enduml

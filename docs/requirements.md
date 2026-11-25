@@ -330,6 +330,20 @@ Public account registration without a valid invitation shall not be available.
 
 **Release:** Production-ready Portfolio
 
+---
+
+### FR-ADMIN-006
+
+The system shall allow authorized superusers to inspect daily
+question and catalog usage counters for individual users.
+
+Usage records shall be accessible through the administration
+interface in read-only mode.
+
+**Release:** Production-ready Portfolio
+
+---
+
 ## 5.9 Public Demo
 
 ### FR-DEMO-001
@@ -490,7 +504,38 @@ Business logic shall remain independent from infrastructure components.
 
 ### NFR-RES-001
 
-The public demonstration shall enforce configurable usage limits to prevent abusive or excessive consumption of application and AI resources.
+The public demonstration shall enforce configurable usage limits to
+prevent abusive or excessive consumption of application and AI resources.
+
+The system shall enforce:
+
+- a maximum number of projects per user, including archived projects;
+- a maximum number of question attempts per user per day;
+- a shared maximum number of catalog generation and regeneration
+  attempts per user per day;
+- a maximum question length.
+
+Daily usage shall be accounted for independently for each user,
+across all their projects and conversations.
+
+Daily usage counters shall be persistent and quotas shall renew
+at the beginning of each UTC calendar day.
+
+Execution attempts shall count towards the corresponding daily
+quota even when the subsequent operation fails.
+
+Questions exceeding the configured maximum length shall be rejected
+without consuming the daily question quota.
+
+Usage limits shall be enforced server-side before invoking the
+corresponding execution services.
+
+The system shall prevent concurrent requests from exceeding the
+configured usage limits.
+
+Users shall receive localized error messages when a limit is reached.
+
+These restrictions shall apply exclusively in Public Demo mode.
 
 **Release:** Production-ready Portfolio
 
@@ -633,22 +678,46 @@ These attributes will be progressively completed during the implementation phase
 | FR-DATA-001–006 | UC-02, UC-12 | Data source, PostgreSQL connector and schema tests | ADR-0002 | Implemented |
 | FR-KCAT-001–004 | UC-02, UC-03, UC-08 | Catalog service and view tests | ADR-0003 | Implemented |
 | FR-AI-001–008 | UC-04, UC-05 | Query engine and pipeline integration tests | ADR-0003, ADR-0004 | Implemented |
-| FR-AI-009 | UC-04 | — | — | Production-ready scope |
+| FR-AI-009 | UC-04 | Answer generator prompt tests | — | Implemented |
 | FR-CONV-001–003 | UC-04, UC-06, UC-07 | Conversation and question-run tests | ADR-0001 | Implemented |
-| FR-USER-001 | — | — | — | Production-ready scope |
-| FR-ADMIN-001–003 | UC-11 | — | — | Production-ready scope |
-| FR-DEMO-001–003 | UC-02 | — | — | Production-ready scope |
+| FR-USER-001 | — | Internationalization configuration and translation compilation | — | Implemented |
+| FR-ADMIN-001–005 | UC-11 | Administration, access request and registration test suites | — | Implemented |
+| FR-ADMIN-006 | — | Administration configuration review | — | Implemented |
+| FR-DEMO-001–004 | UC-02 | Demo dataset configuration and data source view test suites | ADR-0002 | Implemented |
 | NFR-SEC-001–006 | UC-02, UC-04, UC-10 | Security, connector, SQL validation and pipeline tests | ADR-0002, ADR-0004 | Implemented |
 | NFR-REL-001–004 | UC-04, UC-05, UC-08 | Failure-handling and execution-trace tests | ADR-0001, ADR-0004 | Implemented |
 | NFR-PERF-001–002 | UC-04 | Query executor and integration tests | ADR-0004 | Implemented |
-| NFR-RES-001 | UC-04 | — | — | Production-ready scope |
+| NFR-RES-001 | UC-02, UC-04, UC-08 | Usage limit service and view integration tests | — | Implemented |
 | NFR-USA-001 | UC-01–UC-12 | Responsive UI verification | — | Implemented |
 | NFR-MAIN-001–002 | UC-01–UC-12 | Architecture review and automated tests | ADR-0001 | Implemented |
 | ENG-001 | — | Ruff formatting verification | — | Implemented |
-| ENG-002–003 | — | — | — | Production-ready scope |
+| ENG-002 | — | Ruff linting checks | — | Implemented |
+| ENG-003 | — | — | — | Not implemented |
 | ENG-004–005 | — | Automated and pipeline integration test suites | — | Implemented |
 | ENG-006 | — | Docker Compose validation | — | Implemented |
-| ENG-007–010 | — | — | — | Production-ready scope |
-| ENG-011 | — | ADR review | ADR-0001–ADR-0004 | Implemented |
-| ENG-012 | — | Documentation-to-implementation audit | ADR-0001–ADR-0004 | Implemented |
-| ENG-013 | — | — | — | Production-ready scope |
+| ENG-007 | — | GitHub Actions workflow configuration review | — | Implemented |
+| ENG-008 | — | Local production component validation; default branch deployment pending | — | Pending validation |
+| ENG-009 | — | Logging and observability tests; local telemetry validation | ADR-0005 | Implemented |
+| ENG-010 | — | Health check tests and Docker health monitoring validation | — | Implemented |
+| ENG-011 | — | ADR review | ADR-0001–ADR-0005 | Implemented |
+| ENG-012 | — | Documentation-to-implementation audit | ADR-0001–ADR-0005 | Implemented |
+| ENG-013 | — | Observability tests and local metrics validation | ADR-0005 | Implemented |
+
+## Implementation Status
+
+The traceability matrix reflects the current implementation status.
+
+- **Implemented:** the requirement is implemented in the current codebase.
+- **Partially implemented:** only part of the requirement is implemented.
+- **Pending validation:** implementation exists, but the required
+  validation remains incomplete.
+- **Not implemented:** the requirement has not yet been implemented.
+
+Implementation status does not imply production validation.
+
+The verification column identifies the associated verification
+mechanisms. It does not imply exhaustive test coverage of every
+requirement.
+
+Production deployment and final operational validation are tracked
+in the [Deployment Guide](deployment.md).

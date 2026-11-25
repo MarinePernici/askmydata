@@ -188,7 +188,13 @@ This stage focuses on maintainability, deployment and operational excellence.
 - prevention of arbitrary external database connections
 - dedicated read-only demonstration database accounts
 - isolation between application and demonstration databases
-- configurable usage limits for application and AI resources
+- configurable project limits per user
+- configurable daily question quotas per user
+- configurable daily catalog generation and regeneration quotas per user
+- configurable maximum question length
+- persistent daily usage accounting
+- server-side usage limit enforcement
+- read-only administration of daily usage counters
 
 ### Advanced Platform Features
 
@@ -297,5 +303,7 @@ The application demonstrates:
 - secure public demonstration environment
 - controlled platform access
 - predefined read-only demonstration data sources
-- application and AI resource protection
+- configurable application and AI resource protection
+- persistent account-level usage accounting
+- server-side enforcement of Public Demo usage limits
 - production-inspired engineering practices

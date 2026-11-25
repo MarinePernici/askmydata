@@ -91,8 +91,26 @@ Access to the application will be restricted to invited users.
 Visitors may submit an access request, while administrators
 retain control over access approval and invitation management.
 
-The Public Demo will enforce configurable usage limits to protect
-application resources and control AI-related costs.
+The Public Demo implements configurable usage limits to protect
+application resources and reduce the risk of excessive AI-related
+costs.
+
+These limits include:
+
+- a maximum number of projects per user;
+- a daily question quota per user;
+- a shared daily quota for Knowledge Catalog generation and regeneration;
+- a maximum question length.
+
+Daily usage is persisted independently of individual projects and
+conversations.
+
+These restrictions apply exclusively in Public Demo mode and allow
+invited users to explore the application within a controlled
+resource consumption framework.
+
+The implemented protections are documented in
+[Resource Protection](deployment.md#116-resource-protection).
 
 Users will be able to create their own projects and follow the standard project creation workflow. During data source configuration,
 they will choose from four predefined demonstration PostgreSQL databases: EEG, Pagila, Olist, and Badminton, each accompanied by

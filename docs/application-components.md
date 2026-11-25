@@ -195,6 +195,7 @@ Provides restricted administrative capabilities through Django Admin.
 * create, review and revoke invitations;
 * inspect projects;
 * inspect failed executions;
+* inspect daily question and catalog usage counters in read-only mode;
 * support demonstration platform operations.
 
 ### Does Not
@@ -225,14 +226,17 @@ Manages user identity, authentication and access to the application.
 * manage user preferences when enabled;
 * receive public access requests;
 * support administrator review of access requests;
-* support invitation-only registration.
+* support invitation-only registration;
+* enforce configurable account-level usage limits in Public Demo mode;
+* maintain persistent daily usage counters.
 
 ### Domain Concepts
 
 * User;
 * UserPreferences;
 * AccessRequest;
-* Invitation.
+* Invitation;
+* DailyUsage.
 
 ### Application Services
 
@@ -248,17 +252,57 @@ Examples:
 * `AcceptInvitation`
 * `RevokeInvitation`
 * `DeactivateUser`
+* `UsageLimitService`
 
 ### Interfaces Exposed
 
 * authentication service;
 * current-user access service;
-* user authorization checks.
+* user authorization checks;
+* project creation limit checks;
+* question length validation;
+* daily question usage reservation;
+* daily catalog usage reservation.
+
+### Public Demo Usage Limit Service
+
+The `UsageLimitService` is implemented within the authentication
+application (`apps.authentication.usage_limits`).
+
+It provides the following operations:
+
+| Operation | Responsibility |
+|---|---|
+| `ensure_project_creation_allowed` | Check the total number of projects owned by the user |
+| `ensure_question_length_allowed` | Validate the maximum permitted question length |
+| `reserve_question` | Reserve one daily question attempt |
+| `reserve_catalog_build` | Reserve one daily catalog generation or regeneration attempt |
+
+The service uses application settings to determine the configured
+limits and the `DailyUsage` model to persist daily usage counters.
+
+The project creation limit is evaluated against existing projects,
+including archived projects.
+
+Daily usage reservations use conditional atomic database updates
+to prevent concurrent requests from exceeding the configured quota.
+
+Usage reservations are not reversed when subsequent execution
+fails.
+
+The service does not invoke external data sources or LLM providers.
+
+All usage limit operations are inactive outside Public Demo mode.
+
+Usage limits are configured as described in
+[Deployment Guide — Resource Protection](deployment.md#116-resource-protection).
 
 ### Dependencies
 
 * Django authentication infrastructure;
 * application database;
+* application settings;
+* project ownership information for project limit evaluation.
 
 ### Does Not
 
@@ -326,6 +370,20 @@ The Projects component coordinates the project lifecycle but does not implement:
 * query generation;
 * SQL execution;
 * conversation processing.
+
+### Public Demo Resource Protection
+
+The project creation entry point invokes the Usage Limit Service
+before creating a new project.
+
+The project limit check and project creation occur within the same
+database transaction.
+
+A row lock on the project owner serializes concurrent project
+creation requests for the same user.
+
+The project creation service remains independent of Public Demo
+usage accounting.
 
 ---
 
@@ -441,6 +499,20 @@ Examples:
 * call the LLM provider directly;
 * modify the external database.
 
+### Public Demo Resource Protection
+
+Catalog generation and regeneration entry points reserve daily
+catalog usage through the Usage Limit Service before invoking
+the catalog construction service.
+
+Both operations share the same daily quota.
+
+When the quota is reached, the catalog operation is rejected
+before schema discovery and semantic enrichment begin.
+
+The catalog construction service does not manage usage counters
+or account-level quotas.
+
 ---
 
 ## 10. Conversation Component
@@ -496,6 +568,20 @@ Examples:
 * generate SQL;
 * execute queries;
 * store hidden model reasoning.
+
+### Public Demo Resource Protection
+
+The question submission entry point validates question length
+and reserves daily question usage through the Usage Limit Service
+before invoking the Question Run service.
+
+Questions exceeding the maximum permitted length are rejected
+before daily usage is reserved.
+
+Questions exceeding the daily quota are rejected before a new
+Question Run is initiated.
+
+The Conversation component does not manage usage counter persistence.
 
 ---
 
@@ -567,7 +653,11 @@ Examples:
 * own project lifecycle;
 * expose source credentials;
 * bypass query validation;
-* modify external data sources.
+* modify external data sources;
+* enforce account-level Public Demo usage quotas.
+
+Public Demo usage limits are enforced at the application entry
+points before the Query Engine is invoked.
 
 ---
 
@@ -1094,6 +1184,7 @@ This database is separate from the external source database explored by users.
 ### Stored Data
 
 * users;
+* daily usage records;
 * projects;
 * data source configurations with encrypted passwords;
 * demonstration dataset references;
@@ -1111,6 +1202,8 @@ This database is separate from the external source database explored by users.
 * enforce data integrity;
 * support transactions;
 * apply schema migrations;
+* enforce uniqueness of daily usage records per user and calendar date;
+* support atomic daily usage counter updates;
 * provide repositories through Django ORM.
 
 ### Does Not
@@ -1141,6 +1234,7 @@ Examples:
 * projects;
 * conversations;
 * catalog metadata;
+* daily usage counters;
 * execution history.
 
 ### External Data Source
@@ -1307,6 +1401,26 @@ Each significant step updates the run and trace state independently.
 
 A failed external call must not erase the existing Question Run history.
 
+### Public Demo Usage Accounting
+
+Project creation uses a database transaction covering the project
+limit check and project creation.
+
+A row lock on the user prevents concurrent project creation
+requests from bypassing the configured limit.
+
+Daily question and catalog usage reservations use atomic,
+conditional database updates.
+
+Usage reservations occur before the corresponding execution
+services are invoked.
+
+External database and LLM operations are not included in the
+usage reservation transaction.
+
+Subsequent execution failures do not roll back daily usage
+reservations.
+
 ---
 
 ## 32. Error Handling
@@ -1324,6 +1438,8 @@ Components should return structured application errors rather than leaking raw i
 * query execution error;
 * LLM provider error;
 * timeout;
+* usage limit exceeded;
+* question length exceeded;
 * unexpected internal error.
 
 ### Rules
@@ -1338,6 +1454,10 @@ Components should return structured application errors rather than leaking raw i
 * Dismissing the dialog does not remove the persistent assistant error message.
 * Clarification requests and questions that cannot be answered do not trigger the technical error dialog.
 * Technical details are logged safely for diagnosis.
+* Public Demo usage limit violations are translated into localized
+  user-facing messages.
+* Usage limit violations stop processing before the corresponding
+  execution service is invoked.
 
 ---
 
@@ -1424,7 +1544,7 @@ They may be introduced only when supported by a concrete functional or operation
 | ------------------------ | ------------------------------------- | ----------------------------- |
 | Web Interface            | User interaction                      | MVP                           |
 | Administration Interface | Platform administration               | Production-ready Portfolio    |
-| Accounts                 | Authentication and users              | MVP                           |
+| Accounts                 | Authentication, users and usage limits | MVP / Production-ready Portfolio |
 | Projects                 | Project lifecycle and ownership       | MVP                           |
 | Data Source Management   | External connection configuration     | Foundation / MVP              |
 | Catalog                  | Semantic catalog and schema snapshots | Foundation / MVP              |
@@ -1458,3 +1578,7 @@ They may be introduced only when supported by a concrete functional or operation
 15. Sensitive information is excluded from logs and traces.
 16. FastAPI extraction remains possible but is not implemented prematurely.
 17. Infrastructure components are introduced only when a demonstrated need exists.
+18. Public Demo usage limits are enforced server-side before
+    invoking the corresponding execution services.
+19. Daily usage accounting is independent of individual projects
+    and external execution outcomes.

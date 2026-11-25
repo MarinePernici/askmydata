@@ -91,6 +91,7 @@ Les mécanismes de protection actuels comprennent :
 - respect du Catalog Scope pour les schémas et tables accessibles ;
 - identifiants de base de données en lecture seule ;
 - limites d'exécution des requêtes ;
+- limites d'utilisation configurables par utilisateur en mode Public Demo ;
 - validation des résultats avant génération de la réponse ;
 - traces d'exécution pour le diagnostic du pipeline ;
 - gestion des secrets par variables d'environnement.
@@ -99,13 +100,50 @@ Les requêtes qui échouent à la validation SQL ne sont pas exécutées. Les qu
 
 Les instructions fournies au LLM sont considérées comme des indications et non comme une frontière de sécurité. Les permissions de la base de données et la validation applicative restent responsables de l'application effective des restrictions d'accès.
 
+## Démonstration publique
+
+AskMyData intègre un mode Public Demo contrôlé permettant aux
+utilisateurs invités d'explorer le parcours complet de l'application
+sans connecter de bases de données externes arbitraires.
+
+L'environnement de démonstration propose quatre jeux de données
+PostgreSQL prédéfinis : EEG, Pagila, Olist et Badminton.
+
+Les limites d'utilisation par défaut sont les suivantes :
+
+| Ressource | Limite par défaut |
+|---|---|
+| Projets | 5 par utilisateur |
+| Questions | 30 par utilisateur et par jour |
+| Générations et régénérations du catalogue | 10 par utilisateur et par jour |
+| Longueur d'une question | 2 000 caractères |
+
+Les compteurs d'utilisation journalière sont conservés dans la base
+de données applicative.
+
+Les limites sont contrôlées côté serveur avant l'appel aux services
+d'exécution concernés.
+
+Toutes les limites sont configurables et s'appliquent exclusivement
+en mode Public Demo.
+
+Ces mécanismes réduisent le risque de consommation excessive des
+ressources, mais ne garantissent pas un plafond financier global.
+
+Consultez la [documentation des jeux de données de démonstration](docs/demo-datasets/README.md)
+et le [Guide de déploiement](docs/deployment.md#116-resource-protection)
+pour davantage de détails.
+
+La Public Demo a été validée localement. Le déploiement distant et
+la validation finale en production restent en cours de préparation.
+
 ## Architecture
 
 AskMyData suit une architecture en **monolithe modulaire** construite avec Django.
 
 L'application est organisée en modules aux responsabilités explicites :
 
-- **Accounts** — authentification et identité utilisateur
+- **Accounts** — authentification, identité utilisateur et limites d'utilisation de la Public Demo
 - **Projects** — cycle de vie et configuration des projets
 - **Data Source** — configuration des bases externes et test des connexions
 - **Knowledge Catalog** — découverte du schéma et métadonnées sémantiques
@@ -171,7 +209,15 @@ Au dernier point de validation documenté dans le benchmark, la suite de tests c
 
 Voir le [benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md) pour la méthodologie complète, les scénarios, les résultats, les problèmes identifiés et leurs résolutions.
 
-La suite automatisée actuelle contient **plus de 550 tests** et est exécutée par GitHub Actions avec les contrôles de linting et de formatage Ruff.
+La suite automatisée actuelle contient **plus de 575 tests** et est
+exécutée par GitHub Actions avec les contrôles de linting et de
+formatage Ruff.
+
+Les limites d'utilisation de la Public Demo sont couvertes par des
+tests unitaires et d'intégration automatisés, portant notamment sur
+l'application des quotas, l'isolation entre utilisateurs, le
+renouvellement journalier, les tentatives d'exécution échouées et
+le comportement en mode standard.
 
 ## Développement local
 
@@ -328,13 +374,18 @@ Déjà implémenté :
 - quatre jeux de données de démonstration : EEG, Pagila, Olist et Badminton
 - service PostgreSQL de démonstration dédié avec des comptes en lecture seule propres à chaque jeu de données
 - initialisation automatisée des bases de données de démonstration
+- limites d'utilisation configurables de la Public Demo pour les projets, les questions, les opérations sur le catalogue et la longueur des questions
+- compteurs d'utilisation journalière persistants avec contrôle atomique des quotas
+- consultation en lecture seule des compteurs d'utilisation via l'administration Django
+- tests unitaires et d'intégration automatisés pour la protection des ressources de la Public Demo
 - configuration Docker orientée production avec Gunicorn, WhiteNoise et Caddy
 - validation locale de l'environnement Public Demo et des composants de déploiement en production
 - documentation de déploiement et d'exploitation
 
 Travaux d'industrialisation restants :
 
-- mécanismes configurables de protection des ressources applicatives et LLM
+- configuration et validation en production des limites d'utilisation de la Public Demo
+- configuration d'un projet et d'une clé API OpenAI dédiés, avec alertes budgétaires
 - validation finale de la sécurité et de la confidentialité de la télémétrie
 - vérification des conditions de réutilisation et d'exposition publique des jeux de données
 - sélection de l'hébergement cloud et dimensionnement du serveur

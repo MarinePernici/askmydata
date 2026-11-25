@@ -48,7 +48,10 @@ The Knowledge Catalog provides semantic context but never modifies the source da
 
 `Project` is the aggregate root of the domain.
 
-All business operations are performed inside a project.
+Data exploration operations are performed inside a project.
+
+Account management, access control and Public Demo usage accounting
+operate independently of individual projects.
 
 The Project aggregate owns:
 
@@ -95,7 +98,8 @@ Represents an authenticated user of AskMyData.
 A User:
 
 - owns zero or more Projects;
-- has zero or one UserPreferences.
+- has zero or one UserPreferences;
+- owns zero or more DailyUsage records.
 
 ### Business Rules
 
@@ -103,6 +107,7 @@ A User:
 - Passwords are never stored in plain text.
 - Users may only access projects they own.
 - Inactive users cannot authenticate.
+- Public Demo users are subject to configurable account-level usage limits.
 
 ### Release
 
@@ -129,6 +134,63 @@ One User owns at most one UserPreferences.
 - The interface language may be French or English.
 - The language of AI-generated answers is determined from the language of each question and is not stored as a user preference.
 - Additional preferences such as timezone and theme are deferred beyond the current portfolio roadmap.
+
+### Release
+
+Production-ready Portfolio
+
+---
+
+## DailyUsage
+
+### Definition
+
+Represents the daily consumption of restricted application and AI
+resources by a user in Public Demo mode.
+
+DailyUsage records account for execution attempts independently
+of individual projects and conversations.
+
+### Responsibilities
+
+- track daily question attempts;
+- track daily catalog generation and regeneration attempts;
+- support enforcement of user-level daily quotas;
+- provide historical usage information for administration.
+
+### Main Attributes
+
+| Attribute | Description |
+|---|---|
+| id | Unique record identifier |
+| date | UTC calendar date associated with the usage record |
+| question_count | Number of reserved question attempts |
+| catalog_count | Number of reserved catalog generation and regeneration attempts |
+
+### Relationships
+
+A DailyUsage record:
+
+- belongs to exactly one User;
+- is independent of individual Projects and Conversations.
+
+A User may own zero or more DailyUsage records.
+
+### Business Rules
+
+- Only one DailyUsage record may exist per user and calendar date.
+- Usage counters are non-negative integers.
+- Counters are initialized to zero.
+- Daily quotas renew at the beginning of each UTC calendar day.
+- Catalog generation and regeneration share the same counter.
+- Usage is reserved before the corresponding execution service is invoked.
+- Failed execution attempts remain counted.
+- Questions exceeding the maximum permitted length do not consume
+  the daily question quota.
+- Deleting an incomplete project does not reset daily usage.
+- Historical usage records are retained across calendar days.
+- Deleting a user also removes their associated DailyUsage records.
+- Usage accounting applies exclusively in Public Demo mode.
 
 ### Release
 
@@ -302,7 +364,6 @@ Archived
 ```
 A project may be archived only from the `ready` state. Projects that have not completed setup may be deleted, while a project in the `regenerating_catalog` state cannot be archived until the operation completes.
 
-
 ### Business Rules
 
 - Projects are created in the `draft` state.
@@ -312,6 +373,14 @@ A project may be archived only from the `ready` state. Projects that have not co
 - Project history is preserved after archival.
 - Projects that have not completed setup may be physically deleted.
 - Ready projects are preserved and may be archived instead of deleted.
+
+#### Public Demo
+
+- The total number of projects owned by a user is subject to a
+  configurable limit.
+- Incomplete, active and archived projects count towards this limit.
+- Deleting an incomplete project releases a project slot.
+- Archiving a project does not release a project slot.
 
 ### Release
 
@@ -805,6 +874,26 @@ Their technical implementation is described in the application architecture docu
 
 ---
 
+## Usage Limit Service
+
+### Definition
+
+Enforces account-level resource protection rules in Public Demo mode.
+
+### Responsibilities
+
+- determine whether a user may create another project;
+- validate question length;
+- reserve daily question usage;
+- reserve daily catalog generation and regeneration usage;
+- reject operations exceeding configured limits;
+- preserve usage accounting independently of project lifecycle.
+
+This service does not execute questions, generate catalogs or
+communicate with external LLM providers.
+
+---
+
 ## Connector
 
 ### Definition
@@ -972,8 +1061,8 @@ Produces the final natural language response.
 
 The relationships and cardinalities between the main domain entities are represented in the domain overview diagram:
 
-- PlantUML source: [`diagrams/source/domain-overview.puml`](diagrams/source/domain-overview.puml)
-- Generated diagram: [`diagrams/generated/AskMyData_Domain_Overview.svg`](diagrams/generated/AskMyData_Domain_Overview.svg)
+- PlantUML source: [`diagrams/src/domain-model.puml`](diagrams/src/domain-model.puml)
+- Generated diagram: [`diagrams/generated/AskMyData_Domain_Model.svg`](diagrams/generated/AskMyData_Domain_Model.svg)
 
 The diagram is the reference representation of the domain relationships. Entity definitions and business rules remain documented in this file.
 
@@ -1036,6 +1125,20 @@ The diagram is the reference representation of the domain relationships. Entity 
 
 ---
 
+## Public Demo Resource Protection
+
+26. Usage limits apply exclusively in Public Demo mode.
+27. All existing projects count towards the user's project limit.
+28. Daily usage is accounted for independently for each user.
+29. Catalog generation and regeneration share a daily quota.
+30. Failed execution attempts remain counted.
+31. Questions exceeding the configured maximum length are rejected
+    without consuming the daily question quota.
+32. Daily quotas renew at the beginning of each UTC calendar day.
+33. Project deletion does not reset daily usage.
+
+---
+
 # 8. Explicitly Deferred Concepts
 
 The following concepts are intentionally excluded from the current domain model.
@@ -1087,7 +1190,15 @@ The following platform concepts remain outside the current portfolio roadmap:
 - API key management;
 - advanced usage accounting.
 
-The Public Demo v1 introduces only minimal configurable usage limits required to protect application and AI resources. The persistence and enforcement mechanism for these limits is intentionally deferred to implementation design.
+The Public Demo v1 implements minimal configurable usage limits
+required to protect application and AI resources.
+
+Daily usage is persisted through DailyUsage records and enforced
+by the Usage Limit Service.
+
+Commercial quotas, subscription management, token-based billing
+and advanced cost accounting remain outside the current portfolio
+roadmap.
 
 ---
 
@@ -1118,6 +1229,9 @@ A Project represents a complete data exploration workspace containing:
 The Knowledge Catalog provides semantic understanding of the selected database.
 
 QuestionRuns orchestrate AI-assisted exploration while ExecutionTraces ensure observability and traceability.
+
+DailyUsage records support account-level resource protection
+independently of the Project aggregate in Public Demo mode.
 
 This model deliberately separates:
 

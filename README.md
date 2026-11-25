@@ -91,6 +91,7 @@ The current safeguards include:
 - Catalog Scope enforcement for accessible schemas and tables;
 - read-only database credentials;
 - query execution limits;
+- configurable account-level usage limits in Public Demo mode;
 - result validation before answer generation;
 - execution traces for pipeline diagnostics;
 - environment-based secret management.
@@ -99,13 +100,47 @@ Queries that fail SQL validation are not executed. Questions requiring informati
 
 LLM instructions are treated as guidance, not as a security boundary. Database permissions and application-level validation remain responsible for enforcing access restrictions.
 
+## Public Demo
+
+AskMyData includes a controlled Public Demo mode designed to allow
+invited users to explore the complete application workflow without
+connecting arbitrary external databases.
+
+The demonstration environment provides four predefined PostgreSQL
+datasets: EEG, Pagila, Olist, and Badminton.
+
+The default usage limits are:
+
+| Resource | Default limit |
+|---|---|
+| Projects | 5 per user |
+| Questions | 30 per user per day |
+| Catalog generations and regenerations | 10 per user per day |
+| Question length | 2000 characters |
+
+Daily usage counters are persisted in the application database.
+Usage limits are enforced server-side before the corresponding
+execution services are invoked.
+
+All limits are configurable and apply exclusively in Public Demo mode.
+
+These mechanisms reduce the risk of excessive resource consumption
+but do not guarantee a global monetary spending cap.
+
+See the [Demo Datasets documentation](docs/demo-datasets/README.md)
+and the [Deployment Guide](docs/deployment.md#116-resource-protection)
+for further details.
+
+The Public Demo has been validated locally. Remote deployment and
+final production validation remain in progress.
+
 ## Architecture
 
 AskMyData follows a **modular monolith** architecture built with Django.
 
 The application is organized into modules with explicit responsibilities:
 
-- **Accounts** — authentication and user identity
+- **Accounts** — authentication, user identity, and Public Demo usage limits
 - **Projects** — project lifecycle and configuration
 - **Data Source** — external database configuration and connection testing
 - **Knowledge Catalog** — schema discovery and semantic metadata
@@ -171,7 +206,13 @@ At the latest recorded benchmark validation point, the full Docker test suite co
 
 See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
 
-The current automated Django test suite contains **more than 550 tests** and is executed by GitHub Actions together with Ruff linting and formatting checks.
+The current automated Django test suite contains **more than 575 tests**
+and is executed by GitHub Actions together with Ruff linting and
+formatting checks.
+
+Public Demo usage limits are covered by automated unit and integration
+tests, including quota enforcement, user isolation, daily renewal,
+failed execution attempts, and standard application mode behavior.
 
 ## Local Development
 
@@ -328,13 +369,18 @@ Already implemented:
 - four demonstration datasets: EEG, Pagila, Olist, and Badminton
 - dedicated demonstration PostgreSQL service with dataset-specific read-only accounts
 - automated demonstration database initialization
+- configurable Public Demo usage limits for projects, questions, catalog operations, and question length
+- persistent daily usage counters with atomic quota enforcement
+- read-only usage counter inspection through Django administration
+- automated unit and integration tests for Public Demo resource protection
 - production-oriented Docker configuration with Gunicorn, WhiteNoise, and Caddy
 - local validation of the Public Demo environment and production deployment components
 - deployment and operational documentation
 
 Remaining production-readiness work includes:
 
-- configurable application and LLM resource protection mechanisms
+- production configuration and validation of Public Demo usage limits
+- dedicated OpenAI project and API key configuration, with budget alerts
 - final security and telemetry privacy validation
 - review of dataset reuse and public exposure conditions
 - cloud hosting selection and server sizing

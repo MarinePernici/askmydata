@@ -84,6 +84,7 @@ The absence of an archive from Git does not by itself establish permission to re
 
 - All four PostgreSQL demo datasets have been prepared and validated.
 - The dataset selection for the initial Public Demo is finalized.
+- Configurable Public Demo usage limits are implemented and validated through automated tests.
 - Database initialization and read-only access have been validated.
 - The dedicated demo database service is integrated into the Docker Compose demo configuration.
 - Application-level dataset selection and Public Demo mode are implemented and tested.
@@ -92,4 +93,6 @@ The absence of an archive from Git does not by itself establish permission to re
 
 The Public Demo has not yet been deployed to a remote production environment.
 
-Production deployment, HTTPS validation, and final verification of usage limits and security controls remain to be completed.
+Production deployment, HTTPS validation, final security checks,
+and production validation of the implemented usage limits remain
+to be completed.
