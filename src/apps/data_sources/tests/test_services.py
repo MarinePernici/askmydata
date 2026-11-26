@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
@@ -108,6 +108,37 @@ class DataSourceServiceTests(TestCase):
         self.assertIsNotNone(
             self.data_source.last_connection_at,
         )
+
+        logger.info.assert_called_once_with(
+            "Data source connection tested.",
+            extra={
+                "event": "data_source.connection_tested",
+                "project_id": self.project.id,
+                "connection_status": DataSource.ConnectionStatus.FAILED,
+            },
+        )
+
+    @patch("apps.data_sources.services.logger")
+    def test_invalid_credentials_update_connection_status_to_failed(self, logger):
+        self.data_source.encrypted_password = "invalid-ciphertext"
+        self.data_source.connection_status = DataSource.ConnectionStatus.CONNECTED
+        self.data_source.save()
+
+        connector_class = Mock()
+        service = DataSourceService(connector_class=connector_class)
+
+        result = service.test_connection(self.data_source)
+
+        self.data_source.refresh_from_db()
+
+        self.assertFalse(result)
+        self.assertEqual(
+            self.data_source.connection_status,
+            DataSource.ConnectionStatus.FAILED,
+        )
+        self.assertIsNotNone(self.data_source.last_connection_at)
+
+        connector_class.assert_not_called()
 
         logger.info.assert_called_once_with(
             "Data source connection tested.",

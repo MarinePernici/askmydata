@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from cryptography.fernet import Fernet
 from django.db import IntegrityError
 from django.test import TestCase, override_settings
 
@@ -76,6 +77,37 @@ class DataSourceModelTests(TestCase):
             "secret-password",
         )
 
+    def test_data_source_cannot_decrypt_password_with_different_key(self):
+        project = create_test_project(name="Test project")
+
+        data_source = DataSource(project=project)
+        data_source.set_password("secret-password")
+
+        with (
+            override_settings(
+                DATASOURCE_ENCRYPTION_KEY=Fernet.generate_key().decode(),
+            ),
+            self.assertRaisesMessage(
+                DataSourceConfigurationError,
+                "Unable to decrypt data source credentials.",
+            ),
+        ):
+            data_source.get_password()
+
+    def test_data_source_cannot_decrypt_invalid_ciphertext(self):
+        project = create_test_project(name="Test project")
+
+        data_source = DataSource(
+            project=project,
+            encrypted_password="invalid-ciphertext",
+        )
+
+        with self.assertRaisesMessage(
+            DataSourceConfigurationError,
+            "Unable to decrypt data source credentials.",
+        ):
+            data_source.get_password()
+
     def test_data_source_is_not_configured_when_connection_fields_are_missing(self):
         project = create_test_project(
             name="Test project",
@@ -135,6 +167,24 @@ class DataSourceModelTests(TestCase):
         )
 
         with self.assertRaises(DataSourceConfigurationError):
+            data_source.to_connection_config()
+
+    def test_data_source_cannot_build_config_when_password_is_invalid(self):
+        project = create_test_project(name="Test project")
+
+        data_source = DataSource(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+            encrypted_password="invalid-ciphertext",
+        )
+
+        with self.assertRaisesMessage(
+            DataSourceConfigurationError,
+            "Unable to decrypt data source credentials.",
+        ):
             data_source.to_connection_config()
 
     @override_settings(PUBLIC_DEMO_MODE=True)

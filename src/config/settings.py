@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 from pathlib import Path
 
 import environ
+from cryptography.fernet import Fernet
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -26,14 +28,21 @@ env = environ.Env(
 
 environ.Env.read_env(BASE_DIR / ".env")
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
+# Data source credential encryption
 DATASOURCE_ENCRYPTION_KEY = env("DATASOURCE_ENCRYPTION_KEY")
+
+try:
+    Fernet(DATASOURCE_ENCRYPTION_KEY.encode())
+except ValueError as exc:
+    raise ImproperlyConfigured(
+        "DATASOURCE_ENCRYPTION_KEY must be a valid Fernet key."
+    ) from exc
 
 OPENAI_API_KEY = env("OPENAI_API_KEY")
 LLM_MODEL = env("LLM_MODEL", default="gpt-5-mini")

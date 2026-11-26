@@ -1,5 +1,6 @@
 from django.utils.translation import gettext as _
 
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from query_engine.exceptions import (
     DataSourceConnectionError,
     DataSourcePermissionError,
@@ -9,6 +10,12 @@ from query_engine.exceptions import (
 
 def get_safe_interface_error_message(exc: Exception) -> str:
     """Return a safe, translated error message for the user interface."""
+    if isinstance(exc, DataSourceConfigurationError):
+        return _(
+            "The project's data source configuration is invalid. "
+            "Contact your administrator."
+        )
+
     if isinstance(exc, DataSourceConnectionError):
         return _(
             "Unable to connect to the project's data source. "
@@ -29,6 +36,12 @@ def get_safe_interface_error_message(exc: Exception) -> str:
 
 def get_safe_conversation_error_message(exc: Exception) -> str:
     """Return a safe error message intended for conversation content."""
+    if isinstance(exc, DataSourceConfigurationError):
+        return (
+            "The project's data source configuration is invalid. "
+            "Contact your administrator."
+        )
+
     if isinstance(exc, DataSourceConnectionError):
         return (
             "Unable to connect to the project's data source. "

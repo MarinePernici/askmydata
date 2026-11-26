@@ -11,6 +11,7 @@ from apps.catalogs.exceptions import (
     DataSourceNotConfiguredError,
 )
 from apps.catalogs.models import CatalogScope, KnowledgeCatalog
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from catalog.types import (
@@ -617,6 +618,51 @@ class CatalogScopeViewTests(TestCase):
             "Configure a data source before building the catalog.",
         )
 
+    @patch("apps.catalogs.views.create_catalog_service")
+    def test_catalog_build_redirects_when_configuration_is_invalid(
+        self,
+        create_catalog_service_mock,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-invalid-build",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
+            DataSourceConfigurationError("Unable to decrypt data source credentials.")
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "catalog-build",
+                kwargs={"project_id": project.id},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
+        self.assertContains(
+            response,
+            "The data source configuration is invalid. "
+            "Configure the data source again.",
+        )
+        self.assertNotContains(
+            response,
+            "Unable to decrypt data source credentials.",
+        )
+
     @patch("apps.catalogs.views.logger")
     @patch("apps.catalogs.views.create_catalog_service")
     def test_catalog_build_displays_generic_error_on_unexpected_failure(
@@ -757,6 +803,53 @@ class CatalogScopeViewTests(TestCase):
 
         usage = DailyUsage.objects.get(user=user)
         self.assertEqual(usage.catalog_count, 1)
+
+    @override_settings(PUBLIC_DEMO_MODE=False)
+    def test_catalog_scope_redirects_when_credentials_are_invalid(self):
+        user = get_user_model().objects.create_user(
+            username="marine-invalid-scope",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        DataSource.objects.create(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+            encrypted_password="invalid-ciphertext",
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-scope",
+                kwargs={"project_id": project.id},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
+        self.assertContains(
+            response,
+            "The data source configuration is invalid. "
+            "Configure the data source again.",
+        )
+        self.assertNotContains(response, "invalid-ciphertext")
+        self.assertNotContains(
+            response,
+            "Unable to decrypt data source credentials.",
+        )
 
 
 class CatalogConfirmationViewTests(TestCase):
@@ -1047,6 +1140,59 @@ class CatalogConfirmationViewTests(TestCase):
         self.assertNotContains(response, "demo-postgresql")
 
         discover_available_tables.assert_called_once_with(project)
+
+    @override_settings(PUBLIC_DEMO_MODE=False)
+    def test_catalog_confirmation_redirects_when_credentials_are_invalid(self):
+        user = get_user_model().objects.create_user(
+            username="marine-invalid-confirmation",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        DataSource.objects.create(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+            encrypted_password="invalid-ciphertext",
+        )
+        CatalogScope.objects.create(
+            project=project,
+            selected_tables=[
+                {"schema": "sales", "table": "customers"},
+            ],
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "catalog-confirmation",
+                kwargs={"project_id": project.id},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-source-configure",
+                kwargs={"project_id": project.id},
+            ),
+        )
+        self.assertContains(
+            response,
+            "The data source configuration is invalid. "
+            "Configure the data source again.",
+        )
+        self.assertNotContains(response, "invalid-ciphertext")
+        self.assertNotContains(
+            response,
+            "Unable to decrypt data source credentials.",
+        )
 
 
 class CatalogDetailViewTests(TestCase):
@@ -1544,3 +1690,43 @@ class CatalogRegenerateViewTests(TestCase):
 
         usage = DailyUsage.objects.get(user=self.user)
         self.assertEqual(usage.catalog_count, 1)
+
+    def test_catalog_regeneration_displays_safe_configuration_error(
+        self,
+        create_catalog_service_mock,
+    ):
+        self.project.status = Project.Status.READY
+        self.project.save(update_fields=["status"])
+
+        create_catalog_service_mock.return_value.build_for_project.side_effect = (
+            DataSourceConfigurationError("Unable to decrypt data source credentials.")
+        )
+
+        response = self.client.post(
+            reverse(
+                "catalog-regenerate",
+                kwargs={"project_id": self.project.id},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "catalog-detail",
+                kwargs={"project_id": self.project.id},
+            ),
+        )
+        self.assertContains(
+            response,
+            "The project's data source configuration is invalid. "
+            "Contact your administrator.",
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            "Unable to decrypt data source credentials.",
+        )
+
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.status, Project.Status.READY)

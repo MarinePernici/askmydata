@@ -1,5 +1,5 @@
 class DataSourceConfigurationError(Exception):
-    """Raised when a data source configuration is incomplete."""
+    """Raised when a data source configuration is invalid or incomplete."""
 
 
 class DataSourceConnectionError(Exception):

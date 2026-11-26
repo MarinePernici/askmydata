@@ -1,9 +1,10 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.projects.tests.factories import create_test_project
@@ -526,6 +527,59 @@ class QuestionRunServiceTests(TestCase):
             question_run.error_message,
             "LLM unavailable",
         )
+
+    @override_settings(PUBLIC_DEMO_MODE=False)
+    def test_invalid_credentials_create_failed_run_with_safe_message(self):
+        project = self.create_project_with_data_source()
+        conversation = self.create_conversation(project)
+
+        data_source = project.data_source
+        data_source.encrypted_password = "invalid-ciphertext"
+        data_source.save(update_fields=["encrypted_password"])
+
+        executor_factory = FakeExecutorFactory()
+
+        service = QuestionRunService(
+            generator=FakeGenerator(),
+            validator=FakeValidator(),
+            executor_factory=executor_factory,
+            result_validator=FakeResultValidator(),
+            answer_generator=FakeAnswerGenerator(),
+            catalog_reader=FakeCatalogReader(KnowledgeCatalog(tables=())),
+            conversation_service=ConversationService(),
+        )
+
+        with self.assertRaises(DataSourceConfigurationError):
+            service.run(
+                project=project,
+                conversation=conversation,
+                question="Return one.",
+            )
+
+        run = QuestionRun.objects.get(conversation=conversation)
+
+        self.assertEqual(run.status, QuestionRun.Status.FAILED)
+        self.assertEqual(run.error_code, "DataSourceConfigurationError")
+        self.assertEqual(
+            run.error_message,
+            "Unable to decrypt data source credentials.",
+        )
+
+        self.assertIsNotNone(run.started_at)
+        self.assertIsNotNone(run.completed_at)
+        self.assertIsNotNone(run.latency_ms)
+        self.assertGreaterEqual(run.latency_ms, 0)
+
+        self.assertIsNotNone(run.assistant_message)
+        self.assertEqual(
+            run.assistant_message.content,
+            "The project's data source configuration is invalid. "
+            "Contact your administrator.",
+        )
+
+        self.assertEqual(conversation.messages.count(), 2)
+        self.assertIsNone(executor_factory.config)
+        self.assertFalse(ExecutionTrace.objects.filter(question_run=run).exists())
 
     def test_execution_errors_create_safe_assistant_messages(self):
         cases = (

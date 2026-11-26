@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.catalogs.exceptions import CatalogNotReadyError
@@ -1053,6 +1053,51 @@ class DataTestConnectionViewTests(TestCase):
         data_source_service_class.return_value.test_connection.assert_called_once_with(
             data_source
         )
+
+    @override_settings(PUBLIC_DEMO_MODE=False)
+    def test_invalid_credentials_do_not_cause_server_error(self):
+        user = get_user_model().objects.create_user(
+            username="marine-invalid-credentials",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+        )
+        data_source = DataSource.objects.create(
+            project=project,
+            host="localhost",
+            port=5432,
+            database="example",
+            username="readonly",
+            encrypted_password="invalid-ciphertext",
+            connection_status=DataSource.ConnectionStatus.CONNECTED,
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "data-test-connection",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "data-overview",
+                kwargs={"project_id": project.id},
+            ),
+        )
+
+        data_source.refresh_from_db()
+
+        self.assertEqual(
+            data_source.connection_status,
+            DataSource.ConnectionStatus.FAILED,
+        )
+        self.assertIsNotNone(data_source.last_connection_at)
 
     @patch("apps.data_sources.views.DataSourceService")
     def test_user_cannot_test_another_users_data_source(

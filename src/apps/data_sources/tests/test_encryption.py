@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from django.test import SimpleTestCase
 
 from apps.data_sources.encryption import CredentialCipher
@@ -26,3 +26,14 @@ class CredentialCipherTests(SimpleTestCase):
             decrypted,
             "secret-password",
         )
+
+    def test_decrypt_rejects_different_key(self):
+        encrypted = self.cipher.encrypt("secret-password")
+        other_cipher = CredentialCipher(Fernet.generate_key().decode())
+
+        with self.assertRaises(InvalidToken):
+            other_cipher.decrypt(encrypted)
+
+    def test_decrypt_rejects_invalid_ciphertext(self):
+        with self.assertRaises(InvalidToken):
+            self.cipher.decrypt("invalid-ciphertext")

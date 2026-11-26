@@ -1,5 +1,6 @@
 import uuid
 
+from cryptography.fernet import InvalidToken
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -91,7 +92,13 @@ class DataSource(models.Model):
 
     def get_password(self) -> str:
         cipher = CredentialCipher(settings.DATASOURCE_ENCRYPTION_KEY)
-        return cipher.decrypt(self.encrypted_password)
+
+        try:
+            return cipher.decrypt(self.encrypted_password)
+        except InvalidToken as exc:
+            raise DataSourceConfigurationError(
+                "Unable to decrypt data source credentials."
+            ) from exc
 
     def is_configured(self) -> bool:
         return all(

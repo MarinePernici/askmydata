@@ -8,6 +8,7 @@ from django.utils import translation
 from apps.authentication.models import DailyUsage, UserPreferences
 from apps.conversations.models import Conversation, Message
 from apps.conversations.services import ConversationService
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.runs.models import ExecutionTrace, QuestionRun
@@ -1509,6 +1510,60 @@ class ConversationViewTests(TestCase):
         self.assertNotContains(
             response,
             "Sensitive connection details",
+        )
+
+    @patch("apps.conversations.views.create_question_run_service")
+    def test_question_run_configuration_error_displays_safe_modal(
+        self,
+        create_question_run_service,
+    ):
+        user = get_user_model().objects.create_user(
+            username="marine-configuration-error",
+            password="test-password",
+        )
+        project = Project.objects.create(
+            owner=user,
+            name="My project",
+            status=Project.Status.READY,
+        )
+        conversation = Conversation.objects.create(
+            project=project,
+            title="Sales analysis",
+        )
+
+        service = create_question_run_service.return_value
+        service.run.side_effect = DataSourceConfigurationError(
+            "Unable to decrypt data source credentials."
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "conversation-ask",
+                kwargs={
+                    "project_id": project.id,
+                    "conversation_id": conversation.id,
+                },
+            ),
+            data={"question": "How many customers?"},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "The project's data source configuration is invalid. "
+            "Contact your administrator.",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "data-question-error-dialog",
+        )
+        self.assertNotContains(
+            response,
+            "Unable to decrypt data source credentials.",
         )
 
     @patch("apps.conversations.views.create_question_run_service")

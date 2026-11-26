@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 
 from apps.authentication.exceptions import UsageLimitExceededError
 from apps.authentication.usage_limits import UsageLimitService
+from apps.data_sources.exceptions import DataSourceConfigurationError
 from apps.data_sources.models import DataSource
 from apps.projects.exceptions import (
     ArchivedProjectError,
@@ -122,7 +123,7 @@ def catalog_scope(request, project_id):
         )
 
     try:
-        _ = project.data_source
+        _data_source = project.data_source
     except DataSource.DoesNotExist:
         return render(
             request,
@@ -137,7 +138,19 @@ def catalog_scope(request, project_id):
 
     service = CatalogScopeService()
 
-    available_tables = service.discover_available_tables(project)
+    try:
+        available_tables = service.discover_available_tables(project)
+    except DataSourceConfigurationError:
+        messages.error(
+            request,
+            _(
+                "The data source configuration is invalid. Configure the data source again."
+            ),
+        )
+        return redirect(
+            "data-source-configure",
+            project_id=project.id,
+        )
 
     if request.method == "POST":
         selections = []
@@ -233,7 +246,20 @@ def catalog_confirmation(request, project_id):
             project_id=project.id,
         )
 
-    available_tables = CatalogScopeService().discover_available_tables(project)
+    try:
+        available_tables = CatalogScopeService().discover_available_tables(project)
+    except DataSourceConfigurationError:
+        messages.error(
+            request,
+            _(
+                "The data source configuration is invalid. Configure the data source again."
+            ),
+        )
+        return redirect(
+            "data-source-configure",
+            project_id=project.id,
+        )
+
     available_tables_count = sum(len(tables) for tables in available_tables.values())
 
     return render(
@@ -309,6 +335,17 @@ def catalog_build(request, project_id):
             "catalog-scope",
             project_id=project.id,
         )
+    except DataSourceConfigurationError:
+        messages.error(
+            request,
+            _(
+                "The data source configuration is invalid. Configure the data source again."
+            ),
+        )
+        return redirect(
+            "data-source-configure",
+            project_id=project.id,
+        )
     except Exception:
         logger.exception(
             "Unexpected catalog build failure.",
@@ -377,6 +414,14 @@ def catalog_regenerate(request, project_id):
         return redirect(
             "catalog-detail",
             project_id=project.id,
+        )
+    except DataSourceConfigurationError:
+        messages.error(
+            request,
+            _(
+                "The project's data source configuration is invalid. "
+                "Contact your administrator."
+            ),
         )
     except Exception:
         logger.exception(

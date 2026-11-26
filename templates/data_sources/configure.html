@@ -58,6 +58,14 @@
                 </div>
             </div>
 
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-error">
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             <form method="post" class="wizard-form">
                 {% csrf_token %}
 

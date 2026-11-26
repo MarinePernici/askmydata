@@ -4,7 +4,10 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.catalogs.services import CatalogService
-from apps.data_sources.exceptions import DataSourceConnectionError
+from apps.data_sources.exceptions import (
+    DataSourceConfigurationError,
+    DataSourceConnectionError,
+)
 from apps.data_sources.models import DataSource
 from apps.projects.models import Project
 from apps.projects.services import ProjectService
@@ -32,11 +35,13 @@ class DataSourceService:
         self,
         data_source: DataSource,
     ) -> bool:
-        config = data_source.to_connection_config()
-
-        connector = self._connector_class(config)
-
-        is_connected = connector.test_connection()
+        try:
+            config = data_source.to_connection_config()
+        except DataSourceConfigurationError:
+            is_connected = False
+        else:
+            connector = self._connector_class(config)
+            is_connected = connector.test_connection()
 
         data_source.connection_status = (
             DataSource.ConnectionStatus.CONNECTED
