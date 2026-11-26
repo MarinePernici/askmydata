@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -66,17 +67,22 @@ class JsonFormatterTests(TestCase):
         self.assertNotIn("connection_status", payload)
         self.assertNotIn("catalog_version", payload)
 
-    def test_format_includes_exception(self):
+    def test_format_includes_exception_type_without_sensitive_details(self):
+        sensitive_message = "Sensitive database connection details"
+
         try:
-            raise RuntimeError("Test failure")
+            raise RuntimeError(sensitive_message)
         except RuntimeError:
             record = self.create_record()
-            record.exc_info = __import__("sys").exc_info()
+            record.exc_info = sys.exc_info()
 
-        payload = json.loads(self.formatter.format(record))
+        formatted = self.formatter.format(record)
+        payload = json.loads(formatted)
 
-        self.assertIn("exception", payload)
-        self.assertIn("RuntimeError: Test failure", payload["exception"])
+        self.assertEqual(payload["exception_type"], "RuntimeError")
+        self.assertNotIn("exception", payload)
+        self.assertNotIn(sensitive_message, formatted)
+        self.assertNotIn("Traceback", formatted)
 
     def test_format_includes_trace_context_when_span_is_active(self):
         tracer_provider = TracerProvider()
@@ -117,3 +123,39 @@ class JsonFormatterTests(TestCase):
         self.assertEqual(payload["message"], "Question run event.")
         self.assertNotIn("trace_id", payload)
         self.assertNotIn("span_id", payload)
+
+    def test_format_redacts_invitation_token(self):
+        record = self.create_record(msg="Not Found: /auth/register/sensitive-token/")
+
+        formatted = self.formatter.format(record)
+        payload = json.loads(formatted)
+
+        self.assertEqual(
+            payload["message"],
+            "Not Found: /auth/register/[REDACTED]/",
+        )
+        self.assertNotIn("sensitive-token", formatted)
+
+    def test_format_redacts_invitation_token_in_absolute_url(self):
+        record = self.create_record(
+            msg="https://example.com/auth/register/sensitive-token/"
+        )
+
+        formatted = self.formatter.format(record)
+        payload = json.loads(formatted)
+
+        self.assertEqual(
+            payload["message"],
+            "https://example.com/auth/register/[REDACTED]/",
+        )
+        self.assertNotIn("sensitive-token", formatted)
+
+    def test_format_preserves_non_sensitive_url(self):
+        record = self.create_record(msg="Not Found: /auth/login/")
+
+        payload = json.loads(self.formatter.format(record))
+
+        self.assertEqual(
+            payload["message"],
+            "Not Found: /auth/login/",
+        )

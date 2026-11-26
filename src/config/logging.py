@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from datetime import UTC, datetime
 
 from opentelemetry import trace
@@ -7,6 +8,8 @@ from opentelemetry import trace
 
 class JsonFormatter(logging.Formatter):
     """Format application log records as one JSON object per line."""
+
+    INVITATION_TOKEN_PATTERN = re.compile(r"(/auth/register/)[^/\s?#]+")
 
     STRUCTURED_FIELDS = (
         "event",
@@ -24,7 +27,10 @@ class JsonFormatter(logging.Formatter):
             ).isoformat(),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": self.INVITATION_TOKEN_PATTERN.sub(
+                r"\g<1>[REDACTED]",
+                record.getMessage(),
+            ),
         }
 
         try:
@@ -42,8 +48,8 @@ class JsonFormatter(logging.Formatter):
             if value is not None:
                 payload[field] = value
 
-        if record.exc_info:
-            payload["exception"] = self.formatException(record.exc_info)
+        if record.exc_info and record.exc_info[0] is not None:
+            payload["exception_type"] = record.exc_info[0].__name__
 
         return json.dumps(
             payload,
