@@ -19,17 +19,11 @@ from config.observability import (
 
 class ConfigureOpenTelemetryTests(SimpleTestCase):
     @override_settings(OTEL_ENABLED=False)
-    @patch("config.observability.DjangoInstrumentor.instrument")
-    @patch("config.observability.PsycopgInstrumentor.instrument")
-    def test_does_not_instrument_when_disabled(
-        self,
-        psycopg_instrument,
-        django_instrument,
-    ):
+    @patch("config.observability._configure_opentelemetry")
+    def test_does_not_configure_when_disabled(self, configure):
         configure_opentelemetry()
 
-        django_instrument.assert_not_called()
-        psycopg_instrument.assert_not_called()
+        configure.assert_not_called()
 
     @override_settings(
         OTEL_ENABLED=True,
@@ -38,25 +32,23 @@ class ConfigureOpenTelemetryTests(SimpleTestCase):
         OTEL_EXPORTER_OTLP_HEADERS="Authorization=test-token",
         OTEL_TRACES_SAMPLER_ARG=1.0,
     )
+    @patch("config.observability.PeriodicExportingMetricReader")
+    @patch("config.observability.BatchSpanProcessor")
     @patch("config.observability.metrics.set_meter_provider")
     @patch("config.observability.trace.set_tracer_provider")
-    @patch("config.observability.PsycopgInstrumentor.instrument")
-    @patch("config.observability.DjangoInstrumentor.instrument")
-    def test_instruments_django_and_psycopg_when_enabled(
+    def test_configures_telemetry_providers_when_enabled(
         self,
-        django_instrument,
-        psycopg_instrument,
-        set_meter_provider,
         set_tracer_provider,
+        set_meter_provider,
+        span_processor,
+        metric_reader,
     ):
         configure_opentelemetry()
 
-        django_instrument.assert_called_once_with(
-            excluded_urls=r"health/live/,health/ready/",
-        )
-        psycopg_instrument.assert_called_once_with()
         set_meter_provider.assert_called_once()
         set_tracer_provider.assert_called_once()
+        span_processor.assert_called_once()
+        metric_reader.assert_called_once()
 
     @override_settings(
         OTEL_ENABLED=True,
@@ -213,6 +205,30 @@ class TracedOperationTests(SimpleTestCase):
 
         self.assertTrue(executed)
 
+    @patch("config.observability.trace.get_tracer")
+    def test_excludes_unauthorized_span_attributes(self, get_tracer):
+        tracer = get_tracer.return_value
+
+        with traced_operation(
+            "sql_validation",
+            attributes={
+                "pipeline_step": "sql_validation",
+                "sql": "SELECT sensitive_data FROM customers",
+                "prompt": "Sensitive prompt",
+                "password": "Sensitive password",
+                "question": "Sensitive question",
+            },
+        ):
+            pass
+
+        tracer.start_as_current_span.assert_called_once_with(
+            "sql_validation",
+            kind=SpanKind.INTERNAL,
+            attributes={"pipeline_step": "sql_validation"},
+            record_exception=False,
+            set_status_on_exception=False,
+        )
+
 
 class TracedQuestionRunTests(SimpleTestCase):
     @patch("config.observability.traced_operation")
@@ -368,6 +384,26 @@ class SetSpanAttributeTests(SimpleTestCase):
 
         set_span_attribute(
             span,
+            "llm.model",
+            "test-model",
+        )
+
+    def test_ignores_unauthorized_attributes(self):
+        span = MagicMock()
+
+        for key in ("sql", "prompt", "password", "question", "answer"):
+            with self.subTest(key=key):
+                set_span_attribute(
+                    span,
+                    key,
+                    "Sensitive content",
+                )
+
+        span.set_attribute.assert_not_called()
+
+    def test_ignores_missing_span(self):
+        set_span_attribute(
+            None,
             "llm.model",
             "test-model",
         )

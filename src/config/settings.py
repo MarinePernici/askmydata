@@ -255,6 +255,7 @@ LOGGING = {
         "httpx": {
             "level": "WARNING",
         },
+        "httpx2": {"level": "WARNING"},
         "openai": {
             "level": "WARNING",
         },

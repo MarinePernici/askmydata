@@ -206,7 +206,7 @@ At the latest recorded benchmark validation point, the full Docker test suite co
 
 See the complete [MVP Quality Benchmark](docs/benchmark/mvp-quality-benchmark.md) for the methodology, scenarios, results, discovered issues, and resolutions.
 
-The current automated Django test suite contains **more than 575 tests**
+The current automated Django test suite contains **more than 580 tests**
 and is executed by GitHub Actions together with Ruff linting and
 formatting checks.
 
@@ -357,7 +357,9 @@ Already implemented:
 - Ruff-based linting and formatting configuration
 - continuous integration with GitHub Actions, including PostgreSQL integration tests
 - structured JSON application logging with Project and Question Run correlation
-- OpenTelemetry distributed tracing for HTTP requests, PostgreSQL queries, Question Runs, Query Engine steps, and LLM calls
+- logging privacy protections including invitation token redaction and safe exception representation
+- targeted OpenTelemetry tracing for Question Runs, Query Engine steps, and LLM calls
+- telemetry privacy protections through an explicit span attribute allowlist and disabled automatic HTTP and PostgreSQL instrumentation
 - OpenTelemetry metrics for Question Run throughput and duration, LLM token usage, and Query Engine step duration
 - optional OTLP export to an external observability backend, with telemetry disabled by default
 - application liveness and readiness health checks

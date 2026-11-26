@@ -1040,6 +1040,13 @@ AskMyData combines:
 OpenTelemetry complements the application-specific observability
 mechanisms without replacing them.
 
+OpenTelemetry instrumentation is intentionally restricted to
+application-controlled spans covering QuestionRun execution,
+Query Engine steps and LLM calls.
+
+Automatic Django HTTP and PostgreSQL instrumentation is
+disabled to reduce the risk of sensitive-data exposure.
+
 The architectural decision is documented in
 [ADR-0005](adrs/0005-opentelemetry-observability.md).
 
@@ -1121,20 +1128,20 @@ A value of `1.0` samples all instrumented traces.
 
 The ratio may be reduced if traffic or telemetry volume increases.
 
-Health endpoints are excluded from automatic HTTP tracing.
-
 ### 9.6. Validate Telemetry
 
 After enabling telemetry:
 
-1. Recreate the application container with the updated configuration.
-2. Perform an authenticated application operation.
+1. Rebuild and recreate the application container with the updated configuration.
+2. Sign in and open a configured project.
 3. Execute a valid natural-language question.
 4. Wait for telemetry export.
-5. Verify that traces appear in the observability backend.
+5. Verify that QuestionRun, Query Engine and LLM spans appear in the observability backend.
 6. Verify that application metrics are available.
 7. Check that correlation identifiers are present where expected.
-8. Inspect exported attributes for unexpected sensitive information.
+8. Verify that exported application span attributes are restricted to the approved allowlist.
+9. Verify that automatic HTTP and PostgreSQL query spans are not exported.
+10. Inspect exported telemetry for unexpected sensitive information.
 
 Application logs should also be inspected for telemetry
 configuration or export errors.
@@ -1142,7 +1149,17 @@ configuration or export errors.
 Telemetry must remain optional and must not prevent normal
 application execution when the external backend is unavailable.
 
-The direct export integration has been validated locally.
+The revised privacy-oriented instrumentation has been validated
+locally using Docker and Grafana Cloud.
+
+Validation confirmed:
+
+- Successful export of application-controlled spans.
+- Correct QuestionRun and Query Engine span hierarchy.
+- Absence of automatic HTTP and PostgreSQL spans in the inspected trace.
+- Compliance of inspected span attributes with the application allowlist.
+- Availability of all four application metrics.
+- Correlation between application logs and OpenTelemetry spans.
 
 Production telemetry export with Gunicorn workers remains
 to be validated on the target deployment.
@@ -1561,11 +1578,44 @@ Telemetry must not export user questions, generated answers,
 SQL queries, prompts, query results, credentials or other
 sensitive application content.
 
-Exported telemetry should be restricted to approved technical
-attributes and operational measurements.
+Automatic Django HTTP and PostgreSQL instrumentation is
+intentionally disabled.
 
-Automatic instrumentation must be reviewed alongside custom
-instrumentation when validating telemetry privacy.
+Application span attributes are restricted through an explicit
+allowlist enforced during span creation and attribute updates.
+
+The permitted application span attributes are:
+
+- `project_id`;
+- `question_run_id`;
+- `pipeline_step`;
+- `llm.operation`;
+- `llm.model`;
+- `error.type`.
+
+Attribute values and span names must remain controlled by
+application code and must not contain user-provided content.
+
+Operational metrics are restricted to technical dimensions
+and numerical measurements.
+
+Exceptions are represented through span status and exception
+type without exporting raw exception messages or stack traces.
+
+Structured application logs also apply confidentiality
+protections:
+
+- Invitation tokens are redacted from logged registration URLs.
+- Exception details are replaced with exception types.
+- Django logs use the centralized JSON formatter.
+- SQL and third-party library logging verbosity is restricted.
+- Gunicorn and Caddy access logging is not enabled.
+
+These protections reduce the risk of sensitive-data exposure
+but do not constitute a generic data-loss prevention mechanism.
+
+Telemetry privacy and production logging must be validated
+before opening the Public Demo to invited users.
 
 ---
 

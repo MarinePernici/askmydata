@@ -1118,7 +1118,22 @@ Only explicitly supported structured fields are included. Arbitrary application 
 
 Structured application logs complement, rather than replace, persisted `ExecutionTrace` records. Execution traces provide durable step-level traceability for Question Runs, while application logs provide operational diagnostics for the running application.
 
-The Production-ready Portfolio does not require a dedicated external logging or telemetry platform. Monitoring integrations may consume these structured logs in later deployment stages.
+The Production-ready Portfolio supports optional external
+observability through OpenTelemetry.
+
+Application traces and operational metrics can be exported
+directly to an OTLP-compatible backend without requiring a
+dedicated OpenTelemetry Collector.
+
+Grafana Cloud Free is the initial observability backend.
+
+Structured application logs remain independent of telemetry
+export and can be correlated with active OpenTelemetry spans
+through trace and span identifiers.
+
+The instrumentation strategy and telemetry privacy requirements
+are documented in
+[ADR-0005](adrs/0005-opentelemetry-observability.md).
 
 ### Data That May Be Recorded
 

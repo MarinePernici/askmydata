@@ -30,7 +30,7 @@ The observability architecture should therefore:
 
 - provide standardized traces and operational metrics;
 - preserve the existing domain-level observability mechanisms;
-- support correlation across HTTP requests, application logs and AI pipeline operations;
+- support correlation across application logs, QuestionRuns and AI pipeline operations;
 - avoid exposing user data, SQL, prompts or other sensitive information;
 - remain optional and non-blocking;
 - avoid unnecessary infrastructure for the expected Public Demo workload;
@@ -52,16 +52,17 @@ The initial OpenTelemetry implementation provides **distributed traces and opera
 
 ## Instrumentation Strategy
 
-AskMyData combines automatic infrastructure instrumentation with targeted custom instrumentation.
+AskMyData uses targeted custom instrumentation to provide
+operational visibility while maintaining control over exported
+telemetry.
 
-Automatic instrumentation covers:
+Automatic Django HTTP and PostgreSQL instrumentation is
+intentionally disabled to prevent the unintended export of
+sensitive URLs, SQL statements, database metadata and
+exception details.
 
-- Django HTTP requests;
-- PostgreSQL interactions supported by the OpenTelemetry instrumentation ecosystem.
-
-Frequently invoked technical endpoints such as liveness and readiness health checks are excluded from HTTP tracing where appropriate.
-
-Custom spans are limited to high-value AI pipeline operations, including:
+Custom spans are limited to high-value AI pipeline operations,
+including:
 
 - QuestionRun execution;
 - SQL generation;
@@ -72,7 +73,8 @@ Custom spans are limited to high-value AI pipeline operations, including:
 
 Instrumentation is intentionally selective rather than exhaustive.
 
-OpenTelemetry spans do not replace persistent `ExecutionTrace` records.
+OpenTelemetry spans do not replace persistent `ExecutionTrace`
+records.
 
 ## LLM Instrumentation
 
@@ -103,20 +105,25 @@ Estimated LLM cost is not exported while cost calculation is not implemented by 
 
 ## Telemetry Attributes
 
-Exported telemetry follows an explicit allowlist.
+Exported application span attributes are restricted through
+an explicit allowlist enforced during span creation and
+attribute updates.
 
-Permitted attributes may include:
+The currently permitted span attributes are:
 
-- Project identifier;
-- QuestionRun identifier;
-- pipeline step;
-- run status;
-- LLM provider;
-- LLM model;
-- data source type;
-- error type.
+- `project_id`;
+- `question_run_id`;
+- `pipeline_step`;
+- `llm.operation`;
+- `llm.model`;
+- `error.type`.
 
-Numerical measurements such as durations, token counts and returned row counts may also be exported when appropriate.
+Operational metrics use explicitly defined technical dimensions
+and numerical measurements, including run status, model name,
+token type, pipeline step, durations and token counts.
+
+Attribute values and span names must remain controlled by
+application code and must not contain user-provided content.
 
 The following content must never be exported through OpenTelemetry:
 
@@ -222,7 +229,7 @@ Using OpenTelemetry enables AskMyData to demonstrate production-oriented observa
 The selected approach provides:
 
 - standardized telemetry;
-- end-to-end visibility from HTTP requests to AI pipeline operations;
+- visibility into QuestionRun execution and AI pipeline operations;
 - visibility into LLM latency and token usage;
 - correlation between traces, logs and persistent execution records;
 - compatibility with external monitoring platforms;
@@ -243,7 +250,7 @@ Using a managed backend avoids operating a dedicated observability stack while s
 
 - Standardized application telemetry.
 - Improved visibility into application and AI pipeline performance.
-- End-to-end request tracing.
+- Controlled tracing of AI pipeline operations.
 - Dedicated visibility into LLM operations.
 - Operational metrics suitable for dashboards and alerting.
 - Correlation between traces, logs, QuestionRuns and ExecutionTraces.
@@ -261,6 +268,9 @@ Using a managed backend avoids operating a dedicated observability stack while s
 - Direct backend export provides less routing and processing flexibility than an OpenTelemetry Collector.
 - Full trace sampling may need to be reduced if traffic increases.
 - Monitoring depends on an external SaaS provider when enabled.
+- No automatic HTTP request or PostgreSQL query tracing.
+- Attribute-name filtering does not replace careful control of
+  attribute values and span names.
 
 ---
 
@@ -359,7 +369,8 @@ The observability architecture may evolve to include:
 - dedicated error tracking;
 - additional connector instrumentation;
 - additional deployment and infrastructure telemetry;
-- migration to another OTLP-compatible observability backend.
+- migration to another OTLP-compatible observability backend;
+- privacy-preserving HTTP request instrumentation.
 
 These changes should preserve the separation between application-specific persistent observability data and externally exported operational telemetry.
 

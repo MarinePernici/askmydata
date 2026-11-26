@@ -209,7 +209,7 @@ Au dernier point de validation documenté dans le benchmark, la suite de tests c
 
 Voir le [benchmark qualité du MVP](docs/benchmark/mvp-quality-benchmark.md) pour la méthodologie complète, les scénarios, les résultats, les problèmes identifiés et leurs résolutions.
 
-La suite automatisée actuelle contient **plus de 575 tests** et est
+La suite automatisée actuelle contient **plus de 580 tests** et est
 exécutée par GitHub Actions avec les contrôles de linting et de
 formatage Ruff.
 
@@ -362,7 +362,9 @@ Déjà implémenté :
 - configuration de Ruff pour le linting et le formatage
 - intégration continue avec GitHub Actions, incluant les tests d'intégration PostgreSQL
 - logs applicatifs structurés en JSON avec corrélation par Project et Question Run
-- tracing distribué OpenTelemetry pour les requêtes HTTP, les requêtes PostgreSQL, les Question Runs, les étapes du Query Engine et les appels LLM
+- protections de confidentialité des logs incluant le masquage des tokens d'invitation et la représentation sécurisée des exceptions
+- tracing OpenTelemetry ciblé sur les Question Runs, les étapes du Query Engine et les appels LLM
+- protections de confidentialité de la télémétrie par une liste explicite d'attributs de spans autorisés et la désactivation de l'instrumentation automatique HTTP et PostgreSQL
 - métriques OpenTelemetry pour le nombre et la durée des Question Runs, l'utilisation des tokens LLM et la durée des étapes du Query Engine
 - export OTLP optionnel vers un backend d'observabilité externe, avec télémétrie désactivée par défaut
 - health checks de liveness et de readiness de l'application

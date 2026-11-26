@@ -14,8 +14,6 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
-from opentelemetry.instrumentation.django import DjangoInstrumentor
-from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
@@ -25,6 +23,17 @@ from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.trace import SpanKind, Status, StatusCode
 
 logger = logging.getLogger(__name__)
+
+ALLOWED_SPAN_ATTRIBUTES = frozenset(
+    {
+        "project_id",
+        "question_run_id",
+        "pipeline_step",
+        "llm.operation",
+        "llm.model",
+        "error.type",
+    }
+)
 
 _meter = metrics.get_meter("askmydata")
 
@@ -96,11 +105,6 @@ def _configure_opentelemetry() -> None:
 
     metrics.set_meter_provider(meter_provider)
 
-    DjangoInstrumentor().instrument(
-        excluded_urls=r"health/live/,health/ready/",
-    )
-    PsycopgInstrumentor().instrument()
-
 
 def _parse_otlp_headers(raw_headers: str) -> dict[str, str]:
     """Parse OTLP HTTP headers from environment configuration."""
@@ -126,11 +130,17 @@ def traced_operation(
 ) -> Generator[trace.Span | None]:
     """Create an application span without affecting business execution."""
     try:
+        safe_attributes = {
+            key: value
+            for key, value in (attributes or {}).items()
+            if key in ALLOWED_SPAN_ATTRIBUTES
+        }
+
         tracer = trace.get_tracer("askmydata")
         span_context = tracer.start_as_current_span(
             name,
             kind=SpanKind.INTERNAL,
-            attributes=attributes,
+            attributes=safe_attributes,
             record_exception=False,
             set_status_on_exception=False,
         )
@@ -198,8 +208,8 @@ def set_span_attribute(
     key: str,
     value: str | int,
 ) -> None:
-    """Set a span attribute without affecting business execution."""
-    if span is None:
+    """Set an allowed span attribute without affecting business execution."""
+    if span is None or key not in ALLOWED_SPAN_ATTRIBUTES:
         return
 
     try:
