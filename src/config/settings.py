@@ -236,4 +236,30 @@ LOGGING = {
         "handlers": ["console"],
         "level": "INFO",
     },
+    "loggers": {
+        "django": {
+            "handlers": [],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django.server": {
+            "handlers": [],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django.db.backends": {
+            "handlers": [],
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "httpx": {
+            "level": "WARNING",
+        },
+        "openai": {
+            "level": "WARNING",
+        },
+        "opentelemetry": {
+            "level": "WARNING",
+        },
+    },
 }
