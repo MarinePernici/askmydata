@@ -161,6 +161,16 @@ Gunicorn.
 Production containers run the application code included in the
 Docker image rather than mounting the host source directory.
 
+During the image build, a temporary Fernet key is generated
+to satisfy Django configuration validation when collecting
+static assets.
+
+This build-time key is independent of deployment secrets
+and is not persisted as a runtime environment variable.
+
+The runtime encryption key must be supplied through the
+deployment environment.
+
 ### 3.4. Network Architecture
 
 In local development, the application is directly accessible through
@@ -318,16 +328,41 @@ through the user interface or committed to the repository.
 
 ### 4.5. Data Source Encryption
 
-The `DATASOURCE_ENCRYPTION_KEY` variable contains a valid Fernet key.
+The `DATASOURCE_ENCRYPTION_KEY` variable must contain a valid
+Fernet key.
 
 It is used to encrypt and decrypt stored external data source
 passwords.
+
+The encryption key is validated during Django settings
+initialization. An empty or invalid key prevents the application
+from starting.
+
+Startup validation verifies the key format but does not verify
+whether the key matches existing encrypted credentials.
+
+If stored credentials cannot be decrypted, the application
+handles the failure as a data source configuration error.
+
+The following operations handle this error in a controlled manner:
+
+- Connection testing marks the data source connection as failed.
+- Catalog setup redirects the user to data source configuration.
+- Catalog regeneration displays a configuration error.
+- Question execution records a failed run and returns a safe
+  error message.
+
+User-facing error messages do not expose encryption keys,
+encrypted credentials or cryptographic exception details.
 
 The same encryption key must be preserved across application
 restarts, updates and database restorations.
 
 Replacing the key without migrating existing encrypted credentials
 makes those credentials unreadable.
+
+See Section 12.7 for credential rotation requirements and
+Section 13.10 for encryption failure troubleshooting.
 
 ### 4.6. Public Demo Configuration
 
@@ -1364,6 +1399,10 @@ Before granting public demonstration access, confirm that:
 - Code quality checks pass.
 - Dependency security findings have been reviewed.
 - No secrets are included in the repository.
+- Independent production secrets have been generated.
+- The runtime Fernet encryption key is valid and securely backed up.
+- Existing encrypted credentials remain readable after application
+  updates, when applicable.
 - All required services are operational.
 - Database migrations are applied.
 - HTTPS is correctly configured.
@@ -1969,6 +2008,49 @@ for diagnostic information.
 
 Do not expose API keys, prompts or user data when sharing
 diagnostic information.
+
+### 13.10. Data Source Encryption Failure
+
+An application startup error such as:
+
+```text
+ImproperlyConfigured: DATASOURCE_ENCRYPTION_KEY must be a valid Fernet key.
+```
+
+indicates that the configured encryption key is empty or invalid.
+
+Verify that:
+
+- The encryption key is defined in the deployment environment.
+- The configured value is a valid Fernet key.
+- The correct environment configuration is loaded.
+
+A valid Fernet key does not guarantee that existing encrypted
+credentials can be decrypted.
+
+If the application starts but reports data source configuration
+errors, verify that the original encryption key has been preserved
+and that the stored encrypted credentials have not been corrupted.
+
+If the encryption key has been changed unintentionally:
+
+1. Restore the original encryption key from a secure backup.
+2. Recreate the application container using the appropriate
+   Compose configuration.
+3. Verify application startup and service health.
+4. Test the affected data source connections.
+5. Verify catalog access and question execution.
+
+Do not generate a replacement encryption key as a troubleshooting
+step when existing encrypted credentials must remain accessible.
+
+If the original key is permanently lost, the affected encrypted
+credentials cannot be recovered through decryption. The affected
+data source credentials must be configured again through an
+appropriate recovery procedure.
+
+Never include encryption keys, plaintext passwords or encrypted
+credential values in diagnostic output.
 
 ---
 
