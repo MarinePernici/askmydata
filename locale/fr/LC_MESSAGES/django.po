@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: AskMyData\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 16:15+0000\n"
-"PO-Revision-Date: 2026-10-05\n"
+"POT-Creation-Date: 2026-11-27 10:35+0000\n"
+"PO-Revision-Date: 2026-11-27\n"
 "Last-Translator: Marine Pernici\n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -83,25 +83,41 @@ msgstr "Prêt"
 msgid "Stale"
 msgstr "Obsolète"
 
-#: src/apps/catalogs/models.py:54 src/apps/data_sources/models.py:21
+#: src/apps/catalogs/models.py:54 src/apps/data_sources/models.py:22
 #: src/apps/runs/models.py:17 src/apps/runs/models.py:100
 #: templates/catalogs/detail.html:36
 msgid "Failed"
 msgstr "Échec"
 
-#: src/apps/catalogs/views.py:295
+#: src/apps/catalogs/views.py:147 src/apps/catalogs/views.py:255
+#: src/apps/catalogs/views.py:342
+msgid ""
+"The data source configuration is invalid. Configure the data source again."
+msgstr ""
+"La configuration de la source de données est invalide. Configurez à nouveau "
+"la source de données."
+
+#: src/apps/catalogs/views.py:321
 msgid "Configure a data source before building the catalog."
 msgstr "Configurez une source de données avant de générer le catalogue."
 
-#: src/apps/catalogs/views.py:305
+#: src/apps/catalogs/views.py:331
 msgid "Select the project data before building the catalog."
 msgstr "Sélectionnez les données du projet avant de générer le catalogue."
 
-#: src/apps/catalogs/views.py:322
+#: src/apps/catalogs/views.py:359
 msgid "Unable to build the catalog."
 msgstr "Impossible de générer le catalogue."
 
-#: src/apps/catalogs/views.py:391
+#: src/apps/catalogs/views.py:422 src/apps/runs/error_messages.py:15
+msgid ""
+"The project's data source configuration is invalid. Contact your "
+"administrator."
+msgstr ""
+"La configuration de la source de données du projet est invalide. Contactez "
+"votre administrateur."
+
+#: src/apps/catalogs/views.py:436
 msgid "Unable to regenerate the catalog."
 msgstr "Impossible de régénérer le catalogue."
 
@@ -129,15 +145,15 @@ msgstr "Génération de la réponse"
 msgid "Project is not ready."
 msgstr "Le projet n’est pas prêt."
 
-#: src/apps/data_sources/models.py:19
+#: src/apps/data_sources/models.py:20
 msgid "Not tested"
 msgstr "Non testée"
 
-#: src/apps/data_sources/models.py:20
+#: src/apps/data_sources/models.py:21
 msgid "Connected"
 msgstr "Connectée"
 
-#: src/apps/runs/error_messages.py:14
+#: src/apps/runs/error_messages.py:21
 msgid ""
 "Unable to connect to the project's data source. Check the connection and try "
 "again."
@@ -145,7 +161,7 @@ msgstr ""
 "Impossible de se connecter à la source de données du projet. Vérifiez la "
 "connexion et réessayez."
 
-#: src/apps/runs/error_messages.py:20
+#: src/apps/runs/error_messages.py:27
 msgid ""
 "The database user no longer has the required permissions. Check the data "
 "source permissions."
@@ -153,13 +169,13 @@ msgstr ""
 "L’utilisateur de la base de données ne dispose plus des autorisations "
 "requises. Vérifiez les autorisations de la source de données."
 
-#: src/apps/runs/error_messages.py:25
+#: src/apps/runs/error_messages.py:32
 msgid "The query took too long to execute. Try a more specific question."
 msgstr ""
 "La requête a pris trop de temps à s’exécuter. Essayez de poser une question "
 "plus précise."
 
-#: src/apps/runs/error_messages.py:27
+#: src/apps/runs/error_messages.py:34
 msgid "Unable to process your question. Please try again."
 msgstr "Impossible de traiter votre question. Veuillez réessayer."
 
@@ -413,21 +429,21 @@ msgid "Type"
 msgstr "Type"
 
 #: templates/catalogs/confirmation.html:98
-#: templates/data_sources/configure.html:104
-#: templates/data_sources/configure.html:130
+#: templates/data_sources/configure.html:112
+#: templates/data_sources/configure.html:138
 #: templates/data_sources/overview.html:77
 msgid "Host"
 msgstr "Hôte"
 
 #: templates/catalogs/confirmation.html:109
-#: templates/data_sources/configure.html:114
-#: templates/data_sources/configure.html:172
+#: templates/data_sources/configure.html:122
+#: templates/data_sources/configure.html:180
 #: templates/data_sources/overview.html:88
 msgid "Database"
 msgstr "Base de données"
 
 #: templates/catalogs/confirmation.html:112
-#: templates/data_sources/configure.html:74
+#: templates/data_sources/configure.html:82
 #: templates/data_sources/overview.html:91
 msgid "Demo dataset"
 msgstr "Jeu de données de démonstration"
@@ -465,7 +481,7 @@ msgid "No tables selected."
 msgstr "Aucune table sélectionnée."
 
 #: templates/catalogs/confirmation.html:154 templates/catalogs/scope.html:81
-#: templates/catalogs/scope.html:161 templates/data_sources/configure.html:231
+#: templates/catalogs/scope.html:161 templates/data_sources/configure.html:239
 msgid "Back"
 msgstr "Retour"
 
@@ -838,35 +854,39 @@ msgstr "Connectez une base de données PostgreSQL à votre projet."
 
 #: templates/data_sources/configure.html:53
 msgid "Select a demo dataset. Connection settings are managed by AskMyData."
-msgstr "Sélectionnez un jeu de données de démonstration. Les paramètres de connexion sont gérés par AskMyData."
+msgstr ""
+"Sélectionnez un jeu de données de démonstration. Les paramètres de connexion "
+"sont gérés par AskMyData."
 
 #: templates/data_sources/configure.html:55
 msgid "Enter the connection details for your PostgreSQL database."
 msgstr ""
 "Saisissez les informations de connexion à votre base de données PostgreSQL."
 
-#: templates/data_sources/configure.html:100
+#: templates/data_sources/configure.html:108
 msgid "The connection details below are illustrative and cannot be modified."
-msgstr "Les informations de connexion ci-dessous sont fournies à titre indicatif et ne peuvent pas être modifiées."
+msgstr ""
+"Les informations de connexion ci-dessous sont fournies à titre indicatif et "
+"ne peuvent pas être modifiées."
 
-#: templates/data_sources/configure.html:109
-#: templates/data_sources/configure.html:150
+#: templates/data_sources/configure.html:117
+#: templates/data_sources/configure.html:158
 msgid "Port"
 msgstr "Port"
 
-#: templates/data_sources/configure.html:119
-#: templates/data_sources/configure.html:192
+#: templates/data_sources/configure.html:127
+#: templates/data_sources/configure.html:200
 #: templates/registration/login.html:58
 msgid "Username"
 msgstr "Nom d’utilisateur"
 
-#: templates/data_sources/configure.html:124
-#: templates/data_sources/configure.html:212
+#: templates/data_sources/configure.html:132
+#: templates/data_sources/configure.html:220
 #: templates/registration/login.html:83
 msgid "Password"
 msgstr "Mot de passe"
 
-#: templates/data_sources/configure.html:235
+#: templates/data_sources/configure.html:243
 msgid "Test and continue"
 msgstr "Tester et continuer"
 
