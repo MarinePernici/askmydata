@@ -219,6 +219,9 @@ MAILERS = {
         ),
     },
 }
+# Automated email delivery is intentionally disabled in the current
+# application scope. Invitation links are shared manually.
+SILENCED_SYSTEM_CHECKS = ["mail.E001"]
 
 # Authentication
 

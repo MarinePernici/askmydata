@@ -976,9 +976,16 @@ The production email backend intentionally discards outgoing emails.
 Automated email delivery is not part of the current Public Demo
 scope. Administrators generate and share invitation links manually.
 
-These settings may produce findings during Django deployment checks.
+The Django deployment check `mail.E001` is explicitly silenced
+because automated email delivery is intentionally disabled.
 
-They must be reviewed explicitly rather than ignored globally.
+This exception must be reviewed if email delivery is introduced
+in a future application release.
+
+The HSTS warning (`security.W004`) remains visible until HTTPS
+has been validated on the production server.
+
+All other Django deployment checks remain active.
 
 ---
 
